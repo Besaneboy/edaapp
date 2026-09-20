@@ -368,10 +368,14 @@
   .sheet label{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
   .sheet input,.sheet select{font-family:inherit;font-size:15px;color:var(--ink);background:var(--surface-2);
     border:1px solid transparent;border-radius:14px;padding:13px 14px;width:100%}
-  .sheet .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .sheet .field{min-width:0}
-  .sheet input,.sheet select,.sheet textarea{min-width:0;max-width:100%}
-  .sheet input[type="time"]{font-variant-numeric:tabular-nums}
+  /* колонки переносятся, а не наезжают: на узких экранах поля встают друг под друга */
+  .sheet .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:10px}
+  .sheet .field{min-width:0;overflow:hidden}
+  .sheet input,.sheet select,.sheet textarea{min-width:0;max-width:100%;width:100%;box-sizing:border-box}
+  .sheet input[type="time"]{font-variant-numeric:tabular-nums;-webkit-appearance:none;appearance:none;
+    padding-right:10px;text-align:left}
+  .sheet input[type="time"]::-webkit-date-and-time-value{text-align:left;margin:0}
+  .sheet input[type="time"]::-webkit-calendar-picker-indicator{margin-left:auto;padding:0}
   .field-note{font-size:12px;color:var(--ink-3);line-height:1.4}
   .field-row{display:flex;gap:8px;align-items:center}
   .field-row .btn{flex:none}
@@ -1172,9 +1176,10 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  $("#storeNote").textContent = STORE_OK
+  const BUILD = "21.09 · сборка 4";
+  $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
-    : "Браузер запретил сохранение — данные живут до перезагрузки";
+    : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
   $("#genBtn").addEventListener("click",()=>openPlanGen());
   $("#genBtn2").addEventListener("click",()=>openPlanGen());
 
