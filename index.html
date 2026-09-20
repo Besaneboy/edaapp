@@ -176,7 +176,11 @@
 
   .meal{display:flex;gap:14px;padding:16px;border-bottom:1px solid var(--line-2)}
   .meal:last-child{border-bottom:0}
-  .meal-time{flex:none;width:46px;font-size:13px;font-weight:600;color:var(--ink-3);padding-top:2px;font-variant-numeric:tabular-nums}
+  .meal-side{flex:none;width:54px;display:flex;flex-direction:column;gap:8px}
+  .meal-time{font-size:13px;font-weight:600;color:var(--ink-3);padding-top:2px;font-variant-numeric:tabular-nums}
+  .meal-thumb{appearance:none;border:0;padding:0;background:none;cursor:pointer;display:block;
+    width:54px;height:54px;border-radius:14px;overflow:hidden}
+  .meal-thumb img{width:100%;height:100%;object-fit:cover;display:block;background:var(--surface-2)}
   .meal-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:9px}
   .meal-head{display:flex;align-items:center;gap:10px}
   .meal-head .meal-name{flex:1;min-width:0}
@@ -1137,7 +1141,18 @@
 
     rows.forEach(({slot,m,y})=>{
       const row=el("div","meal"+(m?"":" empty"));
-      row.appendChild(el("div","meal-time", m ? m.time : y.time));
+      const side=el("div","meal-side");
+      side.appendChild(el("div","meal-time", m ? m.time : (y.time || SLOT_TIME[slot] || "")));
+      if(m && m.rec!=null){
+        const tb=el("button","meal-thumb"); tb.type="button";
+        tb.setAttribute("aria-label","Открыть рецепт: "+m.items);
+        const im=document.createElement("img");
+        im.src=RECIPES[m.rec].img; im.alt=""; im.loading="lazy";
+        tb.appendChild(im);
+        tb.addEventListener("click",()=>goToRecipe(m.rec));
+        side.appendChild(tb);
+      }
+      row.appendChild(side);
       const body=el("div","meal-body");
 
       const head=el("div","meal-head");
@@ -1210,7 +1225,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "21.09 · сборка 8";
+  const BUILD = "21.09 · сборка 9";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
