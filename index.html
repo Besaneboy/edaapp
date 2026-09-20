@@ -138,6 +138,23 @@
   .chip.pro{background:transparent;color:var(--gold);border:1px solid var(--gold)}
 
   /* ── экран «День» ───────────────────────────── */
+  .datestrip{display:flex;gap:8px;overflow-x:auto;padding:2px 0 4px;scrollbar-width:none;scroll-snap-type:x proximity}
+  .datestrip::-webkit-scrollbar{display:none}
+  .dchip{flex:none;width:52px;appearance:none;cursor:pointer;font-family:inherit;scroll-snap-align:center;
+    border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:15px;
+    padding:9px 0 8px;display:flex;flex-direction:column;align-items:center;gap:3px;position:relative}
+  .dchip .dw{font-size:11px;color:var(--ink-3);text-transform:lowercase}
+  .dchip .dd{font-family:"Onest","Manrope",sans-serif;font-size:17px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+  .dchip .dot{width:5px;height:5px;border-radius:50%;background:var(--sage);display:block}
+  .dchip .dot.off{background:transparent}
+  .dchip.past{color:var(--ink-3)}
+  .dchip.past .dd{font-weight:500}
+  .dchip.today{border-color:var(--sage)}
+  .dchip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--ground)}
+  .dchip[aria-pressed="true"] .dw{color:var(--ground);opacity:.75}
+  .dchip[aria-pressed="true"] .dot{background:var(--ground)}
+  .dayactions{display:flex;gap:8px}
+  .dayactions .btn{flex:1}
   .repeat-card{background:var(--sage-soft);border-radius:var(--radius);padding:18px;
     display:flex;flex-direction:column;gap:14px}
   .repeat-card p{margin:0;font-size:14px;color:var(--ink-2);line-height:1.45}
@@ -416,12 +433,21 @@
           <main class="views" id="views">
             <!-- ЭКРАН: ДЕНЬ -->
             <section class="view" data-view="day">
+              <div class="datestrip" id="dateStrip"></div>
+
+              <div class="sec-label"><span id="dayTitle">Сегодня</span><span class="num" id="dayCount">0 из 4</span></div>
+
               <div class="repeat-card" id="repeatCard">
-                <p><strong>Вчера Мия ела 4 раза.</strong> Рацион почти не меняется — заполните день одним касанием и поправьте, что отличалось.</p>
-                <button class="btn btn-primary btn-wide" id="repeatBtn">Повторить вчерашний день</button>
+                <p id="repeatText"></p>
+                <button class="btn btn-primary btn-wide" id="repeatBtn">Повторить предыдущий день</button>
+                <button class="btn btn-outline" id="genBtn" type="button">Подобрать блюда автоматически</button>
               </div>
 
-              <div class="sec-label"><span>Сегодня, 20 сентября</span><span class="num" id="dayCount">1 из 4</span></div>
+              <div class="dayactions" id="dayActions" hidden>
+                <button class="btn btn-sm btn-ghost" id="genBtn2" type="button">Дополнить подбором</button>
+                <button class="btn btn-sm btn-ghost" id="clearDayBtn" type="button">Очистить день</button>
+              </div>
+
               <div class="flat" id="meals"></div>
 
               <div class="sec-label">Добавить приём</div>
@@ -446,8 +472,8 @@
 
               <div class="sec-label">Итог дня</div>
               <dl class="daysum">
-                <div><dt>Приёмов</dt><dd class="num" id="sumMeals">1</dd></div>
-                <div><dt>Новый продукт</dt><dd class="num" id="sumNew">1</dd></div>
+                <div><dt>Приёмов</dt><dd class="num" id="sumMeals">0</dd></div>
+                <div><dt>Новый продукт</dt><dd class="num" id="sumNew">0</dd></div>
                 <div><dt>Реакции</dt><dd class="num" id="sumReact">0</dd></div>
               </dl>
             </section>
@@ -497,8 +523,14 @@
                 </div>
                 <div class="recgrid" id="recGrid"></div>
 
-                <div class="sec-label"><span>Список покупок на неделю</span><span class="num" id="buyCount"></span></div>
-                <p class="planbar"><span id="planCount"></span><button class="btn btn-sm btn-ghost" id="planClear" type="button">Очистить план</button></p>
+                <div class="sec-label"><span>Список покупок</span><span class="num" id="buyCount"></span></div>
+                <div class="filters" id="buyHorizon">
+                  <button data-h="3" aria-pressed="false">3 дня</button>
+                  <button data-h="7" aria-pressed="true">Неделя</button>
+                  <button data-h="14" aria-pressed="false">2 недели</button>
+                  <button data-h="31" aria-pressed="false">Весь план</button>
+                </div>
+                <p class="planbar"><span id="planCount"></span><button class="btn btn-sm btn-ghost" id="planOpen" type="button">Открыть планер</button></p>
                 <div class="flat" id="buyList"></div>
                 <button class="btn btn-primary btn-wide" id="deliverBtn">Отправить в доставку</button>
                 <p class="hint" style="text-align:left">Строки сгруппированы по отделам, одинаковые продукты сложены. Отмеченное «есть дома» в заказ не уходит.</p>
@@ -648,13 +680,6 @@
   const TG = (WA && WA.platform && WA.platform !== "unknown") ? WA : null;
 
   /* ───────── данные ───────── */
-  const YESTERDAY = [
-    {time:"08:30", name:"Завтрак", gram:"140 г", items:"Овсяная каша с яблоком", rec:8},
-    {time:"12:30", name:"Обед",    gram:"165 г", items:"Суп с куриными фрикадельками", rec:0},
-    {time:"16:00", name:"Полдник", gram:"90 г",  items:"Сырники в духовке", rec:2},
-    {time:"19:00", name:"Ужин",    gram:"120 г", items:"Макароны с сыром и брокколи", rec:7}
-  ];
-
   const FOODS = [
     {n:"Кабачок", from:6, state:"ok", tags:[], meta:"с 6 мес · частый первый овощ",
      serve:{"6":"Пюре гладкое, без комков","9":"Кусочки 1×1 см, мягко тушёные","12":"Палочки, запечённые"}},
@@ -888,15 +913,48 @@
   };
 
   /* ───────── состояние ───────── */
+  const DAY_MS = 86400000;
+  const CHILD_AGE_M = 13;                       // возраст ребёнка в демо, месяцев
+  const SLOT_TIME = {"Завтрак":"08:30","Обед":"12:30","Полдник":"16:00","Ужин":"19:00"};
+  const SLOT_GRAM = {"Завтрак":"140 г","Обед":"165 г","Полдник":"90 г","Ужин":"120 г"};
+  const isoOf = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  const TODAY = (()=>{ const d=new Date(); d.setHours(0,0,0,0); return d; })();
+  const TODAY_ISO = isoOf(TODAY);
+  const dateOf = offset => { const d=new Date(TODAY.getTime()+offset*DAY_MS); d.setHours(0,0,0,0); return d; };
+  const isoAt = offset => isoOf(dateOf(offset));
+  const offsetOf = iso => Math.round((new Date(iso+"T00:00:00") - TODAY)/DAY_MS);
+  const FMT_DAY = new Intl.DateTimeFormat("ru-RU",{day:"numeric",month:"long"});
+  const FMT_WD  = new Intl.DateTimeFormat("ru-RU",{weekday:"short"});
+  function dayLabel(iso){
+    const o=offsetOf(iso), d=new Date(iso+"T00:00:00");
+    if(o===0) return "Сегодня, "+FMT_DAY.format(d);
+    if(o===-1) return "Вчера, "+FMT_DAY.format(d);
+    if(o===1) return "Завтра, "+FMT_DAY.format(d);
+    return FMT_WD.format(d).replace(".","")+", "+FMT_DAY.format(d);
+  }
+  const mealsOf = iso => (state.days[iso] || (state.days[iso]=[]));
+
   const state = {
     tab:"day",
-    meals:[{time:"08:30", name:"Завтрак", gram:"140 г", items:"Овсяная каша с яблоком", rec:8, newFood:"яблоком", react:null}],
-    filled:false,
+    days:{}, cursor:TODAY_ISO, buyHorizon:7,
     foodFilter:"all", foodQ:"", openFood:null,
     rec:0, portions:2, step:0, timeLeft:0, running:false, tick:null,
-    recFilter:"all", f:{time:null, age:null, main:null, excl:[]}, plan:[0,3,5,7], pantry:["Масло оливковое","Мука","Масло сливочное"],
+    recFilter:"all", f:{time:null, age:null, main:null, excl:[]}, pantry:["Масло оливковое","Мука","Масло сливочное"],
     paper:false
   };
+
+  // история за прошлые дни и уже запланированные ближайшие
+  (function seedDays(){
+    const mk = (slot, rec, react) => ({
+      name:slot, time:SLOT_TIME[slot], gram:SLOT_GRAM[slot],
+      items:RECIPES[rec].t, rec:rec, react:react||null
+    });
+    state.days[isoAt(-3)] = [mk("Завтрак",8),mk("Обед",0),mk("Полдник",2),mk("Ужин",7)];
+    state.days[isoAt(-2)] = [mk("Завтрак",3),mk("Обед",9),mk("Полдник",2,"Отказ"),mk("Ужин",6)];
+    state.days[isoAt(-1)] = [mk("Завтрак",8),mk("Обед",5),mk("Полдник",2),mk("Ужин",1)];
+    state.days[isoAt(1)]  = [mk("Завтрак",3),mk("Обед",4),mk("Ужин",7)];
+    state.days[isoAt(2)]  = [mk("Завтрак",8),mk("Обед",0)];
+  })();
 
   const $ = s => document.querySelector(s);
   const el = (t,c,x) => { const e=document.createElement(t); if(c) e.className=c; if(x!=null) e.textContent=x; return e; };
@@ -911,6 +969,37 @@
 
   /* ───────── экран «День» ───────── */
   const PLAN_SLOTS = ["Завтрак","Обед","Полдник","Ужин"];
+
+  function renderDateStrip(){
+    const box=$("#dateStrip"); box.innerHTML="";
+    let active=null;
+    for(let o=-7;o<=30;o++){
+      const iso=isoAt(o), d=dateOf(o);
+      const b=el("button","dchip"+(o<0?" past":"")+(o===0?" today":""));
+      b.type="button";
+      b.setAttribute("aria-pressed", String(iso===state.cursor));
+      b.setAttribute("aria-label", dayLabel(iso));
+      b.appendChild(el("span","dw", o===0 ? "сегодня" : FMT_WD.format(d).replace(".","")));
+      b.appendChild(el("span","dd", String(d.getDate())));
+      b.appendChild(el("i","dot"+((state.days[iso]||[]).length?"":" off")));
+      b.addEventListener("click",()=>{ state.cursor=iso; renderDay(); });
+      if(iso===state.cursor) active=b;
+      box.appendChild(b);
+    }
+    if(active) box.scrollLeft = active.offsetLeft - box.clientWidth/2 + active.offsetWidth/2;
+  }
+
+  function renderDay(){
+    renderDateStrip(); renderMeals(); updateSummary(); renderBuy();
+  }
+
+  function clearDay(){
+    const meals=mealsOf(state.cursor);
+    if(!meals.length) return;
+    state.days[state.cursor]=[];
+    renderDay();
+    toast("День очищен.");
+  }
 
   function mealDishNode(m){
     const inner = m.newFood
@@ -928,9 +1017,12 @@
 
   function renderMeals(){
     const box=$("#meals"); box.innerHTML="";
+    const meals=mealsOf(state.cursor);
+    const prevIso=isoAt(offsetOf(state.cursor)-1);
+    const prev=state.days[prevIso]||[];
     const rows = PLAN_SLOTS.map(slot=>{
-      const m=state.meals.find(x=>x.name===slot);
-      const y=YESTERDAY.find(x=>x.name===slot);
+      const m=meals.find(x=>x.name===slot);
+      const y=prev.find(x=>x.name===slot) || {time:SLOT_TIME[slot], items:null};
       return {slot, m, y, time:(m?m.time:y.time)};
     }).sort((a,b)=>a.time.localeCompare(b.time));
 
@@ -967,7 +1059,9 @@
         });
         body.appendChild(rr);
       } else {
-        const p=el("p","meal-items"); p.textContent="Вчера: "+y.items; body.appendChild(p);
+        const p=el("p","meal-items");
+        p.textContent = y.items ? "В прошлый раз: "+y.items : "Пока ничего не запланировано";
+        body.appendChild(p);
         const add=el("button","meal-add","Добавить блюдо"); add.type="button";
         add.addEventListener("click",()=>openRecipesPicker(slot));
         body.appendChild(add);
@@ -975,26 +1069,42 @@
       row.appendChild(body);
       box.appendChild(row);
     });
-    $("#dayCount").textContent=state.meals.length+" из 4";
-    $("#repeatCard").hidden = state.filled;
+    $("#dayCount").textContent=meals.length+" из 4";
+    $("#dayTitle").textContent=dayLabel(state.cursor);
+
+    const empty = meals.length===0;
+    $("#repeatCard").hidden = !empty;
+    $("#dayActions").hidden = empty;
+    if(empty){
+      $("#repeatText").innerHTML = prev.length
+        ? "<strong>"+dayLabel(prevIso).split(",")[0]+" было "+prev.length+" приёма пищи.</strong> Повторите их одним касанием, подберите блюда автоматически или добавьте вручную."
+        : "<strong>День пока пустой.</strong> Подберите блюда автоматически или добавьте их из раздела «Рецепты».";
+      $("#repeatBtn").hidden = !prev.length;
+    }
   }
 
   function updateSummary(){
-    $("#sumMeals").textContent=state.meals.length;
-    $("#sumNew").textContent=state.meals.filter(m=>m.newFood).length;
-    $("#sumReact").textContent=state.meals.filter(m=>m.react&&m.react!=="Съел").length;
+    const meals=mealsOf(state.cursor);
+    $("#sumMeals").textContent=meals.length;
+    $("#sumNew").textContent=meals.filter(m=>m.newFood).length;
+    $("#sumReact").textContent=meals.filter(m=>m.react&&m.react!=="Съел").length;
   }
 
   $("#repeatBtn").addEventListener("click",()=>{
-    YESTERDAY.forEach(y=>{
-      if(!state.meals.find(m=>m.name===y.name))
-        state.meals.push({time:y.time,name:y.name,gram:y.gram,items:y.items,rec:y.rec,react:null});
+    const prevIso=isoAt(offsetOf(state.cursor)-1);
+    const prev=state.days[prevIso]||[];
+    if(!prev.length) return;
+    const meals=mealsOf(state.cursor);
+    prev.forEach(p=>{
+      if(!meals.find(m=>m.name===p.name))
+        meals.push({name:p.name,time:p.time,gram:p.gram,items:p.items,rec:p.rec,react:null});
     });
-    state.meals.sort((a,b)=>a.time.localeCompare(b.time));
-    state.filled=true;
-    renderMeals(); updateSummary();
-    toast("День заполнен из вчерашнего. Поправьте, что отличалось.");
+    renderDay();
+    toast("День заполнен из предыдущего. Поправьте, что отличалось.");
   });
+  $("#clearDayBtn").addEventListener("click",clearDay);
+  $("#genBtn").addEventListener("click",()=>openPlanGen());
+  $("#genBtn2").addEventListener("click",()=>openPlanGen());
 
   /* ───────── шторка добавления ───────── */
   const SHEETS={
@@ -1045,13 +1155,12 @@
       const slotName=$("#shSlot").value, dish=$("#shDish").value, gram=$("#shGram").value||"0";
       const times={"Завтрак":"08:30","Обед":"12:30","Полдник":"16:00","Ужин":"19:00"};
       const ri=RECIPES.findIndex(r=>r.t===dish);
-      const ex=state.meals.find(m=>m.name===slotName);
+      const meals=mealsOf(state.cursor);
+      const ex=meals.find(m=>m.name===slotName);
       if(ex){ ex.items=dish; ex.gram=gram+" г"; ex.rec = ri>=0?ri:null; }
-      else state.meals.push({time:times[slotName],name:slotName,gram:gram+" г",items:dish,
-                             rec:(ri>=0?ri:null),react:null});
-      state.meals.sort((a,b)=>a.time.localeCompare(b.time));
-      if(state.meals.length===4) state.filled=true;
-      closeSheet(); renderMeals(); updateSummary();
+      else meals.push({time:times[slotName],name:slotName,gram:gram+" г",items:dish,
+                       rec:(ri>=0?ri:null),react:null});
+      closeSheet(); renderDay();
       toast(slotName+" записан: "+dish+", "+gram+" г.");
     });
   }
@@ -1084,6 +1193,81 @@
     $("#sheet").hidden=false;
   }
 
+  function poolFor(slot){
+    const fits = r => r.minAge <= CHILD_AGE_M;
+    let pool = RECIPES.map((r,i)=>[r,i]).filter(([r])=>fits(r) && r.slot===slot);
+    if(slot==="Полдник") pool = RECIPES.map((r,i)=>[r,i]).filter(([r])=>fits(r) && r.slot==="Завтрак");
+    if(slot==="Ужин") pool = pool.concat(RECIPES.map((r,i)=>[r,i]).filter(([r])=>fits(r) && r.cat==="Гарниры"));
+    if(!pool.length) pool = RECIPES.map((r,i)=>[r,i]).filter(([r])=>fits(r));
+    return pool.map(([,i])=>i);
+  }
+
+  function fillPlan(days, overwrite){
+    const start=offsetOf(state.cursor);
+    const pools={}; PLAN_SLOTS.forEach(sl=>{
+      pools[sl]=poolFor(sl).sort(()=>Math.random()-0.5);
+    });
+    const cursorBy={}; PLAN_SLOTS.forEach(sl=>cursorBy[sl]=0);
+    let added=0;
+    for(let k=0;k<days;k++){
+      const iso=isoAt(start+k);
+      const meals=mealsOf(iso);
+      const prev=state.days[isoAt(start+k-1)]||[];
+      const usedToday=new Set(meals.filter(m=>m.rec!=null).map(m=>m.rec));
+      PLAN_SLOTS.forEach(slot=>{
+        const has=meals.find(m=>m.name===slot);
+        if(has && !overwrite) return;
+        if(has && overwrite && has.rec!=null) usedToday.delete(has.rec);
+        const pool=pools[slot]; if(!pool.length) return;
+        let rec=null;
+        // не повторяем блюдо в тот же день и не ставим вчерашнее в тот же приём
+        for(let t=0;t<pool.length;t++){
+          const cand=pool[(cursorBy[slot]+t)%pool.length];
+          if(usedToday.has(cand)) continue;
+          if(prev.find(m=>m.name===slot && m.rec===cand)) continue;
+          rec=cand; cursorBy[slot]=(cursorBy[slot]+t+1)%pool.length; break;
+        }
+        if(rec==null){
+          const free=pool.filter(c=>!usedToday.has(c));
+          rec = free.length ? free[0] : pool[cursorBy[slot]%pool.length];
+          cursorBy[slot]++;
+        }
+        usedToday.add(rec);
+        const row={name:slot,time:SLOT_TIME[slot],gram:SLOT_GRAM[slot],items:RECIPES[rec].t,rec:rec,react:null};
+        if(has) Object.assign(has,row); else meals.push(row);
+        added++;
+      });
+    }
+    renderDay(); renderRecGrid();
+    toast("Подобрано "+added+" "+(added%10===1&&added%100!==11?"приём":"приёмов")+" на "+days+" "+(days===1?"день":days<5?"дня":"дней")+". Всё можно поправить вручную.");
+  }
+
+  function openPlanGen(){
+    let days=7, overwrite=false;
+    const box=$("#sheetInner");
+    const OPTS=[["На день",1],["На неделю",7],["На 2 недели",14],["На месяц",30]];
+    function draw(){
+      box.innerHTML =
+        '<div class="sheet-grab"></div>'+
+        '<h3>Подобрать блюда</h3>'+
+        '<p class="ai-note"><span class="chip berry">с '+esc(dayLabel(state.cursor).split(",")[0].toLowerCase())+'</span>'+
+        '<span>Подбор берёт блюда по возрасту ребёнка и не ставит одно и то же два дня подряд. Любой приём потом правится вручную.</span></p>'+
+        '<div class="fsec"><h4>Горизонт планирования</h4><div class="opts">'+
+          OPTS.map(([lab,v])=>'<button class="opt" type="button" data-d="'+v+'" aria-pressed="'+(days===v)+'">'+lab+'</button>').join("")+
+        '</div></div>'+
+        '<label class="check"><input type="checkbox" id="gOver"'+(overwrite?' checked':'')+'>'+
+        '<span>Перезаписать уже запланированное</span></label>'+
+        '<div class="sheet-foot"><button class="btn btn-ghost" id="gCancel" type="button">Отмена</button>'+
+        '<button class="btn btn-primary" id="gGo" type="button">Подобрать</button></div>';
+      box.querySelectorAll("[data-d]").forEach(b=>b.addEventListener("click",()=>{ days=+b.dataset.d; draw(); }));
+      $("#gOver").addEventListener("change",e=>{ overwrite=e.target.checked; });
+      $("#gCancel").addEventListener("click",closeSheet);
+      $("#gGo").addEventListener("click",()=>{ closeSheet(); fillPlan(days, overwrite); });
+    }
+    draw();
+    $("#sheet").hidden=false;
+  }
+
   function openMealEditor(m){
     const box=$("#sheetInner");
     const opts=[...new Set(RECIPES.map(r=>r.t).concat(
@@ -1108,13 +1292,12 @@
       const ri=RECIPES.findIndex(r=>r.t===dish);
       m.rec = ri>=0 ? ri : null;
       if(m.newFood && !dish.toLowerCase().includes(m.newFood.toLowerCase())) m.newFood=null;
-      closeSheet(); renderMeals(); updateSummary();
+      closeSheet(); renderDay();
       toast(m.name+" обновлён: "+time+", "+gram+" г.");
     });
     $("#edDel").addEventListener("click",()=>{
-      state.meals=state.meals.filter(x=>x!==m);
-      state.filled = state.meals.length>=4;
-      closeSheet(); renderMeals(); updateSummary();
+      state.days[state.cursor]=mealsOf(state.cursor).filter(x=>x!==m);
+      closeSheet(); renderDay();
       toast(m.name+" удалён из планера.");
     });
   }
@@ -1199,7 +1382,7 @@
   /* ───────── экран «Рецепты» ───────── */
   function recPasses(r,i,f){
     f = f || state.f;
-    if(state.recFilter==="plan"){ if(!state.plan.includes(i)) return false; }
+    if(state.recFilter==="plan"){ if(!inPlan(i)) return false; }
     else if(state.recFilter!=="all" && r.cat!==state.recFilter) return false;
     if(f.time && r.mins > f.time) return false;
     if(f.age){
@@ -1288,17 +1471,17 @@
       return;
     }
     shown.forEach(([r,i])=>{
-      const inPlan=state.plan.includes(i);
-      const card=el("div","reccard"+(inPlan?" picked":""));
+      const picked=inPlan(i);
+      const card=el("div","reccard"+(picked?" picked":""));
       card.setAttribute("role","button"); card.tabIndex=0;
       const im=document.createElement("img");
       im.src=r.img; im.alt=r.t; im.loading="lazy";
       card.appendChild(im);
 
-      const pin=el("button","plan-btn",inPlan?"✓":"+");
+      const pin=el("button","plan-btn",picked?"✓":"+");
       pin.type="button";
-      pin.setAttribute("aria-pressed",String(inPlan));
-      pin.setAttribute("aria-label",(inPlan?"Убрать из плана недели: ":"В план недели: ")+r.t);
+      pin.setAttribute("aria-pressed",String(picked));
+      pin.setAttribute("aria-label",(picked?"Убрать из планера: ":"В планер: ")+r.t);
       pin.addEventListener("click",e=>{ e.stopPropagation(); togglePlan(i); });
       card.appendChild(pin);
 
@@ -1315,18 +1498,38 @@
     });
   }
 
+  const inPlan = i => plannedRecs(31).includes(i);
+
   function togglePlan(i){
-    const k=state.plan.indexOf(i);
-    if(k>=0) state.plan.splice(k,1); else state.plan.push(i);
-    renderRecGrid(); renderBuy(); updatePlanBtn();
-    toast(k>=0 ? "Убрали из плана. Список покупок пересчитан."
-               : "Добавили в план. Продукты уехали в список покупок.");
+    const r=RECIPES[i];
+    if(inPlan(i)){
+      for(let o=0;o<31;o++){
+        const iso=isoAt(o), meals=state.days[iso]||[];
+        const k=meals.findIndex(m=>m.rec===i);
+        if(k>=0){
+          meals.splice(k,1);
+          renderRecGrid(); renderDay(); updatePlanBtn();
+          toast("Убрали «"+r.t+"» из планера на "+dayLabel(iso).split(",")[0].toLowerCase()+".");
+          return;
+        }
+      }
+      return;
+    }
+    for(let o=0;o<31;o++){
+      const iso=isoAt(o), meals=mealsOf(iso);
+      if(!meals.find(m=>m.name===r.slot)){
+        meals.push({name:r.slot,time:SLOT_TIME[r.slot],gram:SLOT_GRAM[r.slot],items:r.t,rec:i,react:null});
+        renderRecGrid(); renderDay(); updatePlanBtn();
+        toast("«"+r.t+"» → "+dayLabel(iso).split(",")[0].toLowerCase()+", "+r.slot.toLowerCase()+".");
+        return;
+      }
+    }
+    toast("Свободных слотов на месяц вперёд не осталось.");
   }
 
   function updatePlanBtn(){
     const btn=$("#planBtn"); if(!btn) return;
-    const inPlan=state.plan.includes(state.rec);
-    btn.textContent = inPlan ? "Убрать из плана недели" : "Добавить в план недели";
+    btn.textContent = inPlan(state.rec) ? "Убрать из планера" : "Добавить в планер";
   }
 
   $("#recFilters").addEventListener("click",e=>{
@@ -1336,10 +1539,12 @@
     renderRecGrid();
   });
   $("#planBtn").addEventListener("click",()=>togglePlan(state.rec));
-  $("#planClear").addEventListener("click",()=>{
-    if(!state.plan.length) return;
-    state.plan=[]; renderRecGrid(); renderBuy(); updatePlanBtn();
-    toast("План недели очищен.");
+  $("#planOpen").addEventListener("click",()=>selectTab("day"));
+  $("#buyHorizon").addEventListener("click",e=>{
+    const b=e.target.closest("button"); if(!b) return;
+    state.buyHorizon=+b.dataset.h;
+    $("#buyHorizon").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+    renderBuy();
   });
 
   function openRecipe(i){
@@ -1435,9 +1640,22 @@
   }
   const fmtNum = v => (Math.round(v*10)/10).toString().replace(".",",");
 
+  function plannedRecs(horizon){
+    const out=[];
+    for(let o=0;o<horizon;o++){
+      (state.days[isoAt(o)]||[]).forEach(m=>{ if(m.rec!=null) out.push(m.rec); });
+    }
+    return out;
+  }
+  const plannedDays = horizon => {
+    let n=0;
+    for(let o=0;o<horizon;o++) if((state.days[isoAt(o)]||[]).length) n++;
+    return n;
+  };
+
   function planItems(){
     const map=new Map();
-    state.plan.slice().sort((a,b)=>a-b).forEach(i=>{
+    plannedRecs(state.buyHorizon).forEach(i=>{
       const r=RECIPES[i];
       r.ing.forEach(([name,qty])=>{
         if(NO_BUY.includes(name)) return;
@@ -1454,13 +1672,14 @@
   function renderBuy(){
     const box=$("#buyList"); box.innerHTML="";
     const items=planItems();
-    $("#planCount").textContent = state.plan.length
-      ? "в плане " + state.plan.length + " " + (state.plan.length===1?"блюдо":state.plan.length<5?"блюда":"блюд")
-      : "план пуст";
-    $("#planClear").hidden = !state.plan.length;
+    const recs=plannedRecs(state.buyHorizon), days=plannedDays(state.buyHorizon);
+    $("#planCount").textContent = recs.length
+      ? "из планера: " + recs.length + " " + (recs.length===1?"блюдо":recs.length<5?"блюда":"блюд") +
+        " на " + days + " " + (days===1?"день":days<5?"дня":"дней")
+      : "в планере на этот период пусто";
 
     if(!items.length){
-      box.appendChild(el("div","buy-empty","Отметьте блюда на неделю кнопкой + на карточке рецепта — список соберётся сам, одинаковые продукты сложатся в одну строку."));
+      box.appendChild(el("div","buy-empty","Запланируйте блюда во вкладке «Планер» — список соберётся сам: одинаковые продукты сложатся в одну строку и разложатся по отделам магазина."));
       $("#buyCount").textContent="";
       $("#deliverBtn").disabled=true;
       $("#deliverBtn").textContent="Отправить в доставку";
@@ -1499,8 +1718,9 @@
     $("#deliverBtn").textContent="Отправить в доставку · "+need+" позиций";
   }
   $("#deliverBtn").addEventListener("click",()=>{
-    if(!state.plan.length) return;
-    toast("Корзина собрана из " + state.plan.length + " блюд. В релизе здесь выбор сервиса доставки.");
+    const n=plannedRecs(state.buyHorizon).length;
+    if(!n) return;
+    toast("Корзина собрана из " + n + " блюд планера. В релизе здесь выбор сервиса доставки.");
   });
 
   /* ───────── экран «Врачу» ───────── */
@@ -1588,7 +1808,7 @@
   });
 
   /* ───────── старт ───────── */
-  renderMeals(); updateSummary();
+  renderDay();
   renderFoods();
   renderRecGrid(); renderRecipe(); renderBuy();
   if(TG) initTelegram();
