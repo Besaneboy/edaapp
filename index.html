@@ -205,8 +205,16 @@
 
   /* ── экран «Кухня» ──────────────────────────── */
   .recgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .reccard{appearance:none;cursor:pointer;font-family:inherit;text-align:left;padding:0;overflow:hidden;
+  .recgrid-empty{grid-column:1/-1;padding:20px 4px;color:var(--ink-2);font-size:14px}
+  .planbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0;font-size:13px;color:var(--ink-2)}
+  .buy-empty{padding:18px 16px;color:var(--ink-2);font-size:14px;line-height:1.5}
+  .plan-btn{position:absolute;top:8px;right:8px;width:32px;height:32px;border-radius:999px;border:0;cursor:pointer;
+    background:rgba(255,255,255,.93);color:var(--ink);font-family:inherit;font-size:16px;font-weight:700;line-height:1;
+    display:grid;place-items:center;box-shadow:0 2px 10px rgba(22,21,15,.22)}
+  .plan-btn[aria-pressed="true"]{background:var(--sage);color:#fff}
+  .reccard{position:relative;appearance:none;cursor:pointer;font-family:inherit;text-align:left;padding:0;overflow:hidden;
     border:1px solid var(--line-2);background:var(--surface);border-radius:16px;display:flex;flex-direction:column}
+  .reccard.picked{border-color:var(--sage);box-shadow:inset 0 0 0 1px var(--sage)}
   .reccard img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:var(--surface-2)}
   .reccard-b{padding:10px 12px 13px;display:flex;flex-direction:column;gap:3px}
   .reccard-t{font-family:"Onest","Manrope",sans-serif;font-weight:600;font-size:14.5px;line-height:1.25;letter-spacing:-.01em}
@@ -423,9 +431,19 @@
               <div id="cookList" class="view">
                 <div class="sec-label"><span>Рецепты общего стола</span><span class="chip ok">бесплатно</span></div>
                 <p class="ai-note"><span class="chip berry">с 12 мес</span><span>Одно блюдо на всю семью: детскую порцию откладывают до соли и специй.</span></p>
+                <div class="filters" id="recFilters">
+                  <button data-rf="all" aria-pressed="true">Все</button>
+                  <button data-rf="завтрак" aria-pressed="false">Завтрак</button>
+                  <button data-rf="обед" aria-pressed="false">Обед</button>
+                  <button data-rf="ужин" aria-pressed="false">Ужин</button>
+                  <button data-rf="fast" aria-pressed="false">До 20 минут</button>
+                  <button data-rf="nodairy" aria-pressed="false">Без молочного</button>
+                  <button data-rf="plan" aria-pressed="false">В плане недели</button>
+                </div>
                 <div class="recgrid" id="recGrid"></div>
 
                 <div class="sec-label"><span>Список покупок на неделю</span><span class="num" id="buyCount"></span></div>
+                <p class="planbar"><span id="planCount"></span><button class="btn btn-sm btn-ghost" id="planClear" type="button">Очистить план</button></p>
                 <div class="flat" id="buyList"></div>
                 <button class="btn btn-primary btn-wide" id="deliverBtn">Отправить в доставку</button>
                 <p class="hint" style="text-align:left">Строки сгруппированы по отделам, одинаковые продукты сложены. Отмеченное «есть дома» в заказ не уходит.</p>
@@ -450,6 +468,7 @@
                 </div>
 
                 <p class="ai-note"><span class="chip berry">ребёнку</span><span id="recKid"></span></p>
+                <button class="btn btn-outline" id="planBtn" type="button">Добавить в план недели</button>
 
                 <div class="card cookstep">
                   <div class="progress" id="cookProgress"></div>
@@ -465,6 +484,8 @@
                     <button class="btn btn-sm btn-primary" id="nextStep">Следующий шаг</button>
                   </div>
                 </div>
+
+                <button class="btn btn-primary btn-wide" id="diaryBtn" type="button">Записать в дневник</button>
 
                 <div class="card note-box">
                   <div class="sec-label sm">Моя заметка к рецепту</div>
@@ -701,26 +722,27 @@
      ]}
   ];
 
-  const BUY = [
-    {aisle:"Овощи и фрукты", items:[
-      {n:"Кабачок", q:"600 г", from:"из 3 рецептов", have:false},
-      {n:"Груша", q:"4 шт", from:"каша, полдник", have:false},
-      {n:"Морковь", q:"500 г", from:"BLW-палочки", have:true},
-      {n:"Цветная капуста", q:"400 г", from:"ужин вт, чт", have:false}
-    ]},
-    {aisle:"Рыба и мясо", items:[
-      {n:"Филе трески", q:"250 г", from:"обед пн, ср", have:false},
-      {n:"Индейка, грудка", q:"300 г", from:"ужин", have:false}
-    ]},
-    {aisle:"Бакалея", items:[
-      {n:"Гречневая крупа", q:"1 пачка", from:"завтраки", have:true},
-      {n:"Оливковое масло", q:"250 мл", from:"5 рецептов", have:true}
-    ]},
-    {aisle:"Молочное", items:[
-      {n:"Кефир детский", q:"4 × 200 мл", from:"полдник", have:false},
-      {n:"Йогурт без добавок", q:"6 шт", from:"полдник", have:false}
-    ]}
-  ];
+  const AISLE = {
+    "Картофель":"Овощи и фрукты","Морковь":"Овощи и фрукты","Кабачок":"Овощи и фрукты","Помидор":"Овощи и фрукты",
+    "Лук":"Овощи и фрукты","Брокколи":"Овощи и фрукты","Яблоко":"Овощи и фрукты","Банан":"Овощи и фрукты",
+    "Укроп":"Овощи и фрукты",
+    "Куриное филе":"Мясо и рыба","Фарш индейки":"Мясо и рыба","Филе трески":"Мясо и рыба",
+    "Куриное бедро без кости":"Мясо и рыба",
+    "Яйцо":"Молочное и яйца","Молоко":"Молочное и яйца","Сметана 10%":"Молочное и яйца",
+    "Творог 9%":"Молочное и яйца","Сыр твёрдый":"Молочное и яйца","Масло сливочное":"Молочное и яйца",
+    "Рис круглый":"Бакалея","Мука":"Бакалея","Вермишель мелкая":"Бакалея","Хлопья овсяные":"Бакалея",
+    "Макароны мелкие":"Бакалея","Масло оливковое":"Бакалея","Белый хлеб":"Бакалея"
+  };
+  const AISLE_ORDER = ["Овощи и фрукты","Мясо и рыба","Молочное и яйца","Бакалея","Прочее"];
+  const NO_BUY = ["Вода"];
+
+  // метаданные рецептов для фильтров — считаем из подписи и состава
+  const DAIRY = ["Молоко","Сметана 10%","Творог 9%","Сыр твёрдый","Масло сливочное"];
+  RECIPES.forEach(r=>{
+    r.mins = parseInt((r.m.match(/(\d+)\s*мин/)||[])[1]||"0",10);
+    r.meal = (r.m.split("·").pop()||"").trim();
+    r.dairy = r.ing.some(([n])=>DAIRY.includes(n));
+  });
 
   const PANEL = {
     day:{
@@ -778,7 +800,7 @@
     filled:false,
     foodFilter:"all", foodQ:"", openFood:null,
     rec:0, portions:2, step:0, timeLeft:0, running:false, tick:null,
-    buy:JSON.parse(JSON.stringify(BUY)),
+    recFilter:"all", plan:[0,3,5,7], pantry:["Масло оливковое","Мука","Масло сливочное"],
     paper:false
   };
 
@@ -876,9 +898,10 @@
     }
   };
 
-  function openSheet(kind){
-    const c=SHEETS[kind], slot=$("#sheetInner");
-    const opts=["Кабачок с треской на пару","Гречневая каша, груша печёная","Йогурт без добавок","Цветная капуста, индейка","Кефир детский"];
+  function openSheet(kind,custom){
+    const c=custom||SHEETS[kind], slot=$("#sheetInner");
+    const opts=[...new Set(RECIPES.map(r=>r.t).concat(
+      ["Гречневая каша, груша печёная","Йогурт без добавок","Кефир детский",c.dish]))];
     slot.innerHTML=
       '<div class="sheet-grab"></div>'+
       '<h3>'+esc(c.title)+'</h3>'+
@@ -888,7 +911,7 @@
       '</select></div>'+
       '<div class="row">'+
         '<div class="field"><label for="shSlot">Приём</label><select id="shSlot">'+
-          ["Завтрак","Обед","Полдник","Ужин"].map(o=>'<option>'+o+'</option>').join("")+
+          ["Завтрак","Обед","Полдник","Ужин"].map(o=>'<option'+(o===c.slot?' selected':'')+'>'+o+'</option>').join("")+
         '</select></div>'+
         '<div class="field"><label for="shGram">Граммы</label><input id="shGram" inputmode="numeric" value="'+esc(c.gram)+'"></div>'+
       '</div>'+
@@ -978,21 +1001,77 @@
   });
 
   /* ───────── экран «Кухня» ───────── */
+  function recPasses(r,i){
+    switch(state.recFilter){
+      case "all": return true;
+      case "fast": return r.mins<=20;
+      case "nodairy": return !r.dairy;
+      case "plan": return state.plan.includes(i);
+      default: return r.meal===state.recFilter;
+    }
+  }
+
   function renderRecGrid(){
     const box=$("#recGrid"); box.innerHTML="";
-    RECIPES.forEach((r,i)=>{
-      const card=el("button","reccard"); card.type="button";
+    const shown=RECIPES.map((r,i)=>[r,i]).filter(([r,i])=>recPasses(r,i));
+    if(!shown.length){
+      box.appendChild(el("div","recgrid-empty","Под этот фильтр рецептов пока нет. Снимите фильтр или выберите другой приём пищи."));
+      return;
+    }
+    shown.forEach(([r,i])=>{
+      const inPlan=state.plan.includes(i);
+      const card=el("div","reccard"+(inPlan?" picked":""));
+      card.setAttribute("role","button"); card.tabIndex=0;
       const im=document.createElement("img");
       im.src=r.img; im.alt=r.t; im.loading="lazy";
       card.appendChild(im);
+
+      const pin=el("button","plan-btn",inPlan?"✓":"+");
+      pin.type="button";
+      pin.setAttribute("aria-pressed",String(inPlan));
+      pin.setAttribute("aria-label",(inPlan?"Убрать из плана недели: ":"В план недели: ")+r.t);
+      pin.addEventListener("click",e=>{ e.stopPropagation(); togglePlan(i); });
+      card.appendChild(pin);
+
       const b=el("div","reccard-b");
       b.appendChild(el("div","reccard-t",r.t));
       b.appendChild(el("div","reccard-m",r.m));
       card.appendChild(b);
+
       card.addEventListener("click",()=>openRecipe(i));
+      card.addEventListener("keydown",e=>{
+        if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openRecipe(i); }
+      });
       box.appendChild(card);
     });
   }
+
+  function togglePlan(i){
+    const k=state.plan.indexOf(i);
+    if(k>=0) state.plan.splice(k,1); else state.plan.push(i);
+    renderRecGrid(); renderBuy(); updatePlanBtn();
+    toast(k>=0 ? "Убрали из плана. Список покупок пересчитан."
+               : "Добавили в план. Продукты уехали в список покупок.");
+  }
+
+  function updatePlanBtn(){
+    const btn=$("#planBtn"); if(!btn) return;
+    const inPlan=state.plan.includes(state.rec);
+    btn.textContent = inPlan ? "Убрать из плана недели" : "Добавить в план недели";
+  }
+
+  $("#recFilters").addEventListener("click",e=>{
+    const b=e.target.closest("button"); if(!b) return;
+    state.recFilter=b.dataset.rf;
+    $("#recFilters").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+    renderRecGrid();
+  });
+  $("#planBtn").addEventListener("click",()=>togglePlan(state.rec));
+  $("#planClear").addEventListener("click",()=>{
+    if(!state.plan.length) return;
+    state.plan=[]; renderRecGrid(); renderBuy(); updatePlanBtn();
+    toast("План недели очищен.");
+  });
 
   function openRecipe(i){
     state.rec=i; state.step=0; stopTimer();
@@ -1018,6 +1097,7 @@
     const hero=$("#recHero");
     if(hero.getAttribute("src")!==r.img){ hero.src=r.img; hero.alt=r.t; }
     $("#recKid").textContent=r.kid;
+    updatePlanBtn();
     $("#recTitle").textContent=r.t;
     $("#recMeta").textContent=r.m;
     $("#pVal").textContent=state.portions+" "+(state.portions===1?"порция":state.portions<5?"порции":"порций");
@@ -1056,7 +1136,7 @@
   $("#nextStep").addEventListener("click",()=>{
     const last=RECIPES[state.rec].steps.length-1;
     if(state.step<last){ state.step++; stopTimer(); renderRecipe(); }
-    else { toast("Блюдо готово. Записать в дневник Мии?"); }
+    else openDiary();
   });
   $("#pMinus").addEventListener("click",()=>{ if(state.portions>1){ state.portions--; renderRecipe(); }});
   $("#pPlus").addEventListener("click",()=>{ if(state.portions<8){ state.portions++; renderRecipe(); }});
@@ -1067,32 +1147,92 @@
     noteT=setTimeout(()=>{ $("#noteSaved").textContent="Сохранено, видно папе"; },600);
   });
 
+  function openDiary(){
+    const r=RECIPES[state.rec];
+    const byMeal={"завтрак":"Завтрак","обед":"Обед","ужин":"Ужин","гарнир":"Обед"};
+    openSheet(null,{
+      title:"Записать в дневник",
+      note:"Готовили по рецепту. Проверьте порцию: дети съедают меньше, чем кажется взрослым.",
+      conf:"из рецепта", dish:r.t, gram:"150", slot:byMeal[r.meal]||"Обед"
+    });
+  }
+  $("#diaryBtn").addEventListener("click",openDiary);
+
+  function parseQty(q){
+    if(/^половина$/i.test(q)) return {n:0.5,u:"шт"};
+    const m=String(q).match(/^([\d.,]+)\s*(.*)$/);
+    if(!m) return {n:1,u:String(q)};
+    return {n:parseFloat(m[1].replace(",",".")), u:(m[2]||"шт").trim()};
+  }
+  const fmtNum = v => (Math.round(v*10)/10).toString().replace(".",",");
+
+  function planItems(){
+    const map=new Map();
+    state.plan.slice().sort((a,b)=>a-b).forEach(i=>{
+      const r=RECIPES[i];
+      r.ing.forEach(([name,qty])=>{
+        if(NO_BUY.includes(name)) return;
+        const it=map.get(name)||{name, aisle:AISLE[name]||"Прочее", units:new Map(), from:[]};
+        const {n,u}=parseQty(qty);
+        it.units.set(u,(it.units.get(u)||0)+n);
+        if(!it.from.includes(r.t)) it.from.push(r.t);
+        map.set(name,it);
+      });
+    });
+    return [...map.values()];
+  }
+
   function renderBuy(){
     const box=$("#buyList"); box.innerHTML="";
-    let need=0, have=0;
-    state.buy.forEach((group,gi)=>{
+    const items=planItems();
+    $("#planCount").textContent = state.plan.length
+      ? "в плане " + state.plan.length + " " + (state.plan.length===1?"блюдо":state.plan.length<5?"блюда":"блюд")
+      : "план пуст";
+    $("#planClear").hidden = !state.plan.length;
+
+    if(!items.length){
+      box.appendChild(el("div","buy-empty","Отметьте блюда на неделю кнопкой + на карточке рецепта — список соберётся сам, одинаковые продукты сложатся в одну строку."));
+      $("#buyCount").textContent="";
+      $("#deliverBtn").disabled=true;
+      $("#deliverBtn").textContent="Отправить в доставку";
+      return;
+    }
+    $("#deliverBtn").disabled=false;
+
+    let need=0, have=0, idx=0;
+    AISLE_ORDER.forEach(aisle=>{
+      const rows=items.filter(x=>x.aisle===aisle);
+      if(!rows.length) return;
       const g=el("div","aisle");
-      g.appendChild(el("h4",null,group.aisle));
-      group.items.forEach((it,ii)=>{
-        const row=el("div","buy"+(it.have?" have":""));
-        const cb=el("input"); cb.type="checkbox"; cb.checked=it.have;
-        cb.id="buy-"+gi+"-"+ii;
-        cb.addEventListener("change",()=>{ state.buy[gi].items[ii].have=cb.checked; renderBuy(); });
-        const lab=el("label",null,it.n); lab.htmlFor=cb.id;
+      g.appendChild(el("h4",null,aisle));
+      rows.forEach(it=>{
+        const has=state.pantry.includes(it.name);
+        has?have++:need++;
+        const row=el("div","buy"+(has?" have":""));
+        const cb=el("input"); cb.type="checkbox"; cb.checked=has; cb.id="buy-"+(idx++);
+        cb.addEventListener("change",()=>{
+          if(cb.checked) state.pantry.push(it.name);
+          else state.pantry=state.pantry.filter(n=>n!==it.name);
+          renderBuy();
+        });
+        const lab=el("label",null,it.name); lab.htmlFor=cb.id;
         row.appendChild(cb); row.appendChild(lab);
-        row.appendChild(el("span","qty",it.q));
+        row.appendChild(el("span","qty",[...it.units].map(([u,n])=>fmtNum(n)+" "+u).join(" + ")));
         g.appendChild(row);
-        const sub=el("div","buy"); sub.style.padding="0 0 4px 27px";
-        sub.appendChild(el("span","from",it.have?"уже есть дома":it.from));
+        const sub=el("div","buy"); sub.style.padding="0 0 4px 31px";
+        sub.appendChild(el("span","from", has ? "уже есть дома"
+          : (it.from.length===1 ? it.from[0] : "из " + it.from.length + " блюд")));
         g.appendChild(sub);
-        it.have?have++:need++;
       });
       box.appendChild(g);
     });
     $("#buyCount").textContent=need+" купить · "+have+" есть";
     $("#deliverBtn").textContent="Отправить в доставку · "+need+" позиций";
   }
-  $("#deliverBtn").addEventListener("click",()=>toast("Корзина собрана. В релизе здесь выбор сервиса доставки."));
+  $("#deliverBtn").addEventListener("click",()=>{
+    if(!state.plan.length) return;
+    toast("Корзина собрана из " + state.plan.length + " блюд. В релизе здесь выбор сервиса доставки.");
+  });
 
   /* ───────── экран «Врачу» ───────── */
   $("#pdfBtn").addEventListener("click",()=>{
