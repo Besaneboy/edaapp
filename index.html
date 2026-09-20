@@ -90,14 +90,15 @@
     padding:4px 20px 16px;background:var(--cream)}
   .kid{display:flex;align-items:center;gap:11px;appearance:none;background:none;border:0;padding:0;
     cursor:pointer;font-family:inherit;text-align:left;color:inherit}
-  .kid > span{display:flex;flex-direction:column}
+  .kid-meta{display:flex;flex-direction:column;min-width:0}
   .avatar.photo{background-size:cover;background-position:center;color:transparent;font-size:0}
   .avatar.big{width:64px;height:64px;border-radius:20px;font-size:24px}
   .pf-photo{display:flex;align-items:center;gap:14px}
   .pf-photo .field-row{flex-wrap:wrap}
   .kid-name,.kid-age{display:block}
   .avatar{width:42px;height:42px;border-radius:14px;background:var(--sage-soft);color:var(--sage-ink);
-    display:grid;place-items:center;font-family:"Onest",sans-serif;font-weight:700;font-size:17px}
+    display:flex;align-items:center;justify-content:center;line-height:1;flex:none;
+    font-family:"Onest",sans-serif;font-weight:700;font-size:17px}
   .kid-name{font-family:"Onest","Manrope",sans-serif;font-weight:700;font-size:19px;letter-spacing:-.02em;line-height:1.15}
   .kid-age{font-size:12.5px;color:var(--ink-2)}
   .who{display:flex;align-items:center;gap:8px}
@@ -377,7 +378,7 @@
     border:1px solid transparent;border-radius:14px;padding:13px 14px;width:100%}
   /* колонки переносятся, а не наезжают: на узких экранах поля встают друг под друга */
   .sheet .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:10px}
-  .sheet .field{min-width:0;overflow:hidden}
+  .sheet .field{min-width:0}
   .sheet input,.sheet select,.sheet textarea{min-width:0;max-width:100%;width:100%;box-sizing:border-box}
   .sheet input[type="time"]{font-variant-numeric:tabular-nums;-webkit-appearance:none;appearance:none;
     padding-right:10px;text-align:left}
@@ -445,7 +446,7 @@
           <header class="appbar">
             <button class="kid" id="profileBtn" type="button" aria-label="Профиль ребёнка">
               <span class="avatar" id="kidAvatar">М</span>
-              <span>
+              <span class="kid-meta">
                 <span class="kid-name" id="kidName">Мия</span>
                 <span class="kid-age" id="kidAge">1 год 1 мес</span>
               </span>
@@ -1203,7 +1204,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "21.09 · сборка 6";
+  const BUILD = "21.09 · сборка 7";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
