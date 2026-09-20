@@ -88,7 +88,10 @@
 
   .appbar{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;
     padding:4px 20px 16px;background:var(--cream)}
-  .kid{display:flex;align-items:center;gap:11px}
+  .kid{display:flex;align-items:center;gap:11px;appearance:none;background:none;border:0;padding:0;
+    cursor:pointer;font-family:inherit;text-align:left;color:inherit}
+  .kid > span{display:flex;flex-direction:column}
+  .kid-name,.kid-age{display:block}
   .avatar{width:42px;height:42px;border-radius:14px;background:var(--sage-soft);color:var(--sage-ink);
     display:grid;place-items:center;font-family:"Onest",sans-serif;font-weight:700;font-size:17px}
   .kid-name{font-family:"Onest","Manrope",sans-serif;font-weight:700;font-size:19px;letter-spacing:-.02em;line-height:1.15}
@@ -436,13 +439,13 @@
           </div>
 
           <header class="appbar">
-            <div class="kid">
-              <div class="avatar">М</div>
-              <div>
-                <div class="kid-name">Мия</div>
-                <div class="kid-age">1 год 1 мес</div>
-              </div>
-            </div>
+            <button class="kid" id="profileBtn" type="button" aria-label="Профиль ребёнка">
+              <span class="avatar" id="kidAvatar">М</span>
+              <span>
+                <span class="kid-name" id="kidName">Мия</span>
+                <span class="kid-age" id="kidAge">1 год 1 мес</span>
+              </span>
+            </button>
             <div class="who">
               <span class="who-chip">вы + папа</span>
             </div>
@@ -936,7 +939,10 @@
 
   /* ───────── состояние ───────── */
   const DAY_MS = 86400000;
-  const CHILD_AGE_M = 13;                       // возраст ребёнка в демо, месяцев
+  const DEFAULT_BIRTH = (()=>{                   // в демо ребёнку 1 год 1 месяц
+    const d=new Date(); d.setHours(0,0,0,0); d.setMonth(d.getMonth()-13);
+    return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  })();
   const SLOT_TIME = {"Завтрак":"08:30","Второй завтрак":"10:30","Обед":"12:30","Полдник":"16:00",
                      "Ужин":"19:00","Перекус":"11:00","Ночное кормление":"23:00"};
   const SLOT_GRAM = {"Завтрак":"140 г","Второй завтрак":"90 г","Обед":"165 г","Полдник":"90 г",
@@ -959,11 +965,19 @@
     if(o===1) return "Завтра, "+FMT_DAY.format(d);
     return FMT_WD.format(d).replace(".","")+", "+FMT_DAY.format(d);
   }
+  function monthsSince(birthISO){
+    const b=new Date(birthISO+"T00:00:00");
+    if(isNaN(b)) return 0;
+    let m=(TODAY.getFullYear()-b.getFullYear())*12 + (TODAY.getMonth()-b.getMonth());
+    if(TODAY.getDate() < b.getDate()) m--;
+    return Math.max(0, m);
+  }
   const mealsOf = iso => (state.days[iso] || (state.days[iso]=[]));
 
   const state = {
     tab:"day",
     days:{}, cursor:TODAY_ISO, buyHorizon:7, notes:{},
+    child:{name:"Мия", birth:DEFAULT_BIRTH},
     foodFilter:"all", foodQ:"", openFood:null,
     rec:0, portions:2, step:0, timeLeft:0, running:false, tick:null,
     recFilter:"all", f:{time:null, age:null, main:null, excl:[]}, pantry:["Масло оливковое","Мука","Масло сливочное"],
@@ -983,7 +997,7 @@
         if(o>=-90 && o<=60 && (state.days[iso]||[]).length) days[iso]=state.days[iso];
       });
       localStorage.setItem(STORE_KEY, JSON.stringify({
-        v:1, days, pantry:state.pantry, buyHorizon:state.buyHorizon, notes:state.notes
+        v:1, days, pantry:state.pantry, buyHorizon:state.buyHorizon, notes:state.notes, child:state.child
       }));
     }catch(e){ /* приватный режим или переполнение — работаем без сохранения */ }
   }
@@ -999,6 +1013,7 @@
       if(Array.isArray(d.pantry)) state.pantry=d.pantry;
       if(d.buyHorizon) state.buyHorizon=d.buyHorizon;
       if(d.notes && typeof d.notes==="object") state.notes=d.notes;
+      if(d.child && d.child.birth) state.child={name:d.child.name||"Ребёнок", birth:d.child.birth};
       return true;
     }catch(e){ return false; }
   }
@@ -1006,6 +1021,7 @@
   function resetDemo(){
     try{ localStorage.removeItem(STORE_KEY); }catch(e){}
     state.days={}; state.notes={}; state.pantry=["Масло оливковое","Мука","Масло сливочное"];
+    state.child={name:"Мия", birth:DEFAULT_BIRTH}; renderProfile();
     state.cursor=TODAY_ISO; state.buyHorizon=7;
     seedDays(); renderDay(); renderRecGrid();
     toast("Демо-данные возвращены в исходное состояние.");
@@ -1026,6 +1042,12 @@
   if(!loadState()) seedDays();
 
   const $ = s => document.querySelector(s);
+  const childMonths = () => monthsSince(state.child.birth);
+  function ageLabel(m){
+    if(m<12) return m+" "+plur(m,"месяц","месяца","месяцев");
+    const y=Math.floor(m/12), r=m%12;
+    return y+" "+plur(y,"год","года","лет")+(r? " "+r+" мес" : "");
+  }
   const el = (t,c,x) => { const e=document.createElement(t); if(c) e.className=c; if(x!=null) e.textContent=x; return e; };
   const plur = (n, one, few, many) => {
     const a=n%10, b=n%100;
@@ -1176,7 +1198,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "21.09 · сборка 4";
+  const BUILD = "21.09 · сборка 5";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -1325,7 +1347,7 @@
   }
 
   function poolFor(slot){
-    const fits = r => r.minAge <= CHILD_AGE_M;
+    const fits = r => r.minAge <= childMonths();
     let pool = RECIPES.map((r,i)=>[r,i]).filter(([r])=>fits(r) && r.slot===slot);
     if(slot==="Полдник") pool = RECIPES.map((r,i)=>[r,i]).filter(([r])=>fits(r) && r.slot==="Завтрак");
     if(slot==="Ужин") pool = pool.concat(RECIPES.map((r,i)=>[r,i]).filter(([r])=>fits(r) && r.cat==="Гарниры"));
@@ -1337,7 +1359,7 @@
     const start=offsetOf(state.cursor);
     const pools={}; PLAN_SLOTS.forEach(sl=>{ pools[sl]=poolFor(sl).sort(()=>Math.random()-0.5); });
     const cursorBy={}; PLAN_SLOTS.forEach(sl=>cursorBy[sl]=0);
-    let added=0;
+    let added=0, skipped=0;
     for(let k=0;k<days;k++){
       const iso=isoAt(start+k);
       const meals=mealsOf(iso);
@@ -1358,8 +1380,8 @@
         }
         if(rec==null){
           const free=pool.filter(c=>!usedToday.has(c));
-          rec = free.length ? free[0] : pool[cursorBy[slot]%pool.length];
-          cursorBy[slot]++;
+          if(!free.length){ skipped++; return; }   // лучше пустой приём, чем одно блюдо дважды за день
+          rec=free[0]; cursorBy[slot]++;
         }
         usedToday.add(rec);
         const row={name:slot,time:SLOT_TIME[slot],gram:SLOT_GRAM[slot],items:RECIPES[rec].t,rec:rec,note:null};
@@ -1369,7 +1391,9 @@
     }
     renderDay(); renderRecGrid();
     toast("Подобрано "+added+" "+plur(added,"приём","приёма","приёмов")+
-          " на "+days+" "+plur(days,"день","дня","дней")+". Всё можно поправить вручную.");
+          " на "+days+" "+plur(days,"день","дня","дней")+"."+
+          (skipped ? " Для возраста подходит мало блюд — "+skipped+" "+plur(skipped,"приём","приёма","приёмов")+" оставили пустыми."
+                   : " Всё можно поправить вручную."));
   }
 
   function openPlanGen(){
@@ -1427,6 +1451,54 @@
       '<div class="field-row"><button class="btn btn-sm btn-ghost" id="'+id+'Pick" type="button">Выбрать из рецептов</button>'+
       '<span class="field-note">или впишите своё</span></div></div>';
   }
+
+  function renderProfile(){
+    const name=(state.child.name||"Ребёнок").trim();
+    const m=childMonths();
+    $("#kidName").textContent=name;
+    $("#kidAge").textContent=ageLabel(m);
+    $("#kidAvatar").textContent=(name[0]||"Р").toUpperCase();
+    const head=document.querySelector(".report-head h3");
+    if(head) head.textContent="Пищевой дневник: "+name;
+  }
+
+  function openProfile(){
+    const box=$("#sheetInner");
+    function draw(){
+      const m=monthsSince($("#pfBirth") ? $("#pfBirth").value : state.child.birth);
+      box.innerHTML =
+        '<div class="sheet-grab"></div>'+
+        '<h3>Профиль ребёнка</h3>'+
+        '<div class="field"><label for="pfName">Имя</label>'+
+        '<input id="pfName" value="'+esc(state.child.name)+'" placeholder="Как зовут ребёнка"></div>'+
+        '<div class="field"><label for="pfBirth">Дата рождения</label>'+
+        '<input id="pfBirth" type="date" value="'+esc(state.child.birth)+'" max="'+TODAY_ISO+'">'+
+        '<span class="field-note" id="pfAge"></span></div>'+
+        '<div class="actions"><button class="btn btn-ghost" id="pfCancel" type="button">Отмена</button>'+
+        '<button class="btn btn-primary" id="pfSave" type="button">Сохранить</button></div>';
+      updateAgeNote();
+      $("#pfBirth").addEventListener("input",updateAgeNote);
+      $("#pfCancel").addEventListener("click",closeSheet);
+      $("#pfSave").addEventListener("click",()=>{
+        const name=$("#pfName").value.trim() || "Ребёнок";
+        const birth=$("#pfBirth").value || state.child.birth;
+        state.child={name, birth};
+        closeSheet(); renderProfile(); renderFoods(); renderDay(); renderRecGrid(); saveState();
+        toast(name+", "+ageLabel(childMonths())+". Подбор и справочник пересчитаны.");
+      });
+    }
+    function updateAgeNote(){
+      const v=$("#pfBirth").value;
+      const m=monthsSince(v);
+      const band = m<9 ? "6–8 месяцев" : m<12 ? "9–11 месяцев" : m<24 ? "12–23 месяца" : "старше 2 лет";
+      $("#pfAge").textContent = v
+        ? "Сейчас " + ageLabel(m) + ". По классификации ВОЗ это " + band + " — от этого зависят подбор блюд и справочник."
+        : "Укажите дату рождения — возраст посчитается сам.";
+    }
+    draw();
+    $("#sheet").hidden=false;
+  }
+  $("#profileBtn").addEventListener("click",openProfile);
 
   function openMealNote(m){
     const box=$("#sheetInner");
@@ -1512,15 +1584,15 @@
   }));
 
   /* ───────── экран «Продукты» ───────── */
-  const AGE=13;
+  const AGE = () => childMonths();
   function foodPasses(f){
     const q=state.foodQ.trim().toLowerCase();
     if(q && !f.n.toLowerCase().includes(q)) return false;
     switch(state.foodFilter){
-      case "now": return f.from<=AGE;
+      case "now": return f.from<=AGE();
       case "allergen": return f.tags.includes("allergen");
       case "choke": return f.tags.includes("choke");
-      case "later": return f.from>AGE;
+      case "later": return f.from>AGE();
       default: return true;
     }
   }
@@ -1554,7 +1626,8 @@
       const serve=el("div","serve");
       serve.appendChild(el("div","sec-label sm","Как подать"));
       [["6","6 мес"],["9","9 мес"],["12","12 мес+"]].forEach(([k,label])=>{
-        const r=el("div","serve-row"+(k==="12"?" now":""));
+        const nowKey = AGE()<9 ? "6" : AGE()<12 ? "9" : "12";
+        const r=el("div","serve-row"+(k===nowKey?" now":""));
         r.appendChild(el("span","serve-age",label));
         r.appendChild(el("span",null,f.serve[k]));
         serve.appendChild(r);
@@ -1935,7 +2008,7 @@
     state.paper=true; $("#pdfBtn").textContent="Скрыть выписку";
     $("#paperSlot").innerHTML=
       '<div class="paper">'+
-        '<h5>Пищевой дневник · Мия, 1 год 1 мес</h5>'+
+        '<h5>Пищевой дневник · '+esc(state.child.name)+', '+esc(ageLabel(childMonths()))+'</h5>'+
         '<div>Период 21.08.2026 — 20.09.2026 · сформировано 20.09.2026</div>'+
         '<table><thead><tr><th>Продукт</th><th>Введён</th><th>Реакция</th></tr></thead><tbody>'+
           '<tr><td>Яичный желток</td><td class="num">08.09</td><td>сыпь 14.09, пауза</td></tr>'+
@@ -2014,6 +2087,7 @@
   });
 
   /* ───────── старт ───────── */
+  renderProfile();
   renderDay();
   renderFoods();
   renderRecGrid(); renderRecipe(); renderBuy();
