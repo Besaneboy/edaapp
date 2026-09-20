@@ -204,6 +204,16 @@
   .source{font-size:12px;color:var(--ink-3);display:flex;gap:8px;align-items:center;line-height:1.4}
 
   /* ── экран «Кухня» ──────────────────────────── */
+  .recgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .reccard{appearance:none;cursor:pointer;font-family:inherit;text-align:left;padding:0;overflow:hidden;
+    border:1px solid var(--line-2);background:var(--surface);border-radius:16px;display:flex;flex-direction:column}
+  .reccard img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:var(--surface-2)}
+  .reccard-b{padding:10px 12px 13px;display:flex;flex-direction:column;gap:3px}
+  .reccard-t{font-family:"Onest","Manrope",sans-serif;font-weight:600;font-size:14.5px;line-height:1.25;letter-spacing:-.01em}
+  .reccard-m{font-size:12px;color:var(--ink-2)}
+  .rec-hero{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:16px;display:block;background:var(--surface-2)}
+  .backlink{appearance:none;background:none;border:0;padding:0;cursor:pointer;align-self:flex-start;
+    font-family:"Onest","Manrope",sans-serif;font-size:14px;font-weight:600;color:var(--sage-ink)}
   .rec-switch{display:flex;gap:8px;overflow-x:auto;padding:2px 0;scrollbar-width:none}
   .rec-switch::-webkit-scrollbar{display:none}
   .rec-switch button{flex:none;max-width:150px;appearance:none;cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:500;
@@ -343,7 +353,7 @@
               <div class="avatar">М</div>
               <div>
                 <div class="kid-name">Мия</div>
-                <div class="kid-age">9 мес 4 дня</div>
+                <div class="kid-age">1 год 1 мес</div>
               </div>
             </div>
             <div class="who">
@@ -399,7 +409,7 @@
               </div>
               <div class="filters" id="foodFilters">
                 <button data-f="all" aria-pressed="true">Все</button>
-                <button data-f="now" aria-pressed="false">Можно в 9 мес</button>
+                <button data-f="now" aria-pressed="false">Можно сейчас</button>
                 <button data-f="allergen" aria-pressed="false">Аллергены</button>
                 <button data-f="choke" aria-pressed="false">Риск удушья</button>
                 <button data-f="later" aria-pressed="false">Рано</button>
@@ -410,49 +420,58 @@
 
             <!-- ЭКРАН: КУХНЯ -->
             <section class="view" data-view="cook" hidden>
-              <div class="sec-label"><span>Рецепты под 9 месяцев</span><span class="chip ok">бесплатно</span></div>
-              <div class="rec-switch" id="recSwitch"></div>
+              <div id="cookList" class="view">
+                <div class="sec-label"><span>Рецепты общего стола</span><span class="chip ok">бесплатно</span></div>
+                <p class="ai-note"><span class="chip berry">с 12 мес</span><span>Одно блюдо на всю семью: детскую порцию откладывают до соли и специй.</span></p>
+                <div class="recgrid" id="recGrid"></div>
 
-              <div class="flat">
-                <div class="portions">
-                  <div>
-                    <div style="font-weight:600;font-size:13.5px" id="recTitle"></div>
-                    <div style="font-size:12px;color:var(--ink-2)" id="recMeta"></div>
+                <div class="sec-label"><span>Список покупок на неделю</span><span class="num" id="buyCount"></span></div>
+                <div class="flat" id="buyList"></div>
+                <button class="btn btn-primary btn-wide" id="deliverBtn">Отправить в доставку</button>
+                <p class="hint" style="text-align:left">Строки сгруппированы по отделам, одинаковые продукты сложены. Отмеченное «есть дома» в заказ не уходит.</p>
+              </div>
+
+              <div id="cookDetail" class="view" hidden>
+                <button class="backlink" id="recBack" type="button">← Все рецепты</button>
+                <img class="rec-hero" id="recHero" alt="" loading="lazy">
+                <div class="flat">
+                  <div class="portions">
+                    <div>
+                      <div style="font-family:'Onest',sans-serif;font-weight:600;font-size:16px" id="recTitle"></div>
+                      <div style="font-size:12.5px;color:var(--ink-2)" id="recMeta"></div>
+                    </div>
+                    <div class="stepper">
+                      <button id="pMinus" aria-label="Меньше порций">−</button>
+                      <span class="num" id="pVal">2 порции</span>
+                      <button id="pPlus" aria-label="Больше порций">+</button>
+                    </div>
                   </div>
-                  <div class="stepper">
-                    <button id="pMinus" aria-label="Меньше порций">−</button>
-                    <span class="num" id="pVal">2 порции</span>
-                    <button id="pPlus" aria-label="Больше порций">+</button>
+                  <ul class="ings" id="ings"></ul>
+                </div>
+
+                <p class="ai-note"><span class="chip berry">ребёнку</span><span id="recKid"></span></p>
+
+                <div class="card cookstep">
+                  <div class="progress" id="cookProgress"></div>
+                  <div class="step-n" id="stepN"></div>
+                  <p class="step-text" id="stepText"></p>
+                  <div class="timer" id="timerBox">
+                    <span class="timer-val" id="timerVal">00:00</span>
+                    <button class="btn btn-sm btn-ghost" id="timerBtn">Запустить</button>
+                    <span class="chip" id="timerHint">экран не гаснет</span>
+                  </div>
+                  <div class="step-nav">
+                    <button class="btn btn-sm btn-ghost" id="prevStep">Назад</button>
+                    <button class="btn btn-sm btn-primary" id="nextStep">Следующий шаг</button>
                   </div>
                 </div>
-                <ul class="ings" id="ings"></ul>
-              </div>
 
-              <div class="card cookstep">
-                <div class="progress" id="cookProgress"></div>
-                <div class="step-n" id="stepN"></div>
-                <p class="step-text" id="stepText"></p>
-                <div class="timer" id="timerBox">
-                  <span class="timer-val" id="timerVal">00:00</span>
-                  <button class="btn btn-sm btn-ghost" id="timerBtn">Запустить</button>
-                  <span class="chip" id="timerHint">экран не гаснет</span>
-                </div>
-                <div class="step-nav">
-                  <button class="btn btn-sm btn-ghost" id="prevStep">Назад</button>
-                  <button class="btn btn-sm btn-primary" id="nextStep">Следующий шаг</button>
+                <div class="card note-box">
+                  <div class="sec-label sm">Моя заметка к рецепту</div>
+                  <textarea id="recNote" placeholder="В следующий раз — меньше воды"></textarea>
+                  <span class="source" id="noteSaved">Сохраняется автоматически, видна папе</span>
                 </div>
               </div>
-
-              <div class="card note-box">
-                <div class="sec-label sm">Моя заметка к рецепту</div>
-                <textarea id="recNote" placeholder="В следующий раз — меньше воды"></textarea>
-                <span class="source" id="noteSaved">Сохраняется автоматически, видна папе</span>
-              </div>
-
-              <div class="sec-label"><span>Список покупок на неделю</span><span class="num" id="buyCount"></span></div>
-              <div class="flat" id="buyList"></div>
-              <button class="btn btn-primary btn-wide" id="deliverBtn">Отправить в доставку · 1 магазин</button>
-              <p class="hint" style="text-align:left">Строки сгруппированы по отделам, одинаковые продукты сложены. Отмеченное «есть дома» в заказ не уходит.</p>
             </section>
 
             <!-- ЭКРАН: ВРАЧУ -->
@@ -586,29 +605,99 @@
   ];
 
   const RECIPES = [
-    {t:"Кабачок с треской на пару", m:"9+ мес · 18 мин · белок",
-     ing:[["Кабачок","90 г"],["Филе трески","30 г"],["Оливковое масло","3 г"],["Вода","60 мл"]],
+    {t:"Суп с куриными фрикадельками", m:"с 12 мес · 30 мин · обед", img:"img/sup-frikadelki.jpg",
+     kid:"Солите только взрослую кастрюлю и в самом конце — детскую порцию отложите раньше.",
+     ing:[["Куриное филе","200 г"],["Картофель","2 шт"],["Морковь","1 шт"],["Вермишель мелкая","2 ст. л."],["Вода","1,2 л"],["Укроп","2 веточки"]],
      steps:[
-       {s:"Кабачок очистить и нарезать кубиком 1 см. Кожицу снять полностью — в 9 месяцев она ещё грубая.",t:0},
-       {s:"Треску проверить на кости пальцами, разобрать на волокна. Это единственный шаг, который нельзя делать быстро.",t:0},
-       {s:"Кабачок на пару под крышкой.",t:480},
-       {s:"Добавить треску и готовить вместе до плотной белой мякоти.",t:300},
-       {s:"Размять вилкой до крупных комочков, влить масло. Остудить до 37° — капните на запястье.",t:0}
+       {s:"Филе пробить в блендере, скатать мокрыми руками шарики размером с грецкий орех.",t:0},
+       {s:"Картофель и морковь нарезать мелким кубиком, залить водой и варить до мягкости.",t:600},
+       {s:"Опустить фрикадельки в кипящий бульон и варить, пока не всплывут и не станут белыми внутри.",t:480},
+       {s:"Всыпать вермишель и доварить.",t:300},
+       {s:"Отложить детскую порцию, взрослую посолить. Укроп кладите в тарелку, а не в кастрюлю.",t:0}
      ]},
-    {t:"Гречка с грушей", m:"6+ мес · 25 мин · первая каша",
-     ing:[["Гречневая крупа","30 г"],["Вода","200 мл"],["Груша","50 г"]],
+    {t:"Тефтели-ёжики с рисом", m:"с 12 мес · 45 мин · ужин", img:"img/tefteli-ezhiki.jpg",
+     kid:"Ребёнку тефтелю разомните вилкой вместе с соусом — так проще прожевать.",
+     ing:[["Фарш индейки","300 г"],["Рис круглый","80 г"],["Лук","половина"],["Яйцо","1 шт"],["Сметана 10%","2 ст. л."],["Вода","200 мл"]],
      steps:[
-       {s:"Крупу промыть до прозрачной воды и залить кипятком.",t:0},
-       {s:"Варить на медленном огне под крышкой.",t:900},
-       {s:"Грушу очистить и припустить отдельно до мягкости.",t:420},
-       {s:"Пробить блендером до нужной густоты: в 6 месяцев — жиже, чем кажется правильным.",t:0}
+       {s:"Рис отварить до полуготовности и остудить — иначе он вытянет влагу из фарша.",t:480},
+       {s:"Лук натереть мелко, смешать с фаршем, рисом и яйцом, вымесить и скатать шарики.",t:0},
+       {s:"Выложить в форму, залить сметаной, разведённой водой.",t:0},
+       {s:"Запекать при 180° под фольгой.",t:1800},
+       {s:"Проверить прокол: сок должен быть прозрачным.",t:0}
      ]},
-    {t:"Овощные палочки для BLW", m:"9+ мес · 30 мин · самостоятельная еда",
-     ing:[["Морковь","1 шт"],["Батат","1 шт"],["Оливковое масло","5 г"]],
+    {t:"Сырники в духовке", m:"с 12 мес · 30 мин · завтрак", img:"img/syrniki.jpg",
+     kid:"Сахар не нужен: сладость даёт банан. Так сырники подходят и ребёнку, и взрослым.",
+     ing:[["Творог 9%","250 г"],["Яйцо","1 шт"],["Мука","3 ст. л."],["Банан","половина"],["Масло сливочное","5 г"]],
      steps:[
-       {s:"Нарезать палочками с палец взрослого — ребёнок должен удерживать в кулаке.",t:0},
-       {s:"Запекать при 180° до мягкости: палочка должна разминаться между пальцами.",t:1500},
-       {s:"Остудить. Проверить каждую палочку на твёрдые края.",t:0}
+       {s:"Творог протереть через сито. От этого зависит, будут сырники нежными или резиновыми.",t:0},
+       {s:"Смешать творог, яйцо, размятый банан и муку. Тесто липкое — так и должно быть.",t:0},
+       {s:"Мокрыми руками сформировать шайбы и выложить на пергамент.",t:0},
+       {s:"Запекать при 180° до румяной корочки.",t:1500},
+       {s:"Подавать тёплыми, со сметаной или яблочным пюре.",t:0}
+     ]},
+    {t:"Паровой омлет", m:"с 12 мес · 15 мин · завтрак", img:"img/omlet.jpg",
+     kid:"Нарежьте кубиками — годовалый ребёнок берёт их пальцами и ест сам.",
+     ing:[["Яйцо","2 шт"],["Молоко","60 мл"],["Масло сливочное","5 г"]],
+     steps:[
+       {s:"Взбить яйца с молоком вилкой без фанатизма: пышность даёт пар, а не венчик.",t:0},
+       {s:"Форму смазать маслом и вылить смесь.",t:0},
+       {s:"Готовить на пару под крышкой до плотной середины.",t:900},
+       {s:"Дать постоять пару минут и нарезать.",t:120}
+     ]},
+    {t:"Куриные котлеты в духовке", m:"с 12 мес · 35 мин · обед", img:"img/kurinye-kotlety.jpg",
+     kid:"Кабачок в фарше даёт сочность вместо жира — котлета не сохнет и без масла.",
+     ing:[["Куриное филе","400 г"],["Кабачок","100 г"],["Белый хлеб","30 г"],["Молоко","50 мл"],["Яйцо","1 шт"]],
+     steps:[
+       {s:"Хлеб замочить в молоке.",t:300},
+       {s:"Филе и кабачок измельчить, смешать с отжатым хлебом и яйцом.",t:0},
+       {s:"Сформировать котлеты и выложить на пергамент.",t:0},
+       {s:"Запекать при 180°.",t:1500},
+       {s:"Проколоть котлету: прозрачный сок — готово.",t:0}
+     ]},
+    {t:"Рыбные котлеты из трески", m:"с 12 мес · 30 мин · обед", img:"img/rybnye-kotlety.jpg",
+     kid:"Треска держит жар дольше, чем кажется: перед подачей проверьте температуру на запястье.",
+     ing:[["Филе трески","300 г"],["Картофель","1 шт"],["Яйцо","1 шт"],["Укроп","2 веточки"],["Масло оливковое","5 г"]],
+     steps:[
+       {s:"Перебрать треску пальцами на кости. Это самый важный шаг, его нельзя делать быстро.",t:0},
+       {s:"Картофель натереть и отжать, смешать с рыбой, яйцом и укропом.",t:0},
+       {s:"Сформировать небольшие котлеты.",t:0},
+       {s:"Запекать при 190°.",t:1200},
+       {s:"Остудить до тёплого.",t:300}
+     ]},
+    {t:"Овощное рагу", m:"с 12 мес · 35 мин · гарнир", img:"img/ovoshnoe-ragu.jpg",
+     kid:"Детскую порцию разомните вилкой, взрослую посолите и поперчите уже в тарелке.",
+     ing:[["Кабачок","1 шт"],["Картофель","2 шт"],["Морковь","1 шт"],["Помидор","1 шт"],["Масло оливковое","1 ст. л."],["Вода","100 мл"]],
+     steps:[
+       {s:"Овощи нарезать кубиком полтора сантиметра.",t:0},
+       {s:"Морковь припустить в масле.",t:300},
+       {s:"Добавить картофель и воду, тушить под крышкой.",t:900},
+       {s:"Добавить кабачок и помидор, тушить до мягкости.",t:600}
+     ]},
+    {t:"Макароны с сыром и брокколи", m:"с 12 мес · 20 мин · ужин", img:"img/makarony-syr.jpg",
+     kid:"Берите мелкие макароны: ракушки и звёздочки ребёнок ловит ложкой, спагетти — нет.",
+     ing:[["Макароны мелкие","150 г"],["Брокколи","150 г"],["Сыр твёрдый","40 г"],["Молоко","60 мл"],["Масло сливочное","10 г"]],
+     steps:[
+       {s:"Отварить макароны в кипящей воде.",t:540},
+       {s:"За четыре минуты до конца бросить к ним соцветия брокколи.",t:240},
+       {s:"Слить воду, вернуть в кастрюлю, добавить молоко, масло и тёртый сыр.",t:0},
+       {s:"Прогреть, помешивая, пока сыр не разойдётся.",t:60}
+     ]},
+    {t:"Овсяная каша с яблоком", m:"с 12 мес · 15 мин · завтрак", img:"img/ovsyanka.jpg",
+     kid:"Тёртое яблоко заменяет сахар: класть его отдельно не нужно.",
+     ing:[["Хлопья овсяные","60 г"],["Молоко","250 мл"],["Яблоко","1 шт"],["Масло сливочное","5 г"]],
+     steps:[
+       {s:"Яблоко натереть на крупной тёрке.",t:0},
+       {s:"Молоко довести до кипения, всыпать хлопья и варить на медленном огне.",t:420},
+       {s:"Добавить яблоко и масло, снять с огня и дать постоять под крышкой.",t:180}
+     ]},
+    {t:"Пюре с тушёной курицей", m:"с 12 мес · 40 мин · обед", img:"img/pure-kuritsa.jpg",
+     kid:"Курицу разберите на волокна и перемешайте с пюре — ребёнок съест то, что не нужно жевать долго.",
+     ing:[["Картофель","4 шт"],["Молоко","80 мл"],["Масло сливочное","15 г"],["Куриное бедро без кости","300 г"],["Морковь","1 шт"]],
+     steps:[
+       {s:"Картофель отварить до мягкости.",t:1200},
+       {s:"Курицу и морковь нарезать, тушить под крышкой с небольшим количеством воды.",t:1500},
+       {s:"Картофель размять с горячим молоком и маслом. Холодное молоко делает пюре серым.",t:0},
+       {s:"Соединить с курицей или выложить рядом.",t:0}
      ]}
   ];
 
@@ -824,7 +913,7 @@
   document.querySelectorAll("[data-add]").forEach(b=>b.addEventListener("click",()=>openSheet(b.dataset.add)));
 
   /* ───────── экран «Продукты» ───────── */
-  const AGE=9;
+  const AGE=13;
   function foodPasses(f){
     const q=state.foodQ.trim().toLowerCase();
     if(q && !f.n.toLowerCase().includes(q)) return false;
@@ -866,7 +955,7 @@
       const serve=el("div","serve");
       serve.appendChild(el("div","sec-label sm","Как подать"));
       [["6","6 мес"],["9","9 мес"],["12","12 мес+"]].forEach(([k,label])=>{
-        const r=el("div","serve-row"+(k==="9"?" now":""));
+        const r=el("div","serve-row"+(k==="12"?" now":""));
         r.appendChild(el("span","serve-age",label));
         r.appendChild(el("span",null,f.serve[k]));
         serve.appendChild(r);
@@ -889,15 +978,34 @@
   });
 
   /* ───────── экран «Кухня» ───────── */
-  function renderRecSwitch(){
-    const box=$("#recSwitch"); box.innerHTML="";
+  function renderRecGrid(){
+    const box=$("#recGrid"); box.innerHTML="";
     RECIPES.forEach((r,i)=>{
-      const b=el("button",null,r.t); b.type="button";
-      b.setAttribute("aria-pressed", String(i===state.rec));
-      b.addEventListener("click",()=>{ state.rec=i; state.step=0; stopTimer(); renderRecipe(); });
-      box.appendChild(b);
+      const card=el("button","reccard"); card.type="button";
+      const im=document.createElement("img");
+      im.src=r.img; im.alt=r.t; im.loading="lazy";
+      card.appendChild(im);
+      const b=el("div","reccard-b");
+      b.appendChild(el("div","reccard-t",r.t));
+      b.appendChild(el("div","reccard-m",r.m));
+      card.appendChild(b);
+      card.addEventListener("click",()=>openRecipe(i));
+      box.appendChild(card);
     });
   }
+
+  function openRecipe(i){
+    state.rec=i; state.step=0; stopTimer();
+    $("#cookList").hidden=true; $("#cookDetail").hidden=false;
+    renderRecipe(); $("#views").scrollTop=0;
+  }
+
+  function closeRecipe(){
+    stopTimer();
+    $("#cookDetail").hidden=true; $("#cookList").hidden=false;
+    $("#views").scrollTop=0;
+  }
+  $("#recBack").addEventListener("click",closeRecipe);
   function scaleQty(q){
     const m=q.match(/^([\d.,]+)\s*(.*)$/);
     if(!m) return q;
@@ -907,6 +1015,9 @@
   }
   function renderRecipe(){
     const r=RECIPES[state.rec];
+    const hero=$("#recHero");
+    if(hero.getAttribute("src")!==r.img){ hero.src=r.img; hero.alt=r.t; }
+    $("#recKid").textContent=r.kid;
     $("#recTitle").textContent=r.t;
     $("#recMeta").textContent=r.m;
     $("#pVal").textContent=state.portions+" "+(state.portions===1?"порция":state.portions<5?"порции":"порций");
@@ -989,7 +1100,7 @@
     state.paper=true; $("#pdfBtn").textContent="Скрыть выписку";
     $("#paperSlot").innerHTML=
       '<div class="paper">'+
-        '<h5>Пищевой дневник · Мия, 9 мес</h5>'+
+        '<h5>Пищевой дневник · Мия, 1 год 1 мес</h5>'+
         '<div>Период 21.08.2026 — 20.09.2026 · сформировано 20.09.2026</div>'+
         '<table><thead><tr><th>Продукт</th><th>Введён</th><th>Реакция</th></tr></thead><tbody>'+
           '<tr><td>Яичный желток</td><td class="num">08.09</td><td>сыпь 14.09, пауза</td></tr>'+
@@ -1060,14 +1171,14 @@
     $("#views").scrollTop=0;
     stopTimer();
     if(TG && TG.HapticFeedback) TG.HapticFeedback.selectionChanged();
-    if(state.tab==="cook") renderRecipe();
+    if(state.tab==="cook") closeRecipe();
     renderPanel();
   });
 
   /* ───────── старт ───────── */
   renderMeals(); updateSummary();
   renderFoods();
-  renderRecSwitch(); renderRecipe(); renderBuy();
+  renderRecGrid(); renderRecipe(); renderBuy();
   if(TG) initTelegram();
   renderPanel();
 })();
