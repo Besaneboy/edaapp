@@ -192,6 +192,13 @@
   .react[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
   .react[aria-pressed="true"][data-kind="bad"]{background:var(--risk);border-color:var(--risk);color:#fff}
   .meal.empty .meal-name{color:var(--ink-3);font-weight:500}
+  .meal-note{appearance:none;cursor:pointer;font-family:inherit;text-align:left;align-self:flex-start;
+    max-width:100%;border:1px solid transparent;border-radius:12px;padding:9px 12px;
+    background:var(--surface-2);color:var(--ink-2);font-size:13px;line-height:1.4}
+  .meal-note.add{background:none;border:1px dashed var(--line);color:var(--sage-ink);
+    font-weight:600;font-size:12.5px;padding:7px 13px;border-radius:999px}
+  .sheet textarea{font-family:inherit;font-size:15px;color:var(--ink);background:var(--surface-2);
+    border:1px solid transparent;border-radius:14px;padding:13px 14px;width:100%;resize:none;line-height:1.45}
 
   .quick{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
   .quick button{appearance:none;cursor:pointer;font-family:inherit;border:1px solid var(--line);background:var(--surface);
@@ -353,6 +360,7 @@
     display:flex;flex-direction:column;gap:14px;animation:rise .22s ease-out}
   @keyframes rise{from{transform:translateY(18px);opacity:.4}to{transform:none;opacity:1}}
   @media (prefers-reduced-motion:reduce){.sheet-inner{animation:none}}
+  .sheet-inner > *{flex:none}
   .sheet-grab{width:38px;height:4px;border-radius:2px;background:var(--line);align-self:center}
   .sheet h3{margin:0;font-family:"Onest","Manrope",sans-serif;font-size:17px;font-weight:600;text-align:center;
     padding-bottom:12px;border-bottom:1px solid var(--line-2)}
@@ -474,7 +482,7 @@
               <dl class="daysum">
                 <div><dt>Приёмов</dt><dd class="num" id="sumMeals">0</dd></div>
                 <div><dt>Новый продукт</dt><dd class="num" id="sumNew">0</dd></div>
-                <div><dt>Реакции</dt><dd class="num" id="sumReact">0</dd></div>
+                <div><dt>Комментарии</dt><dd class="num" id="sumReact">0</dd></div>
               </dl>
 
               <p class="planbar"><span id="storeNote"></span>
@@ -605,7 +613,7 @@
               </div>
 
               <div class="card">
-                <div class="sec-label sm" style="margin-bottom:6px">Реакции за период</div>
+                <div class="sec-label sm" style="margin-bottom:6px">Комментарии и реакции за период</div>
                 <div class="ev">
                   <span class="ev-date">14.09</span>
                   <div class="ev-body"><b>Яичный желток</b> · 2-е введение, 1/4 шт
@@ -874,7 +882,7 @@
         {n:"Повтор вчерашнего в один тап", f:"MyFitnessPal: недавнее, избранное, копирование дня", c:["ok","бесплатно"]},
         {n:"Фото и голос вместо ввода руками", f:"Lifesum, MyFitnessPal Premium+ (Cal AI, март 2026)", c:["pro","подписка"]},
         {n:"Правка того, что предложил ИИ", f:"Lifesum — иначе доверие к цифрам рушится", c:["ok","бесплатно"]},
-        {n:"Отметка реакции прямо в приёме", f:"Solid Starts — из этого потом собирается выписка", c:["ok","бесплатно"]}
+        {n:"Комментарий к приёму", f:"Solid Starts — из заметок собирается выписка врачу", c:["ok","бесплатно"]}
       ],
       q:["Любой трекер, который заставляет вводить одно и то же каждый день, проигрывает тому, который предлагает вчерашнее в один тап.","Исследование, раздел «Фишки трекинга»"]
     },
@@ -989,12 +997,12 @@
 
   // история за прошлые дни и уже запланированные ближайшие
   function seedDays(){
-    const mk = (slot, rec, react) => ({
+    const mk = (slot, rec, note) => ({
       name:slot, time:SLOT_TIME[slot], gram:SLOT_GRAM[slot],
-      items:RECIPES[rec].t, rec:rec, react:react||null
+      items:RECIPES[rec].t, rec:rec, note:note||null
     });
     state.days[isoAt(-3)] = [mk("Завтрак",8),mk("Обед",0),mk("Полдник",2),mk("Ужин",7)];
-    state.days[isoAt(-2)] = [mk("Завтрак",3),mk("Обед",9),mk("Полдник",2,"Отказ"),mk("Ужин",6)];
+    state.days[isoAt(-2)] = [mk("Завтрак",3),mk("Обед",9),mk("Полдник",2,"Отказался, съел только грушу"),mk("Ужин",6)];
     state.days[isoAt(-1)] = [mk("Завтрак",8),mk("Обед",5),mk("Полдник",2),mk("Ужин",1)];
     state.days[isoAt(1)]  = [mk("Завтрак",3),mk("Обед",4),mk("Ужин",7)];
     state.days[isoAt(2)]  = [mk("Завтрак",8),mk("Обед",0)];
@@ -1003,6 +1011,12 @@
 
   const $ = s => document.querySelector(s);
   const el = (t,c,x) => { const e=document.createElement(t); if(c) e.className=c; if(x!=null) e.textContent=x; return e; };
+  const plur = (n, one, few, many) => {
+    const a=n%10, b=n%100;
+    if(a===1 && b!==11) return one;
+    if(a>=2 && a<=4 && (b<10 || b>=20)) return few;
+    return many;
+  };
   const plural = n => n===0 ? "нет в рецептах" : "в " + n + " " + (n===1 ? "блюде" : "блюдах");
   const esc = s => String(s).replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
 
@@ -1090,19 +1104,11 @@
 
       if(m){
         body.appendChild(mealDishNode(m));
-        const rr=el("div","reactions");
-        [["Съел","good"],["Отказ","bad"],["Сыпь","bad"],["Колики","bad"]].forEach(([label,kind])=>{
-          const b=el("button","react",label);
-          b.type="button"; b.dataset.kind=kind;
-          b.setAttribute("aria-pressed", m.react===label ? "true":"false");
-          b.addEventListener("click",()=>{
-            m.react = m.react===label ? null : label;
-            renderMeals(); updateSummary(); saveState();
-            if(m.react && kind==="bad") toast("Отмечено. Реакция попадёт в выписку для педиатра.");
-          });
-          rr.appendChild(b);
-        });
-        body.appendChild(rr);
+        const note=el("button","meal-note"+(m.note?"":" add"), m.note ? m.note : "Комментарий");
+        note.type="button";
+        note.setAttribute("aria-label",(m.note?"Изменить комментарий: ":"Добавить комментарий: ")+m.name);
+        note.addEventListener("click",()=>openMealNote(m));
+        body.appendChild(note);
       } else {
         const p=el("p","meal-items");
         p.textContent = y.items ? "В прошлый раз: "+y.items : "Пока ничего не запланировано";
@@ -1132,7 +1138,7 @@
     const meals=mealsOf(state.cursor);
     $("#sumMeals").textContent=meals.length;
     $("#sumNew").textContent=meals.filter(m=>m.newFood).length;
-    $("#sumReact").textContent=meals.filter(m=>m.react&&m.react!=="Съел").length;
+    $("#sumReact").textContent=meals.filter(m=>m.note).length;
   }
 
   $("#repeatBtn").addEventListener("click",()=>{
@@ -1213,32 +1219,71 @@
       toast(slotName+" записан: "+dish+", "+gram+" г.");
     });
   }
+  const CAT_LIST = ["Все","Завтраки","Основные блюда","Супы","Перекусы","Салаты",
+                    "Гарниры","Каши","Заготовки","Пюре","Напитки"];
+
+  function syncCatPills(){
+    const box=$("#recFilters"); if(!box) return;
+    box.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.rf===state.recFilter)));
+  }
+
   function openRecipesPicker(slot){
     const box=$("#sheetInner");
-    box.innerHTML =
-      '<div class="sheet-grab"></div>'+
-      '<h3>Добавить из рецептов</h3>'+
-      '<p class="ai-note"><span class="chip berry">'+(slot?esc(slot):"любой приём")+'</span>'+
-      '<span>Выберите блюдо — порцию и время поправите на следующем шаге.</span></p>'+
-      '<div id="pickList"></div>';
-    const list=box.querySelector("#pickList");
-    RECIPES.forEach((r,i)=>{
-      const row=el("button","pickrow"); row.type="button";
-      const im=document.createElement("img"); im.src=r.img; im.alt=""; im.loading="lazy";
-      row.appendChild(im);
-      const d=el("div");
-      d.appendChild(el("div","t",r.t));
-      d.appendChild(el("div","m",r.m));
-      row.appendChild(d);
-      row.addEventListener("click",()=>{
-        openSheet(null,{
-          title:"Добавить блюдо", conf:"из рецептов",
-          note:"Блюдо из раздела «Рецепты». Проверьте порцию: дети съедают меньше, чем кажется.",
-          dish:r.t, gram:"150", slot:slot||r.slot, rec:i
-        });
+
+    function draw(){
+      const shown=RECIPES.map((r,i)=>[r,i]).filter(([r,i])=>recPasses(r,i));
+      const n=activeFilters(state.f);
+      box.innerHTML =
+        '<div class="sheet-grab"></div>'+
+        '<h3>Добавить из рецептов</h3>'+
+        '<p class="ai-note"><span class="chip berry">'+(slot?esc(slot):"любой приём")+'</span>'+
+        '<span>Выберите блюдо — порцию и время поправите на следующем шаге.</span></p>'+
+        '<div class="filters" id="pkCats">'+
+          CAT_LIST.map(c=>{
+            const k = c==="Все" ? "all" : c;
+            return '<button type="button" data-c="'+esc(k)+'" aria-pressed="'+(state.recFilter===k)+'">'+esc(c)+'</button>';
+          }).join("")+
+        '</div>'+
+        '<div class="filterbar">'+
+          '<button class="btn btn-sm fbtn" id="pkFilter" type="button">'+
+            '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M6 12h12M10 18h4"/></svg>'+
+            'Фильтры'+(n?'<span class="fcount">'+n+'</span>':'')+
+          '</button>'+
+          '<span class="num">'+shown.length+' из '+RECIPES.length+'</span>'+
+        '</div>'+
+        '<div id="pickList"></div>';
+
+      box.querySelector("#pkCats").addEventListener("click",e=>{
+        const b=e.target.closest("button"); if(!b) return;
+        state.recFilter=b.dataset.c; renderRecGrid(); draw();
       });
-      list.appendChild(row);
-    });
+      $("#pkFilter").addEventListener("click",()=>openFilters(()=>openRecipesPicker(slot)));
+
+      const list=box.querySelector("#pickList");
+      if(!shown.length){
+        list.appendChild(el("div","buy-empty","Под выбранные фильтры ничего не подошло. Снимите их кнопкой «Фильтры» или выберите другую категорию."));
+        return;
+      }
+      shown.forEach(([r,i])=>{
+        const row=el("button","pickrow"); row.type="button";
+        const im=document.createElement("img"); im.src=r.img; im.alt=""; im.loading="lazy";
+        row.appendChild(im);
+        const d=el("div");
+        d.appendChild(el("div","t",r.t));
+        d.appendChild(el("div","m",r.m));
+        row.appendChild(d);
+        row.addEventListener("click",()=>{
+          openSheet(null,{
+            title:"Добавить блюдо", conf:"из рецептов",
+            note:"Блюдо из раздела «Рецепты». Проверьте порцию: дети съедают меньше, чем кажется.",
+            dish:r.t, gram:"150", slot:slot||r.slot, rec:i
+          });
+        });
+        list.appendChild(row);
+      });
+    }
+
+    draw();
     $("#sheet").hidden=false;
   }
 
@@ -1253,9 +1298,7 @@
 
   function fillPlan(days, overwrite){
     const start=offsetOf(state.cursor);
-    const pools={}; PLAN_SLOTS.forEach(sl=>{
-      pools[sl]=poolFor(sl).sort(()=>Math.random()-0.5);
-    });
+    const pools={}; PLAN_SLOTS.forEach(sl=>{ pools[sl]=poolFor(sl).sort(()=>Math.random()-0.5); });
     const cursorBy={}; PLAN_SLOTS.forEach(sl=>cursorBy[sl]=0);
     let added=0;
     for(let k=0;k<days;k++){
@@ -1282,13 +1325,14 @@
           cursorBy[slot]++;
         }
         usedToday.add(rec);
-        const row={name:slot,time:SLOT_TIME[slot],gram:SLOT_GRAM[slot],items:RECIPES[rec].t,rec:rec,react:null};
+        const row={name:slot,time:SLOT_TIME[slot],gram:SLOT_GRAM[slot],items:RECIPES[rec].t,rec:rec,note:null};
         if(has) Object.assign(has,row); else meals.push(row);
         added++;
       });
     }
     renderDay(); renderRecGrid();
-    toast("Подобрано "+added+" "+(added%10===1&&added%100!==11?"приём":"приёмов")+" на "+days+" "+(days===1?"день":days<5?"дня":"дней")+". Всё можно поправить вручную.");
+    toast("Подобрано "+added+" "+plur(added,"приём","приёма","приёмов")+
+          " на "+days+" "+plur(days,"день","дня","дней")+". Всё можно поправить вручную.");
   }
 
   function openPlanGen(){
@@ -1315,6 +1359,31 @@
     }
     draw();
     $("#sheet").hidden=false;
+  }
+
+  function openMealNote(m){
+    const box=$("#sheetInner");
+    box.innerHTML =
+      '<div class="sheet-grab"></div>'+
+      '<h3>Комментарий</h3>'+
+      '<p class="ai-note"><span class="chip berry">'+esc(m.name)+'</span><span>'+esc(m.items)+'</span></p>'+
+      '<div class="field"><label for="mnText">Как прошло</label>'+
+      '<textarea id="mnText" rows="4" placeholder="Съел половину, остальное размазал по столу"></textarea></div>'+
+      '<div class="actions"><button class="btn btn-ghost" id="mnDel" type="button">Удалить</button>'+
+      '<button class="btn btn-primary" id="mnSave" type="button">Сохранить</button></div>';
+    const ta=$("#mnText"); ta.value = m.note || "";
+    $("#sheet").hidden=false;
+    ta.focus();
+    $("#mnSave").addEventListener("click",()=>{
+      const v=ta.value.trim();
+      m.note = v || null;
+      closeSheet(); renderDay();
+      toast(v ? "Комментарий сохранён." : "Комментарий пустой — не сохранили.");
+    });
+    $("#mnDel").addEventListener("click",()=>{
+      m.note=null; closeSheet(); renderDay();
+      toast("Комментарий удалён.");
+    });
   }
 
   function openMealEditor(m){
@@ -1450,10 +1519,10 @@
     const n=activeFilters(state.f), found=countRecipes(state.f);
     const badge=$("#fCount");
     badge.hidden = n===0; badge.textContent = n;
-    $("#recFound").textContent = found + " " + (found===1?"рецепт":found<5?"рецепта":"рецептов");
+    $("#recFound").textContent = found + " " + plur(found,"рецепт","рецепта","рецептов");
   }
 
-  function openFilters(){
+  function openFilters(after){
     const d = {time:state.f.time, age:state.f.age, main:state.f.main, excl:state.f.excl.slice()};
     const TIMES=[["До 15 минут",15],["До 30 минут",30],["До 45 минут",45],["До часа",60]];
     const MAINS=[...new Set(MAIN)];
@@ -1498,9 +1567,13 @@
       $("#fReset").addEventListener("click",()=>{ d.time=null; d.age=null; d.main=null; d.excl=[]; draw(); });
       $("#fApply").addEventListener("click",()=>{
         state.f={time:d.time, age:d.age, main:d.main, excl:d.excl.slice()};
-        closeSheet(); renderRecGrid();
+        renderRecGrid();
         const n=activeFilters(state.f);
-        toast(n ? "Фильтров применено: "+n+". Снять — кнопкой «Фильтры»." : "Фильтры сняты.");
+        if(after){ after(); }
+        else {
+          closeSheet();
+          toast(n ? "Фильтров применено: "+n+". Снять — кнопкой «Фильтры»." : "Фильтры сняты.");
+        }
       });
     }
 
@@ -1512,7 +1585,7 @@
   function renderRecGrid(){
     const box=$("#recGrid"); box.innerHTML="";
     const shown=RECIPES.map((r,i)=>[r,i]).filter(([r,i])=>recPasses(r,i));
-    renderFilterBar();
+    renderFilterBar(); syncCatPills();
     if(!shown.length){
       box.appendChild(el("div","recgrid-empty", activeFilters(state.f)
         ? "Под выбранные фильтры ничего не подошло. Откройте «Фильтры» и нажмите «Сбросить»."
@@ -1728,8 +1801,8 @@
     const items=planItems();
     const recs=plannedRecs(state.buyHorizon), days=plannedDays(state.buyHorizon);
     $("#planCount").textContent = recs.length
-      ? "из планера: " + recs.length + " " + (recs.length===1?"блюдо":recs.length<5?"блюда":"блюд") +
-        " на " + days + " " + (days===1?"день":days<5?"дня":"дней")
+      ? "из планера: " + recs.length + " " + plur(recs.length,"блюдо","блюда","блюд") +
+        " на " + days + " " + plur(days,"день","дня","дней")
       : "в планере на этот период пусто";
 
     if(!items.length){
