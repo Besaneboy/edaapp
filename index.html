@@ -1,12 +1,12 @@
 <!doctype html>
-<html lang="ru">
+<html lang="ru" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Дневник прикорма EdaApp</title>
 <meta name="description" content="Демо детского питания: справочник продуктов, дневник прикорма, режим готовки и выписка педиатру.">
 <style>
-  :root{color-scheme:light dark}
+  :root{color-scheme:light}
   html,body{margin:0;height:100%}
   img{max-width:100%}
   [hidden]{display:none!important}
@@ -21,6 +21,7 @@
   [hidden]{display:none!important}
 
   :root{
+    color-scheme:light;
     --cream:#F2EEE7;
     --ground:#F8F6F2;
     --surface:#FFFFFF;
@@ -45,58 +46,6 @@
     --btn-on-sage:#FFFFFF;
     --radius:18px;
     --shadow:0 20px 54px -28px rgba(20,19,15,.38);
-  }
-  @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){
-      --cream:#1C1C17;
-      --ground:#141410;
-      --surface:#1E1E19;
-      --surface-2:#26261F;
-      --ink:#F3F1EA;
-      --ink-2:#A9A598;
-      --ink-3:#878376;
-      --line:#302F27;
-      --line-2:#282720;
-      --sage:#A6BC94;
-      --sage-ink:#BCCFAC;
-      --sage-soft:#242A1E;
-      --gold:#D6B063;
-      --gold-soft:#2A2516;
-      --ok:#89BB90;
-      --ok-soft:#1E2A20;
-      --warn:#D0A555;
-      --warn-soft:#2A2416;
-      --risk:#E08C7E;
-      --risk-soft:#2C1D1A;
-      --bezel:#070706;
-      --btn-on-sage:#14170F;
-      --shadow:0 20px 54px -30px rgba(0,0,0,.85);
-    }
-  }
-  :root[data-theme="dark"]{
-    --cream:#1C1C17;
-    --ground:#141410;
-    --surface:#1E1E19;
-    --surface-2:#26261F;
-    --ink:#F3F1EA;
-    --ink-2:#A9A598;
-    --ink-3:#878376;
-    --line:#302F27;
-    --line-2:#282720;
-    --sage:#A6BC94;
-    --sage-ink:#BCCFAC;
-    --sage-soft:#242A1E;
-    --gold:#D6B063;
-    --gold-soft:#2A2516;
-    --ok:#89BB90;
-    --ok-soft:#1E2A20;
-    --warn:#D0A555;
-    --warn-soft:#2A2416;
-    --risk:#E08C7E;
-    --risk-soft:#2C1D1A;
-    --bezel:#070706;
-    --btn-on-sage:#14170F;
-    --shadow:0 20px 54px -30px rgba(0,0,0,.85);
   }
 
   body{
@@ -1090,14 +1039,10 @@
   }
 
   function applyTgTheme(){
-    const p=TG.themeParams||{}, dark=TG.colorScheme==="dark";
-    document.documentElement.setAttribute("data-theme", dark?"dark":"light");
-    const s=document.documentElement.style;
-    if(p.bg_color) s.setProperty("--surface", p.bg_color);
-    if(p.secondary_bg_color||p.bg_color) s.setProperty("--ground", p.secondary_bg_color||p.bg_color);
-    if(p.text_color) s.setProperty("--ink", p.text_color);
-    if(p.hint_color) s.setProperty("--ink-3", p.hint_color);
-    try{ TG.setHeaderColor(p.bg_color || (dark?"#1A201C":"#FFFFFF")); }catch(e){}
+    // приложение всегда светлое, тему клиента не наследуем
+    document.documentElement.setAttribute("data-theme","light");
+    try{ TG.setHeaderColor("#F2EEE7"); }catch(e){}
+    try{ TG.setBackgroundColor("#F8F6F2"); }catch(e){}
   }
 
   function initTelegram(){
