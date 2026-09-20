@@ -204,6 +204,33 @@
   .source{font-size:12px;color:var(--ink-3);display:flex;gap:8px;align-items:center;line-height:1.4}
 
   /* ── экран «Рецепты» ────────────────────────── */
+  .filterbar{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .fbtn{width:auto;gap:8px;padding:9px 15px}
+  .fbtn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round}
+  .fcount{background:var(--sage);color:#fff;border-radius:999px;min-width:21px;height:21px;padding:0 6px;
+    display:inline-grid;place-items:center;font-size:12px;font-weight:700}
+  #recFound{font-size:13px;color:var(--ink-2);font-weight:500}
+
+  .fsec{display:flex;flex-direction:column;gap:9px}
+  .fsec h4{margin:0;font-family:"Onest","Manrope",sans-serif;font-size:16px;font-weight:600;letter-spacing:-.01em}
+  .fsec .who{margin:0;font-size:12.5px;color:var(--ink-3);line-height:1.45}
+  .opts{display:flex;flex-direction:column;gap:8px}
+  .opt{appearance:none;cursor:pointer;font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);
+    background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;text-align:center}
+  .opt[aria-pressed="true"]{border-color:var(--sage);background:var(--sage-soft);color:var(--sage-ink);font-weight:600}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chipbtn{appearance:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:500;white-space:nowrap;
+    border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:10px 15px}
+  .chipbtn[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink);font-weight:600}
+  .sheet label.check{display:flex;align-items:center;gap:12px;padding:11px 0;cursor:pointer;
+    border-bottom:1px solid var(--line-2);
+    font-size:15px;font-weight:500;color:var(--ink);text-transform:none;letter-spacing:0}
+  .sheet label.check:last-child{border-bottom:0}
+  .sheet .check input[type="checkbox"]{accent-color:var(--sage);width:19px;height:19px;flex:none;
+    padding:0;border:0;border-radius:0;background:none}
+  .sheet .check .tail{margin-left:auto;font-size:12.5px;color:var(--ink-3);font-weight:400}
+  .sheet-foot{position:sticky;bottom:0;background:var(--surface);padding:12px 0 6px;
+    display:grid;grid-template-columns:1fr 1.5fr;gap:10px;box-shadow:0 -12px 18px -14px rgba(22,21,15,.35)}
   .recgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .recgrid-empty{grid-column:1/-1;padding:20px 4px;color:var(--ink-2);font-size:14px}
   .planbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0;font-size:13px;color:var(--ink-2)}
@@ -288,7 +315,7 @@
   /* ── шторка и тост ──────────────────────────── */
   .sheet{position:absolute;inset:0;background:rgba(22,21,15,.36);display:flex;align-items:flex-end;
     border-radius:38px;z-index:5}
-  .sheet-inner{width:100%;background:var(--surface);border-radius:26px 26px 38px 38px;padding:14px 20px 28px;
+  .sheet-inner{width:100%;max-height:88%;overflow-y:auto;background:var(--surface);border-radius:26px 26px 38px 38px;padding:14px 20px 28px;
     display:flex;flex-direction:column;gap:14px;animation:rise .22s ease-out}
   @keyframes rise{from{transform:translateY(18px);opacity:.4}to{transform:none;opacity:1}}
   @media (prefers-reduced-motion:reduce){.sheet-inner{animation:none}}
@@ -430,7 +457,7 @@
             <section class="view" data-view="cook" hidden>
               <div id="cookList" class="view">
                 <div class="sec-label"><span>Рецепты общего стола</span><span class="chip ok">бесплатно</span></div>
-                <p class="ai-note"><span class="chip berry">с 12 мес</span><span>Одно блюдо на всю семью: детскую порцию откладывают до соли и специй.</span></p>
+                <p class="ai-note"><span class="chip berry">по возрасту</span><span>Одно блюдо на всю семью: детскую порцию откладывают до соли и специй.</span></p>
                 <div class="filters" id="recFilters">
                   <button data-rf="all" aria-pressed="true">Все</button>
                   <button data-rf="Завтраки" aria-pressed="false">Завтраки</button>
@@ -443,6 +470,13 @@
                   <button data-rf="Заготовки" aria-pressed="false">Заготовки</button>
                   <button data-rf="Пюре" aria-pressed="false">Пюре</button>
                   <button data-rf="Напитки" aria-pressed="false">Напитки</button>
+                </div>
+                <div class="filterbar">
+                  <button class="btn btn-sm fbtn" id="filterBtn" type="button">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
+                    Фильтры<span class="fcount" id="fCount" hidden>0</span>
+                  </button>
+                  <span class="num" id="recFound"></span>
                 </div>
                 <div class="recgrid" id="recGrid"></div>
 
@@ -746,10 +780,32 @@
   const CATS  = ["Супы","Основные блюда","Завтраки","Завтраки","Основные блюда",
                  "Основные блюда","Гарниры","Основные блюда","Каши","Основные блюда"];
   const SLOTS = ["Обед","Ужин","Завтрак","Завтрак","Обед","Обед","Обед","Ужин","Завтрак","Обед"];
+  // с какого возраста блюдо подходит в адаптированной подаче, месяцев
+  const MINAGE = [9, 12, 12, 8, 10, 9, 6, 12, 6, 8];
+  const MAIN   = ["Курица и индейка","Курица и индейка","Творог","Яйцо","Курица и индейка",
+                  "Рыба","Овощи","Макароны","Крупы","Курица и индейка"];
+  const ALLERGEN_SRC = {
+    "Молочное":["Молоко","Сметана 10%","Творог 9%","Сыр твёрдый","Масло сливочное"],
+    "Яйцо":["Яйцо"],
+    "Рыба":["Филе трески"],
+    "Глютен":["Мука","Белый хлеб","Макароны мелкие","Вермишель мелкая"]
+  };
+  // возрастные группы по руководству ВОЗ по прикорму детей 6–23 месяцев, 2023
+  const AGE_BANDS = [
+    {k:"6-8",   label:"6–8 месяцев",     start:6,  note:"ВОЗ: прикорм начинают около 6 месяцев, 2–3 приёма пищи в день"},
+    {k:"9-11",  label:"9–11 месяцев",    start:9,  note:"ВОЗ: 3–4 приёма пищи и 1–2 перекуса, консистенция плотнее"},
+    {k:"12-23", label:"12–23 месяца",    start:12, note:"ВОЗ: 3–4 приёма пищи и 1–2 перекуса, общий стол семьи"},
+    {k:"24",    label:"2 года и старше", start:24, note:"ВОЗ: грудное вскармливание можно продолжать до 2 лет и дольше"}
+  ];
   RECIPES.forEach(r=>{
     r.mins = parseInt((r.m.match(/(\d+)\s*мин/)||[])[1]||"0",10);
-    r.cat = CATS[RECIPES.indexOf(r)];
-    r.slot = SLOTS[RECIPES.indexOf(r)];
+    const i = RECIPES.indexOf(r);
+    r.cat = CATS[i];
+    r.slot = SLOTS[i];
+    r.minAge = MINAGE[i];
+    r.main = MAIN[i];
+    r.allerg = Object.keys(ALLERGEN_SRC).filter(k=>r.ing.some(([n])=>ALLERGEN_SRC[k].includes(n)));
+    r.m = "с " + r.minAge + " мес · " + r.mins + " мин · " + (r.m.split("·").pop()||"").trim();
     r.dairy = r.ing.some(([n])=>DAIRY.includes(n));
   });
 
@@ -809,12 +865,13 @@
     filled:false,
     foodFilter:"all", foodQ:"", openFood:null,
     rec:0, portions:2, step:0, timeLeft:0, running:false, tick:null,
-    recFilter:"all", plan:[0,3,5,7], pantry:["Масло оливковое","Мука","Масло сливочное"],
+    recFilter:"all", f:{time:null, age:null, main:null, excl:[]}, plan:[0,3,5,7], pantry:["Масло оливковое","Мука","Масло сливочное"],
     paper:false
   };
 
   const $ = s => document.querySelector(s);
   const el = (t,c,x) => { const e=document.createElement(t); if(c) e.className=c; if(x!=null) e.textContent=x; return e; };
+  const plural = n => "в " + n + " " + (n===1 ? "блюде" : "блюдах");
   const esc = s => String(s).replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
 
   let toastT=null;
@@ -1010,19 +1067,94 @@
   });
 
   /* ───────── экран «Рецепты» ───────── */
-  function recPasses(r,i){
-    switch(state.recFilter){
-      case "all": return true;
-      case "plan": return state.plan.includes(i);
-      default: return r.cat===state.recFilter;
+  function recPasses(r,i,f){
+    f = f || state.f;
+    if(state.recFilter==="plan"){ if(!state.plan.includes(i)) return false; }
+    else if(state.recFilter!=="all" && r.cat!==state.recFilter) return false;
+    if(f.time && r.mins > f.time) return false;
+    if(f.age){
+      const band=AGE_BANDS.find(b=>b.k===f.age);
+      if(band && r.minAge > band.start) return false;
     }
+    if(f.main && r.main !== f.main) return false;
+    if(f.excl.length && r.allerg.some(a=>f.excl.includes(a))) return false;
+    return true;
   }
+
+  const countRecipes = f => RECIPES.filter((r,i)=>recPasses(r,i,f)).length;
+  const activeFilters = f => (f.time?1:0)+(f.age?1:0)+(f.main?1:0)+f.excl.length;
+
+  function renderFilterBar(){
+    const n=activeFilters(state.f), found=countRecipes(state.f);
+    const badge=$("#fCount");
+    badge.hidden = n===0; badge.textContent = n;
+    $("#recFound").textContent = found + " " + (found===1?"рецепт":found<5?"рецепта":"рецептов");
+  }
+
+  function openFilters(){
+    const d = {time:state.f.time, age:state.f.age, main:state.f.main, excl:state.f.excl.slice()};
+    const TIMES=[["До 15 минут",15],["До 30 минут",30],["До 45 минут",45],["До часа",60]];
+    const MAINS=[...new Set(MAIN)];
+    const ALLERGENS=Object.keys(ALLERGEN_SRC);
+    const slot=$("#sheetInner");
+
+    function draw(){
+      const band = d.age ? AGE_BANDS.find(b=>b.k===d.age) : null;
+      slot.innerHTML =
+        '<div class="sheet-grab"></div>'+
+        '<h3>Фильтры</h3>'+
+        '<div class="fsec"><h4>Время приготовления</h4><div class="opts">'+
+          TIMES.map(([lab,v])=>'<button class="opt" type="button" data-time="'+v+'" aria-pressed="'+(d.time===v)+'">'+lab+'</button>').join("")+
+        '</div></div>'+
+        '<div class="fsec"><h4>Возраст ребёнка</h4><div class="chips">'+
+          AGE_BANDS.map(b=>'<button class="chipbtn" type="button" data-age="'+b.k+'" aria-pressed="'+(d.age===b.k)+'">'+b.label+'</button>').join("")+
+        '</div><p class="who">'+(band ? band.note : 'Возрастные группы — по руководству ВОЗ по прикорму детей 6–23 месяцев (2023). Показываем блюда, которые подходят с начала выбранного периода.')+'</p></div>'+
+        '<div class="fsec"><h4>Основной ингредиент</h4><div class="chips">'+
+          MAINS.map(m=>'<button class="chipbtn" type="button" data-main="'+esc(m)+'" aria-pressed="'+(d.main===m)+'">'+esc(m)+'</button>').join("")+
+        '</div></div>'+
+        '<div class="fsec"><h4>Исключить аллерген</h4><div>'+
+          ALLERGENS.map(a=>'<label class="check"><input type="checkbox" data-excl="'+esc(a)+'"'+(d.excl.includes(a)?' checked':'')+'>'+
+            '<span>'+esc(a)+'</span><span class="tail">'+plural(RECIPES.filter(r=>r.allerg.includes(a)).length)+'</span></label>').join("")+
+        '</div></div>'+
+        '<div class="sheet-foot"><button class="btn btn-ghost" id="fReset" type="button">Сбросить</button>'+
+        '<button class="btn btn-primary" id="fApply" type="button">Показать '+countRecipes(d)+'</button></div>';
+
+      slot.querySelectorAll("[data-time]").forEach(b=>b.addEventListener("click",()=>{
+        const v=+b.dataset.time; d.time = d.time===v ? null : v; draw();
+      }));
+      slot.querySelectorAll("[data-age]").forEach(b=>b.addEventListener("click",()=>{
+        d.age = d.age===b.dataset.age ? null : b.dataset.age; draw();
+      }));
+      slot.querySelectorAll("[data-main]").forEach(b=>b.addEventListener("click",()=>{
+        d.main = d.main===b.dataset.main ? null : b.dataset.main; draw();
+      }));
+      slot.querySelectorAll("[data-excl]").forEach(c=>c.addEventListener("change",()=>{
+        const a=c.dataset.excl;
+        d.excl = c.checked ? d.excl.concat([a]) : d.excl.filter(x=>x!==a);
+        draw();
+      }));
+      $("#fReset").addEventListener("click",()=>{ d.time=null; d.age=null; d.main=null; d.excl=[]; draw(); });
+      $("#fApply").addEventListener("click",()=>{
+        state.f={time:d.time, age:d.age, main:d.main, excl:d.excl.slice()};
+        closeSheet(); renderRecGrid();
+        const n=activeFilters(state.f);
+        toast(n ? "Фильтров применено: "+n+". Снять — кнопкой «Фильтры»." : "Фильтры сняты.");
+      });
+    }
+
+    draw();
+    $("#sheet").hidden=false;
+  }
+  $("#filterBtn").addEventListener("click",openFilters);
 
   function renderRecGrid(){
     const box=$("#recGrid"); box.innerHTML="";
     const shown=RECIPES.map((r,i)=>[r,i]).filter(([r,i])=>recPasses(r,i));
+    renderFilterBar();
     if(!shown.length){
-      box.appendChild(el("div","recgrid-empty","В этой категории рецептов пока нет — она наполняется. Нажмите «Все», чтобы увидеть весь список."));
+      box.appendChild(el("div","recgrid-empty", activeFilters(state.f)
+        ? "Под выбранные фильтры ничего не подошло. Откройте «Фильтры» и нажмите «Сбросить»."
+        : "В этой категории рецептов пока нет — она наполняется. Нажмите «Все», чтобы увидеть весь список."));
       return;
     }
     shown.forEach(([r,i])=>{
