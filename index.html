@@ -93,7 +93,13 @@
   .kid-meta{display:flex;flex-direction:column;min-width:0}
   .avatar.photo{background-size:cover;background-position:center;color:transparent;font-size:0}
   .avatar.big{width:64px;height:64px;border-radius:20px;font-size:24px}
-  .pf-photo{display:flex;align-items:center;gap:14px}
+  .pf-photo{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .sheet label.filebtn{position:relative;overflow:hidden;cursor:pointer;
+    font-family:"Onest","Manrope",sans-serif;font-size:13.5px;font-weight:600;letter-spacing:0;
+    text-transform:none;color:var(--ink);display:inline-flex;align-items:center;justify-content:center}
+  .filebtn input[type="file"]{position:absolute;inset:0;width:100%;height:100%;opacity:0;
+    cursor:pointer;font-size:0;padding:0;border:0;background:none}
+  .pf-hint{flex-basis:100%;font-size:12px;color:var(--ink-3);line-height:1.4;margin:0}
   .pf-photo .field-row{flex-wrap:wrap}
   .kid-name,.kid-age{display:block}
   .avatar{width:42px;height:42px;border-radius:14px;background:var(--sage-soft);color:var(--sage-ink);
@@ -1204,7 +1210,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "21.09 · сборка 7";
+  const BUILD = "21.09 · сборка 8";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -1514,10 +1520,13 @@
         '<h3>Профиль ребёнка</h3>'+
         '<div class="pf-photo"><span class="avatar big" id="pfAvatar"></span>'+
           '<div class="field-row">'+
-            '<button class="btn btn-sm btn-ghost" id="pfPick" type="button">'+(photo?"Заменить фото":"Добавить фото")+'</button>'+
+            '<label class="btn btn-sm btn-ghost filebtn">'+(photo?"Заменить фото":"Добавить фото")+
+              '<input type="file" id="pfFile" accept="image/*">'+
+            '</label>'+
             (photo?'<button class="btn btn-sm btn-ghost" id="pfDrop" type="button">Убрать</button>':'')+
           '</div>'+
-          '<input type="file" id="pfFile" accept="image/*" hidden></div>'+
+          '<p class="pf-hint">Снимок из галереи телефона или новое фото с камеры — телефон предложит выбрать.</p>'+
+        '</div>'+
         '<div class="field"><label for="pfName">Имя</label>'+
         '<input id="pfName" value="'+esc(state.child.name)+'" placeholder="Как зовут ребёнка"></div>'+
         '<div class="field"><label for="pfBirth">Дата рождения</label>'+
@@ -1529,7 +1538,6 @@
       paintAvatar($("#pfAvatar"), {name:$("#pfName").value, photo:photo});
       $("#pfName").addEventListener("input",()=>paintAvatar($("#pfAvatar"), {name:$("#pfName").value, photo:photo}));
       $("#pfBirth").addEventListener("input",updateAgeNote);
-      $("#pfPick").addEventListener("click",()=>$("#pfFile").click());
       $("#pfFile").addEventListener("change",e=>{
         const f=e.target.files && e.target.files[0];
         if(!f) return;
