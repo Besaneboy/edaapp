@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Дневник прикорма EdaApp</title>
-<meta name="description" content="Демо MVP детского питания: справочник продуктов, лог с повтором вчерашнего дня, режим готовки и выписка педиатру.">
+<meta name="description" content="Демо детского питания: справочник продуктов, дневник прикорма, режим готовки и выписка педиатру.">
 <style>
   :root{color-scheme:light dark}
-  html,body{margin:0}
+  html,body{margin:0;height:100%}
   img{max-width:100%}
   [hidden]{display:none!important}
 </style>
@@ -417,32 +417,23 @@
   .notes li b{color:var(--ink);font-weight:600}
   .notes p{margin:0;font-size:13.5px;color:var(--ink-2)}
 
-  /* ── режим Telegram Mini App ────────────────── */
-  .info-btn{display:none}
-  body.tg .wrap{max-width:none;padding:0;gap:0}
-  body.tg .top,body.tg .notes,body.tg .hint{display:none}
-  body.tg .stage{display:block}
-  body.tg .phone-col{position:static;gap:0}
-  body.tg .phone{width:100%;max-width:none;height:100dvh;border-radius:0;padding:0;box-shadow:none;background:var(--surface)}
-  body.tg .screen{border-radius:0}
-  body.tg .statusbar{display:none}
-  body.tg .sheet{border-radius:0}
-  body.tg .info-btn{display:inline-flex}
-  body.tg .panel{
+  /* ── приложение на весь экран ───────────────── */
+  body .wrap{max-width:none;padding:0;gap:0}
+  body .top,body .notes,body .hint{display:none}
+  body .stage{display:block}
+  body .phone-col{position:static;gap:0}
+  body .phone{width:100%;max-width:560px;margin:0 auto;height:100dvh;border-radius:0;padding:0;box-shadow:none;background:var(--surface)}
+  body .screen{border-radius:0}
+  body .statusbar{display:none}
+  body .sheet{border-radius:0}
+  body .panel{
     position:fixed;inset:0;z-index:20;background:var(--ground);overflow-y:auto;
     padding:20px 18px 48px;max-width:none
   }
-  .panel-close{align-self:flex-start}
 </style>
 
 <div class="wrap">
-  <header class="top">
-    <div class="brand">
-      <span class="logo">Eda<b>App</b></span>
-      <span class="eyebrow">Кликабельное демо MVP · по исследованию рынка от 19.09.2026</span>
-    </div>
-    <p class="scope">Взята связка, рекомендованная в документе: <code>справочник + лог с повтором + выгрузка для врача</code>. Рамка — прикорм 6–36 мес.</p>
-  </header>
+  
 
   <div class="stage">
     <div class="phone-col">
@@ -463,7 +454,6 @@
             </div>
             <div class="who">
               <span class="who-chip">вы + папа</span>
-              <button class="btn btn-sm btn-ghost info-btn" id="infoBtn" type="button">Почему так</button>
             </div>
           </header>
 
@@ -651,34 +641,11 @@
           <div class="toast" id="toast" hidden></div>
         </div>
       </div>
-      <p class="hint">Всё кликабельно: повтор дня, фото- и голосовой ввод, фильтры справочника, таймер готовки, список покупок, выписка.</p>
     </div>
 
-    <aside class="panel" id="panel"></aside>
   </div>
 
-  <section class="notes">
-    <div>
-      <h3>Что в демо сознательно не делали</h3>
-      <ul>
-        <li><b>Импорт чужих рецептов</b> — в документе это «низкий эффект для нашей ниши»: мамы приходят за проверенным контентом.</li>
-        <li><b>Трекинг калорий взрослого</b> — лишний в детской рамке.</li>
-        <li><b>Реальное распознавание</b> — фото и голос показаны как сценарий с обязательной правкой до сохранения.</li>
-      </ul>
-    </div>
-    <div>
-      <h3>Линия бесплатного и платного</h3>
-      <ul>
-        <li>Бесплатно: справочник и базовый лог — то, ради чего открывают приложение каждый день.</li>
-        <li>Подписка: выписка педиатру, аналитика рациона, общий доступ, персональная схема.</li>
-        <li>Урок MyFitnessPal: пейвол на ежедневной механике оплачивается оттоком.</li>
-      </ul>
-    </div>
-    <div>
-      <h3>Что решить до разработки</h3>
-      <p>Открытый вопрос из исследования: EdaApp — это только прикорм до трёх лет или питание семьи целиком. Демо собрано в первой рамке. Данные справочника — заглушки; перед релизом их заполняет педиатр-эксперт, каждая карточка со ссылкой на источник.</p>
-    </div>
-  </section>
+  
 </div>
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -1140,7 +1107,8 @@
 
   /* ───────── правая панель и вкладки ───────── */
   function renderPanel(){
-    const d=PANEL[state.tab], p=$("#panel");
+    const p=$("#panel"); if(!p) return;
+    const d=PANEL[state.tab];
     p.innerHTML="";
     const head=el("div","panel-head");
     head.appendChild(el("span","eyebrow","Что показывает этот экран"));
@@ -1168,7 +1136,7 @@
   }
 
   function closePanel(){
-    $("#panel").hidden=true;
+    const p=$("#panel"); if(p) p.hidden=true;
     if(TG) TG.BackButton.hide();
   }
 
@@ -1188,13 +1156,6 @@
     document.body.classList.add("tg");
     applyTgTheme();
     TG.onEvent("themeChanged", applyTgTheme);
-    $("#panel").hidden=true;
-    $("#infoBtn").addEventListener("click",()=>{
-      $("#panel").hidden=false;
-      $("#panel").scrollTop=0;
-      TG.BackButton.show();
-    });
-    TG.BackButton.onClick(closePanel);
   }
 
   $("#tabbar").addEventListener("click",e=>{
