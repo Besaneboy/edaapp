@@ -476,6 +476,9 @@
                 <div><dt>Новый продукт</dt><dd class="num" id="sumNew">0</dd></div>
                 <div><dt>Реакции</dt><dd class="num" id="sumReact">0</dd></div>
               </dl>
+
+              <p class="planbar"><span id="storeNote"></span>
+                <button class="btn btn-sm btn-ghost" id="resetDemo" type="button">Сбросить демо</button></p>
             </section>
 
             <!-- ЭКРАН: ПРОДУКТЫ -->
@@ -936,15 +939,56 @@
 
   const state = {
     tab:"day",
-    days:{}, cursor:TODAY_ISO, buyHorizon:7,
+    days:{}, cursor:TODAY_ISO, buyHorizon:7, notes:{},
     foodFilter:"all", foodQ:"", openFood:null,
     rec:0, portions:2, step:0, timeLeft:0, running:false, tick:null,
     recFilter:"all", f:{time:null, age:null, main:null, excl:[]}, pantry:["Масло оливковое","Мука","Масло сливочное"],
     paper:false
   };
 
+  // ── сохранение на устройстве ──────────────────────────────
+  const STORE_KEY = "edaapp.planner.v1";
+  const STORE_OK = (()=>{ try{ localStorage.setItem("edaapp.t","1"); localStorage.removeItem("edaapp.t"); return true; }catch(e){ return false; } })();
+
+  function saveState(){
+    if(!STORE_OK) return;
+    try{
+      const days={};
+      Object.keys(state.days).forEach(iso=>{
+        const o=offsetOf(iso);
+        if(o>=-90 && o<=60 && (state.days[iso]||[]).length) days[iso]=state.days[iso];
+      });
+      localStorage.setItem(STORE_KEY, JSON.stringify({
+        v:1, days, pantry:state.pantry, buyHorizon:state.buyHorizon, notes:state.notes
+      }));
+    }catch(e){ /* приватный режим или переполнение — работаем без сохранения */ }
+  }
+
+  function loadState(){
+    if(!STORE_OK) return false;
+    try{
+      const raw=localStorage.getItem(STORE_KEY);
+      if(!raw) return false;
+      const d=JSON.parse(raw);
+      if(!d || d.v!==1 || typeof d.days!=="object" || !d.days) return false;
+      state.days=d.days;
+      if(Array.isArray(d.pantry)) state.pantry=d.pantry;
+      if(d.buyHorizon) state.buyHorizon=d.buyHorizon;
+      if(d.notes && typeof d.notes==="object") state.notes=d.notes;
+      return true;
+    }catch(e){ return false; }
+  }
+
+  function resetDemo(){
+    try{ localStorage.removeItem(STORE_KEY); }catch(e){}
+    state.days={}; state.notes={}; state.pantry=["Масло оливковое","Мука","Масло сливочное"];
+    state.cursor=TODAY_ISO; state.buyHorizon=7;
+    seedDays(); renderDay(); renderRecGrid();
+    toast("Демо-данные возвращены в исходное состояние.");
+  }
+
   // история за прошлые дни и уже запланированные ближайшие
-  (function seedDays(){
+  function seedDays(){
     const mk = (slot, rec, react) => ({
       name:slot, time:SLOT_TIME[slot], gram:SLOT_GRAM[slot],
       items:RECIPES[rec].t, rec:rec, react:react||null
@@ -954,7 +998,8 @@
     state.days[isoAt(-1)] = [mk("Завтрак",8),mk("Обед",5),mk("Полдник",2),mk("Ужин",1)];
     state.days[isoAt(1)]  = [mk("Завтрак",3),mk("Обед",4),mk("Ужин",7)];
     state.days[isoAt(2)]  = [mk("Завтрак",8),mk("Обед",0)];
-  })();
+  }
+  if(!loadState()) seedDays();
 
   const $ = s => document.querySelector(s);
   const el = (t,c,x) => { const e=document.createElement(t); if(c) e.className=c; if(x!=null) e.textContent=x; return e; };
@@ -990,7 +1035,7 @@
   }
 
   function renderDay(){
-    renderDateStrip(); renderMeals(); updateSummary(); renderBuy();
+    renderDateStrip(); renderMeals(); updateSummary(); renderBuy(); saveState();
   }
 
   function clearDay(){
@@ -1052,7 +1097,7 @@
           b.setAttribute("aria-pressed", m.react===label ? "true":"false");
           b.addEventListener("click",()=>{
             m.react = m.react===label ? null : label;
-            renderMeals(); updateSummary();
+            renderMeals(); updateSummary(); saveState();
             if(m.react && kind==="bad") toast("Отмечено. Реакция попадёт в выписку для педиатра.");
           });
           rr.appendChild(b);
@@ -1103,6 +1148,10 @@
     toast("День заполнен из предыдущего. Поправьте, что отличалось.");
   });
   $("#clearDayBtn").addEventListener("click",clearDay);
+  $("#resetDemo").addEventListener("click",resetDemo);
+  $("#storeNote").textContent = STORE_OK
+    ? "План и история сохраняются на этом устройстве"
+    : "Браузер запретил сохранение — данные живут до перезагрузки";
   $("#genBtn").addEventListener("click",()=>openPlanGen());
   $("#genBtn2").addEventListener("click",()=>openPlanGen());
 
@@ -1544,7 +1593,7 @@
     const b=e.target.closest("button"); if(!b) return;
     state.buyHorizon=+b.dataset.h;
     $("#buyHorizon").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
-    renderBuy();
+    renderBuy(); saveState();
   });
 
   function openRecipe(i){
@@ -1571,6 +1620,7 @@
     const hero=$("#recHero");
     if(hero.getAttribute("src")!==r.img){ hero.src=r.img; hero.alt=r.t; }
     $("#recKid").textContent=r.kid;
+    $("#recNote").value = state.notes[state.rec] || "";
     updatePlanBtn();
     $("#recTitle").textContent=r.t;
     $("#recMeta").textContent=r.m;
@@ -1615,10 +1665,14 @@
   $("#pMinus").addEventListener("click",()=>{ if(state.portions>1){ state.portions--; renderRecipe(); }});
   $("#pPlus").addEventListener("click",()=>{ if(state.portions<8){ state.portions++; renderRecipe(); }});
   let noteT=null;
-  $("#recNote").addEventListener("input",()=>{
+  $("#recNote").addEventListener("input",e=>{
+    state.notes[state.rec]=e.target.value;
     clearTimeout(noteT);
     $("#noteSaved").textContent="…";
-    noteT=setTimeout(()=>{ $("#noteSaved").textContent="Сохранено, видно папе"; },600);
+    noteT=setTimeout(()=>{
+      saveState();
+      $("#noteSaved").textContent = STORE_OK ? "Сохранено на этом устройстве" : "Сохранено до перезагрузки";
+    },600);
   });
 
   function openDiary(){
@@ -1701,7 +1755,7 @@
         cb.addEventListener("change",()=>{
           if(cb.checked) state.pantry.push(it.name);
           else state.pantry=state.pantry.filter(n=>n!==it.name);
-          renderBuy();
+          renderBuy(); saveState();
         });
         const lab=el("label",null,it.name); lab.htmlFor=cb.id;
         row.appendChild(cb); row.appendChild(lab);
