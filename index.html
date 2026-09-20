@@ -688,8 +688,8 @@
 
   /* Telegram Mini App: объект есть только внутри Telegram.
      На обычной странице всё работает как раньше. */
-  const TG = (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData !== undefined)
-    ? window.Telegram.WebApp : null;
+  const WA = window.Telegram && window.Telegram.WebApp;
+  const TG = (WA && WA.platform && WA.platform !== "unknown") ? WA : null;
 
   /* ───────── данные ───────── */
   const YESTERDAY = [
