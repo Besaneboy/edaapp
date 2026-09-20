@@ -1,0 +1,1222 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Дневник прикорма EdaApp</title>
+<meta name="description" content="Демо MVP детского питания: справочник продуктов, лог с повтором вчерашнего дня, режим готовки и выписка педиатру.">
+<style>
+  :root{color-scheme:light dark}
+  html,body{margin:0}
+  img{max-width:100%}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Unbounded:wght@500;600&display=swap">
+<style>
+  :root{
+    --ground:#EFF2EE;
+    --surface:#FFFFFF;
+    --surface-2:#F6F9F5;
+    --ink:#18201C;
+    --ink-2:#56635C;
+    --ink-3:#8A968F;
+    --line:#DAE1DB;
+    --line-2:#E9EEE8;
+    --berry:#6E2A50;
+    --berry-ink:#6E2A50;
+    --berry-soft:#F3E5EC;
+    --ok:#2F7D53;
+    --ok-soft:#E3F1E8;
+    --warn:#8F5C0E;
+    --warn-soft:#F7EBD8;
+    --risk:#A6372F;
+    --risk-soft:#F8E4E1;
+    --bezel:#202823;
+    --bezel-2:#39433C;
+    --shadow:0 24px 60px -28px rgba(24,32,28,.45);
+    --radius:14px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ground:#111512;
+      --surface:#1A201C;
+      --surface-2:#212824;
+      --ink:#E9EEE9;
+      --ink-2:#9EABA3;
+      --ink-3:#778279;
+      --line:#2E3832;
+      --line-2:#262E29;
+      --berry:#D98CB8;
+      --berry-ink:#E7A9CC;
+      --berry-soft:#33202B;
+      --ok:#74C293;
+      --ok-soft:#1D2C23;
+      --warn:#D8A755;
+      --warn-soft:#2C2418;
+      --risk:#E48B82;
+      --risk-soft:#2E1E1C;
+      --bezel:#050706;
+      --bezel-2:#2A332D;
+      --shadow:0 24px 60px -30px rgba(0,0,0,.8);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#111512;
+    --surface:#1A201C;
+    --surface-2:#212824;
+    --ink:#E9EEE9;
+    --ink-2:#9EABA3;
+    --ink-3:#778279;
+    --line:#2E3832;
+    --line-2:#262E29;
+    --berry:#D98CB8;
+    --berry-ink:#E7A9CC;
+    --berry-soft:#33202B;
+    --ok:#74C293;
+    --ok-soft:#1D2C23;
+    --warn:#D8A755;
+    --warn-soft:#2C2418;
+    --risk:#E48B82;
+    --risk-soft:#2E1E1C;
+    --bezel:#050706;
+    --bezel-2:#2A332D;
+    --shadow:0 24px 60px -30px rgba(0,0,0,.8);
+  }
+
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  body{
+    margin:0;
+    background:var(--ground);
+    color:var(--ink);
+    font-family:"Golos Text","Segoe UI",system-ui,sans-serif;
+    font-size:15px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1120px;margin:0 auto;padding:28px 24px 64px;display:flex;flex-direction:column;gap:28px}
+
+  /* ── шапка стенда ───────────────────────────── */
+  .top{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:12px 24px;
+    border-bottom:1px solid var(--line);padding-bottom:18px}
+  .brand{display:flex;flex-direction:column;gap:5px}
+  .logo{font-family:"Unbounded","Golos Text",sans-serif;font-weight:600;font-size:22px;letter-spacing:-.01em}
+  .logo b{color:var(--berry-ink);font-weight:600}
+  .eyebrow{font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);font-weight:500}
+  .scope{font-size:13px;color:var(--ink-2);max-width:34ch;text-align:right}
+  .scope code{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--berry-ink)}
+
+  .stage{display:grid;grid-template-columns:390px minmax(280px,1fr);gap:44px;align-items:start}
+  @media (max-width:880px){
+    .stage{grid-template-columns:minmax(0,390px);justify-content:center}
+    .scope{text-align:left}
+  }
+
+  /* ── телефон ────────────────────────────────── */
+  .phone-col{display:flex;flex-direction:column;gap:14px;position:sticky;top:24px}
+  @media (max-width:880px){.phone-col{position:static}}
+  .phone{
+    width:390px;max-width:100%;height:812px;border-radius:46px;background:var(--bezel);
+    padding:11px;box-shadow:var(--shadow);position:relative
+  }
+  .screen{
+    height:100%;border-radius:36px;overflow:hidden;background:var(--surface-2);
+    display:flex;flex-direction:column;position:relative
+  }
+  .statusbar{
+    flex:none;height:34px;display:flex;align-items:center;justify-content:space-between;
+    padding:0 26px;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-2);
+    background:var(--surface)
+  }
+  .sb-dots{display:flex;gap:3px;align-items:center}
+  .sb-dots i{width:4px;height:4px;border-radius:50%;background:var(--ink-3);display:block}
+  .sb-dots i:last-child{width:16px;height:8px;border-radius:2px;border:1px solid var(--ink-3);background:none}
+
+  .appbar{
+    flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:6px 18px 14px;background:var(--surface);border-bottom:1px solid var(--line-2)
+  }
+  .kid{display:flex;align-items:center;gap:10px}
+  .avatar{
+    width:38px;height:38px;border-radius:13px;background:var(--berry-soft);color:var(--berry-ink);
+    display:grid;place-items:center;font-weight:700;font-size:16px
+  }
+  .kid-name{font-weight:600;font-size:15px;line-height:1.2}
+  .kid-age{font-size:12px;color:var(--ink-2);font-family:"JetBrains Mono",monospace}
+  .who{display:flex;align-items:center;gap:6px}
+  .who-chip{
+    font-size:11px;padding:4px 8px;border-radius:999px;border:1px solid var(--line);
+    color:var(--ink-2);background:var(--surface-2);white-space:nowrap
+  }
+
+  .views{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:16px 16px 18px;display:block}
+  .view{display:flex;flex-direction:column;gap:14px}
+  .view[hidden]{display:none}
+
+  .tabbar{
+    flex:none;display:grid;grid-template-columns:repeat(4,1fr);gap:2px;
+    background:var(--surface);border-top:1px solid var(--line-2);padding:8px 8px 20px
+  }
+  .tab{
+    appearance:none;border:0;background:none;cursor:pointer;display:flex;flex-direction:column;
+    align-items:center;gap:4px;padding:6px 2px;border-radius:12px;color:var(--ink-3);
+    font-family:inherit;font-size:11px;font-weight:500
+  }
+  .tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  .tab[aria-selected="true"]{color:var(--berry-ink);background:var(--berry-soft)}
+  .tab:focus-visible,.icon-btn:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{
+    outline:2px solid var(--berry);outline-offset:2px
+  }
+
+  /* ── общие элементы экранов ─────────────────── */
+  .sec-label{
+    font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);
+    font-weight:600;display:flex;align-items:center;justify-content:space-between;gap:8px
+  }
+  .card{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--radius);padding:14px}
+  .flat{background:var(--surface);border-radius:var(--radius);padding:0;overflow:hidden;border:1px solid var(--line-2)}
+
+  .btn{
+    appearance:none;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;
+    border-radius:12px;padding:12px 14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .12s ease
+  }
+  .btn:active{transform:scale(.98)}
+  .btn-primary{background:var(--berry);border-color:var(--berry);color:#fff}
+  :root[data-theme="dark"] .btn-primary{color:#20141B}
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn-primary{color:#20141B}}
+  .btn-ghost{background:var(--surface-2)}
+  .btn-wide{width:100%}
+  .btn-sm{font-size:13px;padding:8px 11px;border-radius:10px;font-weight:500}
+
+  .chip{
+    display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;
+    padding:3px 8px;border-radius:999px;background:var(--surface-2);color:var(--ink-2);
+    border:1px solid var(--line-2);white-space:nowrap
+  }
+  .chip.ok{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+  .chip.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+  .chip.risk{background:var(--risk-soft);color:var(--risk);border-color:transparent}
+  .chip.berry{background:var(--berry-soft);color:var(--berry-ink);border-color:transparent}
+  .chip.pro{background:transparent;color:var(--berry-ink);border:1px dashed var(--berry)}
+
+  .num{font-family:"JetBrains Mono",monospace;font-variant-numeric:tabular-nums}
+
+  /* ── экран «День» ───────────────────────────── */
+  .repeat-card{
+    background:var(--berry-soft);border:1px solid transparent;border-radius:var(--radius);
+    padding:14px;display:flex;flex-direction:column;gap:10px
+  }
+  .repeat-card p{margin:0;font-size:13px;color:var(--ink-2)}
+  .repeat-card strong{color:var(--ink)}
+
+  .meal{display:flex;gap:12px;padding:13px 14px;border-bottom:1px solid var(--line-2)}
+  .meal:last-child{border-bottom:0}
+  .meal-time{
+    flex:none;width:44px;font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink-3);padding-top:2px
+  }
+  .meal-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}
+  .meal-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+  .meal-name{font-weight:600;font-size:14px}
+  .meal-gram{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink-2)}
+  .meal-items{font-size:13px;color:var(--ink-2);margin:0}
+  .meal-items em{font-style:normal;color:var(--berry-ink);font-weight:600}
+  .reactions{display:flex;flex-wrap:wrap;gap:5px}
+  .react{
+    appearance:none;font-family:inherit;cursor:pointer;font-size:11px;font-weight:500;
+    padding:4px 9px;border-radius:999px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink-2)
+  }
+  .react[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+  .react[aria-pressed="true"][data-kind="bad"]{background:var(--risk);border-color:var(--risk);color:#fff}
+  .meal.empty .meal-body{gap:8px}
+  .meal.empty .meal-name{color:var(--ink-3);font-weight:500}
+
+  .quick{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .quick button{
+    appearance:none;cursor:pointer;font-family:inherit;border:1px solid var(--line);background:var(--surface);
+    border-radius:12px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;
+    font-size:11px;color:var(--ink-2);font-weight:500
+  }
+  .quick svg{width:18px;height:18px;stroke:var(--berry-ink);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+
+  .daysum{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line-2);border-radius:var(--radius);overflow:hidden;border:1px solid var(--line-2)}
+  .daysum div{background:var(--surface);padding:11px 12px}
+  .daysum dt{font-size:11px;color:var(--ink-3);margin:0 0 3px}
+  .daysum dd{margin:0;font-family:"JetBrains Mono",monospace;font-size:17px;font-weight:600}
+
+  /* ── экран «Продукты» ───────────────────────── */
+  .search{
+    display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--line);
+    border-radius:12px;padding:10px 12px
+  }
+  .search input{border:0;background:none;font-family:inherit;font-size:14px;color:var(--ink);width:100%;padding:0}
+  .search input::placeholder{color:var(--ink-3)}
+  .search svg{width:17px;height:17px;flex:none;stroke:var(--ink-3);fill:none;stroke-width:1.7;stroke-linecap:round}
+  .filters{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+  .filters::-webkit-scrollbar{display:none}
+  .filters button{
+    appearance:none;cursor:pointer;font-family:inherit;font-size:12px;font-weight:500;white-space:nowrap;
+    border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:999px;padding:6px 11px
+  }
+  .filters button[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+
+  .food{border-bottom:1px solid var(--line-2)}
+  .food:last-child{border-bottom:0}
+  .food-row{
+    width:100%;appearance:none;background:none;border:0;font-family:inherit;text-align:left;cursor:pointer;
+    display:flex;align-items:center;gap:11px;padding:12px 14px;color:var(--ink)
+  }
+  .dot{width:9px;height:9px;border-radius:50%;flex:none}
+  .dot.ok{background:var(--ok)}
+  .dot.warn{background:var(--warn)}
+  .dot.risk{background:var(--risk)}
+  .food-main{flex:1;min-width:0}
+  .food-name{font-weight:600;font-size:14px}
+  .food-meta{font-size:12px;color:var(--ink-2);margin-top:1px}
+  .food-detail{padding:0 14px 14px 34px;display:flex;flex-direction:column;gap:10px}
+  .food-detail[hidden]{display:none}
+  .serve{display:flex;flex-direction:column;gap:6px;background:var(--surface-2);border-radius:11px;padding:11px}
+  .serve-row{display:flex;gap:10px;font-size:13px;align-items:baseline}
+  .serve-age{
+    font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-3);flex:none;width:52px;padding-top:1px
+  }
+  .serve-row.now .serve-age{color:var(--berry-ink);font-weight:600}
+  .serve-row.now span:last-child{font-weight:600}
+  .source{font-size:11px;color:var(--ink-3);display:flex;gap:6px;align-items:center}
+
+  /* ── экран «Кухня» ──────────────────────────── */
+  .rec-switch{display:flex;gap:6px}
+  .rec-switch button{
+    flex:1;appearance:none;cursor:pointer;font-family:inherit;font-size:12px;font-weight:500;
+    border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:10px;padding:8px 6px;
+    line-height:1.25
+  }
+  .rec-switch button[aria-pressed="true"]{border-color:var(--berry);color:var(--berry-ink);background:var(--berry-soft)}
+  .portions{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line-2)}
+  .stepper{display:flex;align-items:center;gap:2px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .stepper button{
+    appearance:none;cursor:pointer;border:0;background:var(--surface);color:var(--ink);font-family:inherit;
+    font-size:16px;width:32px;height:30px;line-height:1
+  }
+  .stepper span{min-width:46px;text-align:center;font-family:"JetBrains Mono",monospace;font-size:13px}
+  .ings{list-style:none;margin:0;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+  .ings li{display:flex;justify-content:space-between;gap:12px;font-size:13.5px}
+  .ings span:last-child{font-family:"JetBrains Mono",monospace;color:var(--ink-2);white-space:nowrap}
+
+  .cookstep{display:flex;flex-direction:column;gap:12px}
+  .step-n{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--berry-ink);font-weight:600}
+  .step-text{font-size:19px;line-height:1.35;margin:0;text-wrap:balance}
+  .timer{display:flex;align-items:center;gap:12px;background:var(--surface-2);border-radius:12px;padding:11px 13px}
+  .timer-val{font-family:"JetBrains Mono",monospace;font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;min-width:86px}
+  .timer.done .timer-val{color:var(--ok)}
+  .step-nav{display:grid;grid-template-columns:auto 1fr;gap:8px}
+  .progress{display:flex;gap:4px}
+  .progress i{height:3px;flex:1;border-radius:2px;background:var(--line);display:block}
+  .progress i.on{background:var(--berry)}
+  .note-box{display:flex;flex-direction:column;gap:7px}
+  .note-box textarea{
+    font-family:inherit;font-size:13px;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);
+    border-radius:11px;padding:10px;resize:none;min-height:56px;width:100%
+  }
+
+  .aisle{padding:11px 14px;border-bottom:1px solid var(--line-2)}
+  .aisle:last-child{border-bottom:0}
+  .aisle h4{margin:0 0 8px;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+  .buy{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:13.5px}
+  .buy input{accent-color:var(--berry);width:17px;height:17px;flex:none}
+  .buy label{flex:1;cursor:pointer}
+  .buy.have label{text-decoration:line-through;color:var(--ink-3)}
+  .buy .qty{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink-2)}
+  .buy .from{font-size:11px;color:var(--ink-3)}
+
+  /* ── экран «Врачу» ──────────────────────────── */
+  .report-head{display:flex;flex-direction:column;gap:4px}
+  .report-head h3{margin:0;font-size:17px}
+  .report-head p{margin:0;font-size:13px;color:var(--ink-2)}
+  .bars{display:flex;flex-direction:column;gap:9px}
+  .bar-row{display:grid;grid-template-columns:78px 1fr 34px;gap:9px;align-items:center;font-size:12.5px}
+  .bar{height:8px;border-radius:4px;background:var(--line-2);overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:4px;background:var(--berry)}
+  .bar-row .num{text-align:right;font-size:12px;color:var(--ink-2)}
+  .ev{display:flex;gap:10px;padding:10px 0;border-bottom:1px dashed var(--line);font-size:13px}
+  .ev:last-child{border-bottom:0}
+  .ev-date{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-3);flex:none;width:46px;padding-top:2px}
+  .ev-body{flex:1}
+  .ev-body b{font-weight:600}
+  .ev-body p{margin:2px 0 0;color:var(--ink-2);font-size:12.5px}
+
+  .paper{
+    background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;
+    font-size:12px;color:var(--ink-2);display:flex;flex-direction:column;gap:8px
+  }
+  .paper h5{margin:0;font-size:13px;color:var(--ink);font-family:"Unbounded","Golos Text",sans-serif;font-weight:500}
+  .paper table{width:100%;border-collapse:collapse;font-size:11.5px}
+  .paper th,.paper td{text-align:left;padding:4px 6px;border-bottom:1px solid var(--line-2)}
+  .paper th{color:var(--ink-3);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em}
+  .paper td.num{font-family:"JetBrains Mono",monospace}
+
+  /* ── шторка и тост ──────────────────────────── */
+  .sheet{
+    position:absolute;inset:0;background:rgba(10,16,13,.44);display:flex;align-items:flex-end;
+    border-radius:36px;z-index:5
+  }
+  .sheet[hidden]{display:none}
+  .sheet-inner{
+    width:100%;background:var(--surface);border-radius:22px 22px 36px 36px;padding:16px 18px 26px;
+    display:flex;flex-direction:column;gap:13px;animation:rise .22s ease-out
+  }
+  @keyframes rise{from{transform:translateY(16px);opacity:.4}to{transform:none;opacity:1}}
+  @media (prefers-reduced-motion:reduce){.sheet-inner{animation:none}}
+  .sheet-grab{width:36px;height:4px;border-radius:2px;background:var(--line);align-self:center}
+  .sheet h3{margin:0;font-size:16px}
+  .sheet .field{display:flex;flex-direction:column;gap:5px}
+  .sheet label{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+  .sheet input,.sheet select{
+    font-family:inherit;font-size:14px;color:var(--ink);background:var(--surface-2);
+    border:1px solid var(--line);border-radius:11px;padding:10px 11px;width:100%
+  }
+  .sheet .row{display:grid;grid-template-columns:1fr 104px;gap:9px}
+  .sheet .actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:2px}
+  .ai-note{font-size:12px;color:var(--ink-2);display:flex;gap:7px;align-items:flex-start;line-height:1.4}
+
+  .toast{
+    position:absolute;left:16px;right:16px;bottom:96px;background:var(--ink);color:var(--ground);
+    border-radius:12px;padding:11px 13px;font-size:13px;z-index:6;box-shadow:0 12px 30px -12px rgba(0,0,0,.5)
+  }
+  .toast[hidden]{display:none}
+
+  .hint{margin:0;font-size:12px;color:var(--ink-3);text-align:center;max-width:390px}
+
+  /* ── правая панель ──────────────────────────── */
+  .panel{display:flex;flex-direction:column;gap:18px;max-width:62ch}
+  .panel-head{display:flex;flex-direction:column;gap:6px}
+  .panel-head h2{
+    margin:0;font-family:"Unbounded","Golos Text",sans-serif;font-weight:500;font-size:20px;letter-spacing:-.01em;
+    text-wrap:balance
+  }
+  .panel-head p{margin:0;color:var(--ink-2);font-size:14px}
+  .mech{display:flex;flex-direction:column;gap:0}
+  .mech-item{display:grid;grid-template-columns:1fr auto;gap:4px 14px;padding:13px 0;border-bottom:1px solid var(--line)}
+  .mech-item:first-child{border-top:1px solid var(--line)}
+  .mech-name{font-weight:600;font-size:14.5px}
+  .mech-from{grid-column:1;font-size:12.5px;color:var(--ink-2)}
+  .mech-item .chip{grid-column:2;grid-row:1;align-self:start}
+  blockquote.q{
+    margin:0;padding:0 0 0 16px;border-left:2px solid var(--berry);color:var(--ink-2);
+    font-size:13.5px;line-height:1.55
+  }
+  blockquote.q cite{display:block;margin-top:6px;font-style:normal;font-size:11px;color:var(--ink-3);letter-spacing:.04em}
+
+  .notes{border-top:1px solid var(--line);padding-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:26px}
+  .notes h3{margin:0 0 9px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+  .notes ul{margin:0;padding-left:17px;display:flex;flex-direction:column;gap:6px;font-size:13.5px;color:var(--ink-2)}
+  .notes li b{color:var(--ink);font-weight:600}
+  .notes p{margin:0;font-size:13.5px;color:var(--ink-2)}
+
+  /* ── режим Telegram Mini App ────────────────── */
+  .info-btn{display:none}
+  body.tg .wrap{max-width:none;padding:0;gap:0}
+  body.tg .top,body.tg .notes,body.tg .hint{display:none}
+  body.tg .stage{display:block}
+  body.tg .phone-col{position:static;gap:0}
+  body.tg .phone{width:100%;max-width:none;height:100dvh;border-radius:0;padding:0;box-shadow:none;background:var(--surface)}
+  body.tg .screen{border-radius:0}
+  body.tg .statusbar{display:none}
+  body.tg .sheet{border-radius:0}
+  body.tg .info-btn{display:inline-flex}
+  body.tg .panel{
+    position:fixed;inset:0;z-index:20;background:var(--ground);overflow-y:auto;
+    padding:20px 18px 48px;max-width:none
+  }
+  .panel-close{align-self:flex-start}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <span class="logo">Eda<b>App</b></span>
+      <span class="eyebrow">Кликабельное демо MVP · по исследованию рынка от 19.09.2026</span>
+    </div>
+    <p class="scope">Взята связка, рекомендованная в документе: <code>справочник + лог с повтором + выгрузка для врача</code>. Рамка — прикорм 6–36 мес.</p>
+  </header>
+
+  <div class="stage">
+    <div class="phone-col">
+      <div class="phone">
+        <div class="screen">
+          <div class="statusbar">
+            <span>9:41</span>
+            <span class="sb-dots"><i></i><i></i><i></i><i></i></span>
+          </div>
+
+          <header class="appbar">
+            <div class="kid">
+              <div class="avatar">М</div>
+              <div>
+                <div class="kid-name">Мия</div>
+                <div class="kid-age">9 мес 4 дня</div>
+              </div>
+            </div>
+            <div class="who">
+              <span class="who-chip">вы + папа</span>
+              <button class="btn btn-sm btn-ghost info-btn" id="infoBtn" type="button">Почему так</button>
+            </div>
+          </header>
+
+          <main class="views" id="views">
+            <!-- ЭКРАН: ДЕНЬ -->
+            <section class="view" data-view="day">
+              <div class="repeat-card" id="repeatCard">
+                <p><strong>Вчера Мия ела 4 раза.</strong> Рацион почти не меняется — заполните день одним касанием и поправьте, что отличалось.</p>
+                <button class="btn btn-primary btn-wide" id="repeatBtn">Повторить вчерашний день</button>
+              </div>
+
+              <div class="sec-label"><span>Сегодня, 20 сентября</span><span class="num" id="dayCount">1 из 4</span></div>
+              <div class="flat" id="meals"></div>
+
+              <div class="sec-label">Добавить приём</div>
+              <div class="quick">
+                <button data-add="photo">
+                  <svg viewBox="0 0 24 24"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.4"/></svg>
+                  Фото
+                </button>
+                <button data-add="voice">
+                  <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 12a7 7 0 0 0 14 0M12 19v2"/></svg>
+                  Голос
+                </button>
+                <button data-add="recent">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4"/><path d="M12 7.5V12l3 2"/></svg>
+                  Недавнее
+                </button>
+                <button data-add="search">
+                  <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.6"/><path d="M19.5 19.5 16 16"/></svg>
+                  Поиск
+                </button>
+              </div>
+
+              <div class="sec-label">Итог дня</div>
+              <dl class="daysum">
+                <div><dt>Приёмов</dt><dd class="num" id="sumMeals">1</dd></div>
+                <div><dt>Новый продукт</dt><dd class="num" id="sumNew">1</dd></div>
+                <div><dt>Реакции</dt><dd class="num" id="sumReact">0</dd></div>
+              </dl>
+            </section>
+
+            <!-- ЭКРАН: ПРОДУКТЫ -->
+            <section class="view" data-view="food" hidden>
+              <div class="sec-label"><span>Справочник продуктов</span><span class="chip ok">бесплатно</span></div>
+              <div class="search">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.6"/><path d="M19.5 19.5 16 16"/></svg>
+                <input type="search" id="foodQ" placeholder="Продукт: мёд, виноград, треска…" aria-label="Поиск по справочнику">
+              </div>
+              <div class="filters" id="foodFilters">
+                <button data-f="all" aria-pressed="true">Все</button>
+                <button data-f="now" aria-pressed="false">Можно в 9 мес</button>
+                <button data-f="allergen" aria-pressed="false">Аллергены</button>
+                <button data-f="choke" aria-pressed="false">Риск удушья</button>
+                <button data-f="later" aria-pressed="false">Рано</button>
+              </div>
+              <div class="flat" id="foodList"></div>
+              <p class="ai-note"><span class="chip berry">важно</span> Ответ про аллерген всегда показывает источник: в детском питании ошибка ИИ — это не «неточные калории», а риск.</p>
+            </section>
+
+            <!-- ЭКРАН: КУХНЯ -->
+            <section class="view" data-view="cook" hidden>
+              <div class="sec-label"><span>Рецепты под 9 месяцев</span><span class="chip ok">бесплатно</span></div>
+              <div class="rec-switch" id="recSwitch"></div>
+
+              <div class="flat">
+                <div class="portions">
+                  <div>
+                    <div style="font-weight:600;font-size:13.5px" id="recTitle"></div>
+                    <div style="font-size:12px;color:var(--ink-2)" id="recMeta"></div>
+                  </div>
+                  <div class="stepper">
+                    <button id="pMinus" aria-label="Меньше порций">−</button>
+                    <span class="num" id="pVal">2 порции</span>
+                    <button id="pPlus" aria-label="Больше порций">+</button>
+                  </div>
+                </div>
+                <ul class="ings" id="ings"></ul>
+              </div>
+
+              <div class="card cookstep">
+                <div class="progress" id="cookProgress"></div>
+                <div class="step-n" id="stepN"></div>
+                <p class="step-text" id="stepText"></p>
+                <div class="timer" id="timerBox">
+                  <span class="timer-val" id="timerVal">00:00</span>
+                  <button class="btn btn-sm btn-ghost" id="timerBtn">Запустить</button>
+                  <span class="chip" id="timerHint">экран не гаснет</span>
+                </div>
+                <div class="step-nav">
+                  <button class="btn btn-sm btn-ghost" id="prevStep">Назад</button>
+                  <button class="btn btn-sm btn-primary" id="nextStep">Следующий шаг</button>
+                </div>
+              </div>
+
+              <div class="card note-box">
+                <div class="sec-label">Моя заметка к рецепту</div>
+                <textarea id="recNote" placeholder="В следующий раз — меньше воды"></textarea>
+                <span class="source" id="noteSaved">Сохраняется автоматически, видна папе</span>
+              </div>
+
+              <div class="sec-label"><span>Список покупок на неделю</span><span class="num" id="buyCount"></span></div>
+              <div class="flat" id="buyList"></div>
+              <button class="btn btn-primary btn-wide" id="deliverBtn">Отправить в доставку · 1 магазин</button>
+              <p class="hint" style="text-align:left">Строки сгруппированы по отделам, одинаковые продукты сложены. Отмеченное «есть дома» в заказ не уходит.</p>
+            </section>
+
+            <!-- ЭКРАН: ВРАЧУ -->
+            <section class="view" data-view="doc" hidden>
+              <div class="sec-label"><span>Отчёт педиатру</span><span class="chip pro">подписка</span></div>
+              <div class="report-head">
+                <h3>Пищевой дневник Мии</h3>
+                <p>21 августа — 20 сентября · 31 день, 118 приёмов</p>
+              </div>
+
+              <div class="card">
+                <div class="sec-label" style="margin-bottom:11px">Введено по группам</div>
+                <div class="bars">
+                  <div class="bar-row"><span>Овощи</span><span class="bar"><i style="width:80%"></i></span><span class="num">8/10</span></div>
+                  <div class="bar-row"><span>Крупы</span><span class="bar"><i style="width:75%"></i></span><span class="num">3/4</span></div>
+                  <div class="bar-row"><span>Фрукты</span><span class="bar"><i style="width:57%"></i></span><span class="num">4/7</span></div>
+                  <div class="bar-row"><span>Белок</span><span class="bar"><i style="width:50%"></i></span><span class="num">3/6</span></div>
+                  <div class="bar-row"><span>Аллергены</span><span class="bar"><i style="width:37%"></i></span><span class="num">3/8</span></div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="sec-label" style="margin-bottom:6px">Реакции за период</div>
+                <div class="ev">
+                  <span class="ev-date">14.09</span>
+                  <div class="ev-body"><b>Яичный желток</b> · 2-е введение, 1/4 шт
+                    <p>Сыпь на щеках через 40 мин, прошла за сутки. Пауза 7 дней.</p></div>
+                </div>
+                <div class="ev">
+                  <span class="ev-date">02.09</span>
+                  <div class="ev-body"><b>Кефир</b> · первое введение, 20 мл
+                    <p>Беспокойство вечером, повтор без реакции 05.09.</p></div>
+                </div>
+                <div class="ev">
+                  <span class="ev-date">27.08</span>
+                  <div class="ev-body"><b>Треска</b> · первое введение, 15 г<p>Без реакции, введена в рацион.</p></div>
+                </div>
+              </div>
+
+              <button class="btn btn-primary btn-wide" id="pdfBtn">Собрать выписку к приёму</button>
+              <div id="paperSlot"></div>
+
+              <div class="sec-label">Кто ведёт дневник</div>
+              <div class="card" style="display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <span class="avatar" style="width:30px;height:30px;border-radius:10px;font-size:13px">М</span>
+                  <div style="flex:1;font-size:13.5px">Мама <span class="chip">владелец</span></div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <span class="avatar" style="width:30px;height:30px;border-radius:10px;font-size:13px;background:var(--surface-2);color:var(--ink-2)">П</span>
+                  <div style="flex:1;font-size:13.5px">Папа <span class="chip ok">записывал сегодня</span></div>
+                </div>
+                <button class="btn btn-sm btn-ghost btn-wide" id="inviteBtn">Пригласить бабушку или няню</button>
+              </div>
+            </section>
+          </main>
+
+          <nav class="tabbar" id="tabbar" role="tablist" aria-label="Разделы приложения">
+            <button class="tab" role="tab" data-tab="day" aria-selected="true">
+              <svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8.5 3v4M15.5 3v4"/></svg>
+              День
+            </button>
+            <button class="tab" role="tab" data-tab="food" aria-selected="false">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.6"/><path d="M19.5 19.5 16 16"/></svg>
+              Продукты
+            </button>
+            <button class="tab" role="tab" data-tab="cook" aria-selected="false">
+              <svg viewBox="0 0 24 24"><path d="M4 10.5h16V15a4.5 4.5 0 0 1-4.5 4.5h-7A4.5 4.5 0 0 1 4 15z"/><path d="M4 12.5H2.2M21.8 12.5H20"/><path d="M9.5 7.5c0-1.4 1.4-1.4 1.4-2.8M14 7.5c0-1.4 1.4-1.4 1.4-2.8"/></svg>
+              Кухня
+            </button>
+            <button class="tab" role="tab" data-tab="doc" aria-selected="false">
+              <svg viewBox="0 0 24 24"><rect x="5" y="4.5" width="14" height="16" rx="2.5"/><path d="M9.5 3h5v3h-5z"/><path d="M9 11.5h6M9 15h4"/></svg>
+              Врачу
+            </button>
+          </nav>
+
+          <div class="sheet" id="sheet" hidden>
+            <div class="sheet-inner" id="sheetInner"></div>
+          </div>
+          <div class="toast" id="toast" hidden></div>
+        </div>
+      </div>
+      <p class="hint">Всё кликабельно: повтор дня, фото- и голосовой ввод, фильтры справочника, таймер готовки, список покупок, выписка.</p>
+    </div>
+
+    <aside class="panel" id="panel"></aside>
+  </div>
+
+  <section class="notes">
+    <div>
+      <h3>Что в демо сознательно не делали</h3>
+      <ul>
+        <li><b>Импорт чужих рецептов</b> — в документе это «низкий эффект для нашей ниши»: мамы приходят за проверенным контентом.</li>
+        <li><b>Трекинг калорий взрослого</b> — лишний в детской рамке.</li>
+        <li><b>Реальное распознавание</b> — фото и голос показаны как сценарий с обязательной правкой до сохранения.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Линия бесплатного и платного</h3>
+      <ul>
+        <li>Бесплатно: справочник и базовый лог — то, ради чего открывают приложение каждый день.</li>
+        <li>Подписка: выписка педиатру, аналитика рациона, общий доступ, персональная схема.</li>
+        <li>Урок MyFitnessPal: пейвол на ежедневной механике оплачивается оттоком.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Что решить до разработки</h3>
+      <p>Открытый вопрос из исследования: EdaApp — это только прикорм до трёх лет или питание семьи целиком. Демо собрано в первой рамке. Данные справочника — заглушки; перед релизом их заполняет педиатр-эксперт, каждая карточка со ссылкой на источник.</p>
+    </div>
+  </section>
+</div>
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* Telegram Mini App: объект есть только внутри Telegram.
+     На обычной странице всё работает как раньше. */
+  const TG = (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData !== undefined)
+    ? window.Telegram.WebApp : null;
+
+  /* ───────── данные ───────── */
+  const YESTERDAY = [
+    {time:"08:30", name:"Завтрак", gram:"140 г", items:"Гречневая каша на воде, груша печёная"},
+    {time:"12:30", name:"Обед", gram:"165 г", items:"Кабачок с треской на пару, олив. масло 3 г"},
+    {time:"16:00", name:"Полдник", gram:"90 г",  items:"Йогурт без добавок"},
+    {time:"19:00", name:"Ужин", gram:"120 г", items:"Цветная капуста, индейка"}
+  ];
+
+  const FOODS = [
+    {n:"Кабачок", from:6, state:"ok", tags:[], meta:"с 6 мес · частый первый овощ",
+     serve:{"6":"Пюре гладкое, без комков","9":"Кусочки 1×1 см, мягко тушёные","12":"Палочки, запечённые"}},
+    {n:"Гречка", from:6, state:"ok", tags:[], meta:"с 6 мес · безмолочная каша",
+     serve:{"6":"Жидкая каша 5%","9":"Каша 10%, можно не протирать","12":"Рассыпчатая с овощами"}},
+    {n:"Треска", from:8, state:"ok", tags:["allergen"], meta:"с 8 мес · аллерген, 2 раза в неделю",
+     serve:{"6":"Рано","9":"15–30 г, отварная, разобрать на волокна и проверить кости","12":"До 60 г, котлета на пару"}},
+    {n:"Яичный желток", from:6, state:"ok", tags:["allergen"], meta:"с 6 мес · аллерген, вводить с 1/8",
+     serve:{"6":"1/8 желтка, растереть в пюре","9":"До 1/2 желтка","12":"Целое яйцо, полностью проваренное"}},
+    {n:"Арахисовая паста", from:6, state:"ok", tags:["allergen","choke"], meta:"с 6 мес · аллерген + риск удушья густой ложкой",
+     serve:{"6":"2 г, развести водой или молоком до жидкой","9":"Тонким слоем в кашу","12":"Тонкий слой на мягкий хлеб"}},
+    {n:"Кефир", from:8, state:"ok", tags:[], meta:"с 8 мес · начинать с 20 мл",
+     serve:{"6":"Рано","9":"До 100 мл в день, без сахара","12":"До 200 мл"}},
+    {n:"Виноград", from:9, state:"warn", tags:["choke"], meta:"с 9 мес · только разрезанный вдоль",
+     serve:{"6":"Рано","9":"Разрезать вдоль на четверти, без кожицы","12":"Четвертинки, целиком — не раньше 4–5 лет"}},
+    {n:"Цельное коровье молоко", from:12, state:"warn", tags:["later"], meta:"как напиток — с 12 мес",
+     serve:{"6":"Рано","9":"Только в составе каши","12":"До 400 мл в день"}},
+    {n:"Мёд", from:36, state:"risk", tags:["later"], meta:"нельзя до 12 мес · ботулизм",
+     serve:{"6":"Нельзя","9":"Нельзя","12":"После года, редко и немного"}},
+    {n:"Соль", from:12, state:"warn", tags:["later"], meta:"не добавлять до 12 мес",
+     serve:{"6":"Не добавлять","9":"Не добавлять","12":"До 1 г в сутки с учётом продуктов"}},
+    {n:"Цельные орехи", from:36, state:"risk", tags:["choke","later"], meta:"целиком — не раньше 4–5 лет",
+     serve:{"6":"Нельзя","9":"Только в виде тонко размолотой пасты","12":"Паста или мука, не целиком"}}
+  ];
+
+  const RECIPES = [
+    {t:"Кабачок с треской на пару", m:"9+ мес · 18 мин · белок",
+     ing:[["Кабачок","90 г"],["Филе трески","30 г"],["Оливковое масло","3 г"],["Вода","60 мл"]],
+     steps:[
+       {s:"Кабачок очистить и нарезать кубиком 1 см. Кожицу снять полностью — в 9 месяцев она ещё грубая.",t:0},
+       {s:"Треску проверить на кости пальцами, разобрать на волокна. Это единственный шаг, который нельзя делать быстро.",t:0},
+       {s:"Кабачок на пару под крышкой.",t:480},
+       {s:"Добавить треску и готовить вместе до плотной белой мякоти.",t:300},
+       {s:"Размять вилкой до крупных комочков, влить масло. Остудить до 37° — капните на запястье.",t:0}
+     ]},
+    {t:"Гречка с грушей", m:"6+ мес · 25 мин · первая каша",
+     ing:[["Гречневая крупа","30 г"],["Вода","200 мл"],["Груша","50 г"]],
+     steps:[
+       {s:"Крупу промыть до прозрачной воды и залить кипятком.",t:0},
+       {s:"Варить на медленном огне под крышкой.",t:900},
+       {s:"Грушу очистить и припустить отдельно до мягкости.",t:420},
+       {s:"Пробить блендером до нужной густоты: в 6 месяцев — жиже, чем кажется правильным.",t:0}
+     ]},
+    {t:"Овощные палочки для BLW", m:"9+ мес · 30 мин · самостоятельная еда",
+     ing:[["Морковь","1 шт"],["Батат","1 шт"],["Оливковое масло","5 г"]],
+     steps:[
+       {s:"Нарезать палочками с палец взрослого — ребёнок должен удерживать в кулаке.",t:0},
+       {s:"Запекать при 180° до мягкости: палочка должна разминаться между пальцами.",t:1500},
+       {s:"Остудить. Проверить каждую палочку на твёрдые края.",t:0}
+     ]}
+  ];
+
+  const BUY = [
+    {aisle:"Овощи и фрукты", items:[
+      {n:"Кабачок", q:"600 г", from:"из 3 рецептов", have:false},
+      {n:"Груша", q:"4 шт", from:"каша, полдник", have:false},
+      {n:"Морковь", q:"500 г", from:"BLW-палочки", have:true},
+      {n:"Цветная капуста", q:"400 г", from:"ужин вт, чт", have:false}
+    ]},
+    {aisle:"Рыба и мясо", items:[
+      {n:"Филе трески", q:"250 г", from:"обед пн, ср", have:false},
+      {n:"Индейка, грудка", q:"300 г", from:"ужин", have:false}
+    ]},
+    {aisle:"Бакалея", items:[
+      {n:"Гречневая крупа", q:"1 пачка", from:"завтраки", have:true},
+      {n:"Оливковое масло", q:"250 мл", from:"5 рецептов", have:true}
+    ]},
+    {aisle:"Молочное", items:[
+      {n:"Кефир детский", q:"4 × 200 мл", from:"полдник", have:false},
+      {n:"Йогурт без добавок", q:"6 шт", from:"полдник", have:false}
+    ]}
+  ];
+
+  const PANEL = {
+    day:{
+      h:"Лог, который не заставляет вводить одно и то же",
+      p:"Вся конкуренция трекеров свелась к секундам на запись приёма пищи. В детском питании это острее: ребёнок ест одно и то же неделями.",
+      m:[
+        {n:"Повтор вчерашнего в один тап", f:"MyFitnessPal: недавнее, избранное, копирование дня", c:["ok","бесплатно"]},
+        {n:"Фото и голос вместо ввода руками", f:"Lifesum, MyFitnessPal Premium+ (Cal AI, март 2026)", c:["pro","подписка"]},
+        {n:"Правка того, что предложил ИИ", f:"Lifesum — иначе доверие к цифрам рушится", c:["ok","бесплатно"]},
+        {n:"Отметка реакции прямо в приёме", f:"Solid Starts — из этого потом собирается выписка", c:["ok","бесплатно"]}
+      ],
+      q:["Любой трекер, который заставляет вводить одно и то же каждый день, проигрывает тому, который предлагает вчерашнее в один тап.","Исследование, раздел «Фишки трекинга»"]
+    },
+    food:{
+      h:"Справочник — причина открывать приложение каждый день",
+      p:"Свободная ниша на русском и самый высокий эффект на уникальность при средней сложности: основная работа тут не код, а контент и экспертиза.",
+      m:[
+        {n:"Подача по возрасту, а не «можно/нельзя»", f:"В нише на русском этого нет ни у кого", c:["ok","бесплатно"]},
+        {n:"Аллергены и риск удушья отдельными метками", f:"Solid Starts", c:["ok","бесплатно"]},
+        {n:"Источник у каждой карточки", f:"Cronometer, Fitia: проверенность — новый дифференциатор", c:["ok","бесплатно"]},
+        {n:"Офлайн-доступ", f:"Paprika — на кухне слабый вайфай", c:["ok","бесплатно"]}
+      ],
+      q:["Галлюцинация в ответе про аллерген — это не неточные калории, а риск. Одна ошибка стоит репутации всего продукта.","Исследование, раздел «ИИ-механики»"]
+    },
+    cook:{
+      h:"Кухня: дёшево в разработке, заметно в использовании",
+      p:"Режим готовки и таймеры — низкая сложность и средний эффект. Список покупок — точка, где тихо ломается большинство планеров.",
+      m:[
+        {n:"Режим готовки по шагам, экран не гаснет", f:"SideChef, Mealime", c:["ok","бесплатно"]},
+        {n:"Таймеры внутри шага", f:"SideChef и большинство планеров", c:["ok","бесплатно"]},
+        {n:"Скейлинг порций", f:"Samsung Food, Paprika", c:["ok","бесплатно"]},
+        {n:"Заметка к рецепту", f:"Самая частая незакрытая просьба в отзывах категории", c:["ok","бесплатно"]},
+        {n:"Список по отделам, со схлопыванием и учётом остатков", f:"Plan to Eat, AnyList; pantry-aware — незанятый дифференциатор", c:["pro","подписка"]},
+        {n:"Передача списка в доставку", f:"Plan to Eat, eMeals → в СНГ это Самокат, Лавка, Сбер", c:["pro","партнёрка"]}
+      ],
+      q:["Планер без списка покупок — половина продукта, а список без сортировки по отделам — половина списка.","Исследование, раздел «Планирование и шопинг»"]
+    },
+    doc:{
+      h:"Выписка превращает лог в документ",
+      p:"Сильная причина продлевать подписку: накопленный дневник нельзя воспроизвести заново, и именно он удерживает — как показало закрытие Yummly.",
+      m:[
+        {n:"Отчёт за период для педиатра", f:"Solid Starts — платная функция, в СНГ нет ни у кого", c:["pro","подписка"]},
+        {n:"История реакций и пауз", f:"Механика прикорма, которой нет у взрослых трекеров", c:["pro","подписка"]},
+        {n:"Второй взрослый в аккаунте", f:"AnyList, Plan to Eat, Cozi — удваивает активную аудиторию", c:["pro","подписка"]},
+        {n:"Экспорт данных с первого релиза", f:"Урок Yummly: библиотеку не простят потерять", c:["ok","бесплатно"]}
+      ],
+      q:["Сохранённые рецепты и история — это то, что удерживает пользователя, и это же то, что он не простит потерять.","Исследование, кейс Yummly"]
+    }
+  };
+
+  /* ───────── состояние ───────── */
+  const state = {
+    tab:"day",
+    meals:[{time:"08:30", name:"Завтрак", gram:"140 г", items:"Гречневая каша, груша печёная", newFood:"груша", react:null}],
+    filled:false,
+    foodFilter:"all", foodQ:"", openFood:null,
+    rec:0, portions:2, step:0, timeLeft:0, running:false, tick:null,
+    buy:JSON.parse(JSON.stringify(BUY)),
+    paper:false
+  };
+
+  const $ = s => document.querySelector(s);
+  const el = (t,c,x) => { const e=document.createElement(t); if(c) e.className=c; if(x!=null) e.textContent=x; return e; };
+  const esc = s => String(s).replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+
+  let toastT=null;
+  function toast(msg){
+    const t=$("#toast"); t.textContent=msg; t.hidden=false;
+    clearTimeout(toastT); toastT=setTimeout(()=>{t.hidden=true;},2600);
+  }
+
+  /* ───────── экран «День» ───────── */
+  function renderMeals(){
+    const box=$("#meals"); box.innerHTML="";
+    const plan=["Завтрак","Обед","Полдник","Ужин"];
+    plan.forEach(slot=>{
+      const m=state.meals.find(x=>x.name===slot);
+      const row=el("div","meal"+(m?"":" empty"));
+      const y=YESTERDAY.find(x=>x.name===slot);
+      row.appendChild(el("div","meal-time", m? m.time : y.time));
+      const body=el("div","meal-body");
+      const head=el("div","meal-head");
+      head.appendChild(el("div","meal-name", slot));
+      if(m) head.appendChild(el("div","meal-gram", m.gram));
+      body.appendChild(head);
+      if(m){
+        const p=el("p","meal-items");
+        p.innerHTML = m.newFood
+          ? esc(m.items).replace(new RegExp(esc(m.newFood),"i"), s=>"<em>"+s+" · новый</em>")
+          : esc(m.items);
+        body.appendChild(p);
+        const rr=el("div","reactions");
+        [["Съел","good"],["Отказ","bad"],["Сыпь","bad"],["Колики","bad"]].forEach(([label,kind])=>{
+          const b=el("button","react",label);
+          b.type="button"; b.dataset.kind=kind;
+          b.setAttribute("aria-pressed", m.react===label ? "true":"false");
+          b.addEventListener("click",()=>{
+            m.react = m.react===label ? null : label;
+            renderMeals(); updateSummary();
+            if(m.react && kind==="bad") toast("Отмечено. Реакция попадёт в выписку для педиатра.");
+          });
+          rr.appendChild(b);
+        });
+        body.appendChild(rr);
+      } else {
+        const p=el("p","meal-items"); p.textContent="Вчера: "+y.items; body.appendChild(p);
+      }
+      row.appendChild(body);
+      box.appendChild(row);
+    });
+    $("#dayCount").textContent=state.meals.length+" из 4";
+    $("#repeatCard").hidden = state.filled;
+  }
+
+  function updateSummary(){
+    $("#sumMeals").textContent=state.meals.length;
+    $("#sumNew").textContent=state.meals.filter(m=>m.newFood).length;
+    $("#sumReact").textContent=state.meals.filter(m=>m.react&&m.react!=="Съел").length;
+  }
+
+  $("#repeatBtn").addEventListener("click",()=>{
+    YESTERDAY.forEach(y=>{
+      if(!state.meals.find(m=>m.name===y.name))
+        state.meals.push({time:y.time,name:y.name,gram:y.gram,items:y.items,react:null});
+    });
+    state.meals.sort((a,b)=>a.time.localeCompare(b.time));
+    state.filled=true;
+    renderMeals(); updateSummary();
+    toast("День заполнен из вчерашнего. Поправьте, что отличалось.");
+  });
+
+  /* ───────── шторка добавления ───────── */
+  const SHEETS={
+    photo:{
+      title:"Распознали по фото",
+      note:"ИИ предлагает, сохраняете вы. До нажатия «Сохранить» ничего не попадает в дневник.",
+      dish:"Кабачок с треской на пару", gram:"165", conf:"уверенность 86%"
+    },
+    voice:{
+      title:"Расшифровали голос",
+      note:"«Мия съела полпорции кабачка с треской, грамм сто» — руки заняты ребёнком, запись голосом.",
+      dish:"Кабачок с треской на пару", gram:"100", conf:"расшифровка"
+    },
+    recent:{
+      title:"Недавнее",
+      note:"80% рациона повторяется — недавние блюда стоят выше поиска.",
+      dish:"Йогурт без добавок", gram:"90", conf:"позавчера и вчера"
+    },
+    search:{
+      title:"Поиск по базе",
+      note:"База детских блюд с граммовкой по возрасту; свои блюда сохраняются в «Мои».",
+      dish:"Цветная капуста, индейка", gram:"120", conf:"из справочника"
+    }
+  };
+
+  function openSheet(kind){
+    const c=SHEETS[kind], slot=$("#sheetInner");
+    const opts=["Кабачок с треской на пару","Гречневая каша, груша печёная","Йогурт без добавок","Цветная капуста, индейка","Кефир детский"];
+    slot.innerHTML=
+      '<div class="sheet-grab"></div>'+
+      '<h3>'+esc(c.title)+'</h3>'+
+      '<p class="ai-note"><span class="chip berry">'+esc(c.conf)+'</span><span>'+esc(c.note)+'</span></p>'+
+      '<div class="field"><label for="shDish">Блюдо</label><select id="shDish">'+
+        opts.map(o=>'<option'+(o===c.dish?' selected':'')+'>'+esc(o)+'</option>').join("")+
+      '</select></div>'+
+      '<div class="row">'+
+        '<div class="field"><label for="shSlot">Приём</label><select id="shSlot">'+
+          ["Завтрак","Обед","Полдник","Ужин"].map(o=>'<option>'+o+'</option>').join("")+
+        '</select></div>'+
+        '<div class="field"><label for="shGram">Граммы</label><input id="shGram" inputmode="numeric" value="'+esc(c.gram)+'"></div>'+
+      '</div>'+
+      '<div class="actions"><button class="btn btn-ghost" id="shCancel">Отмена</button>'+
+      '<button class="btn btn-primary" id="shSave">Сохранить</button></div>';
+    $("#sheet").hidden=false;
+    $("#shCancel").addEventListener("click",closeSheet);
+    $("#shSave").addEventListener("click",()=>{
+      const slotName=$("#shSlot").value, dish=$("#shDish").value, gram=$("#shGram").value||"0";
+      const times={"Завтрак":"08:30","Обед":"12:30","Полдник":"16:00","Ужин":"19:00"};
+      const ex=state.meals.find(m=>m.name===slotName);
+      if(ex){ ex.items=dish; ex.gram=gram+" г"; }
+      else state.meals.push({time:times[slotName],name:slotName,gram:gram+" г",items:dish,react:null});
+      state.meals.sort((a,b)=>a.time.localeCompare(b.time));
+      if(state.meals.length===4) state.filled=true;
+      closeSheet(); renderMeals(); updateSummary();
+      toast(slotName+" записан: "+dish+", "+gram+" г.");
+    });
+  }
+  function closeSheet(){ $("#sheet").hidden=true; $("#sheetInner").innerHTML=""; }
+  $("#sheet").addEventListener("click",e=>{ if(e.target.id==="sheet") closeSheet(); });
+  document.querySelectorAll("[data-add]").forEach(b=>b.addEventListener("click",()=>openSheet(b.dataset.add)));
+
+  /* ───────── экран «Продукты» ───────── */
+  const AGE=9;
+  function foodPasses(f){
+    const q=state.foodQ.trim().toLowerCase();
+    if(q && !f.n.toLowerCase().includes(q)) return false;
+    switch(state.foodFilter){
+      case "now": return f.from<=AGE;
+      case "allergen": return f.tags.includes("allergen");
+      case "choke": return f.tags.includes("choke");
+      case "later": return f.from>AGE;
+      default: return true;
+    }
+  }
+  function renderFoods(){
+    const box=$("#foodList"); box.innerHTML="";
+    const list=FOODS.filter(foodPasses);
+    if(!list.length){
+      const e=el("div","food-detail"); e.style.padding="18px 14px";
+      e.appendChild(el("div","food-meta","Ничего не нашлось. Попробуйте другое название — словарь замен в работе."));
+      box.appendChild(e); return;
+    }
+    list.forEach(f=>{
+      const wrap=el("div","food");
+      const btn=el("button","food-row"); btn.type="button";
+      btn.setAttribute("aria-expanded", state.openFood===f.n ? "true":"false");
+      btn.appendChild(el("span","dot "+f.state));
+      const main=el("div","food-main");
+      main.appendChild(el("div","food-name",f.n));
+      main.appendChild(el("div","food-meta",f.meta));
+      btn.appendChild(main);
+      if(f.tags.includes("allergen")) btn.appendChild(el("span","chip warn","аллерген"));
+      if(f.tags.includes("choke")) btn.appendChild(el("span","chip risk","удушье"));
+      btn.addEventListener("click",()=>{ state.openFood = state.openFood===f.n ? null : f.n; renderFoods(); });
+      wrap.appendChild(btn);
+
+      const det=el("div","food-detail"); det.hidden = state.openFood!==f.n;
+      const serve=el("div","serve");
+      serve.appendChild(el("div","sec-label","Как подать"));
+      [["6","6 мес"],["9","9 мес"],["12","12 мес+"]].forEach(([k,label])=>{
+        const r=el("div","serve-row"+(k==="9"?" now":""));
+        r.appendChild(el("span","serve-age",label));
+        r.appendChild(el("span",null,f.serve[k]));
+        serve.appendChild(r);
+      });
+      det.appendChild(serve);
+      const src=el("div","source");
+      src.appendChild(el("span","chip","источник"));
+      src.appendChild(el("span",null,"Карточку заполняет педиатр-эксперт · в демо данные учебные"));
+      det.appendChild(src);
+      wrap.appendChild(det);
+      box.appendChild(wrap);
+    });
+  }
+  $("#foodQ").addEventListener("input",e=>{ state.foodQ=e.target.value; renderFoods(); });
+  $("#foodFilters").addEventListener("click",e=>{
+    const b=e.target.closest("button"); if(!b) return;
+    state.foodFilter=b.dataset.f;
+    $("#foodFilters").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", String(x===b)));
+    renderFoods();
+  });
+
+  /* ───────── экран «Кухня» ───────── */
+  function renderRecSwitch(){
+    const box=$("#recSwitch"); box.innerHTML="";
+    RECIPES.forEach((r,i)=>{
+      const b=el("button",null,r.t); b.type="button";
+      b.setAttribute("aria-pressed", String(i===state.rec));
+      b.addEventListener("click",()=>{ state.rec=i; state.step=0; stopTimer(); renderRecipe(); });
+      box.appendChild(b);
+    });
+  }
+  function scaleQty(q){
+    const m=q.match(/^([\d.,]+)\s*(.*)$/);
+    if(!m) return q;
+    const base=parseFloat(m[1].replace(",","."))/2;
+    const v=base*state.portions;
+    return (Math.round(v*10)/10).toString().replace(".",",")+(m[2]?" "+m[2]:"");
+  }
+  function renderRecipe(){
+    const r=RECIPES[state.rec];
+    $("#recTitle").textContent=r.t;
+    $("#recMeta").textContent=r.m;
+    $("#pVal").textContent=state.portions+" "+(state.portions===1?"порция":state.portions<5?"порции":"порций");
+    const ul=$("#ings"); ul.innerHTML="";
+    r.ing.forEach(([n,q])=>{
+      const li=el("li"); li.appendChild(el("span",null,n)); li.appendChild(el("span",null,scaleQty(q))); ul.appendChild(li);
+    });
+    const pr=$("#cookProgress"); pr.innerHTML="";
+    r.steps.forEach((_,i)=>{ const i2=el("i", i<=state.step?"on":null); pr.appendChild(i2); });
+    $("#stepN").textContent="Шаг "+(state.step+1)+" из "+r.steps.length;
+    $("#stepText").textContent=r.steps[state.step].s;
+    const t=r.steps[state.step].t;
+    $("#timerBox").hidden = t===0;
+    if(t>0 && !state.running){ state.timeLeft=t; paintTimer(); $("#timerBtn").textContent="Запустить"; $("#timerBox").classList.remove("done"); }
+    $("#prevStep").disabled = state.step===0;
+    $("#nextStep").textContent = state.step===r.steps.length-1 ? "Готово" : "Следующий шаг";
+  }
+  function paintTimer(){
+    const m=Math.floor(state.timeLeft/60), s=state.timeLeft%60;
+    $("#timerVal").textContent=String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
+  }
+  function stopTimer(){ clearInterval(state.tick); state.tick=null; state.running=false; }
+  $("#timerBtn").addEventListener("click",()=>{
+    if(state.running){ stopTimer(); $("#timerBtn").textContent="Продолжить"; return; }
+    if(state.timeLeft<=0) state.timeLeft=RECIPES[state.rec].steps[state.step].t;
+    state.running=true; $("#timerBtn").textContent="Пауза"; $("#timerBox").classList.remove("done");
+    state.tick=setInterval(()=>{
+      state.timeLeft--; paintTimer();
+      if(state.timeLeft<=0){
+        stopTimer(); $("#timerBtn").textContent="Заново"; $("#timerBox").classList.add("done");
+        toast("Таймер шага "+(state.step+1)+" закончился.");
+      }
+    },1000);
+  });
+  $("#prevStep").addEventListener("click",()=>{ if(state.step>0){ state.step--; stopTimer(); renderRecipe(); }});
+  $("#nextStep").addEventListener("click",()=>{
+    const last=RECIPES[state.rec].steps.length-1;
+    if(state.step<last){ state.step++; stopTimer(); renderRecipe(); }
+    else { toast("Блюдо готово. Записать в дневник Мии?"); }
+  });
+  $("#pMinus").addEventListener("click",()=>{ if(state.portions>1){ state.portions--; renderRecipe(); }});
+  $("#pPlus").addEventListener("click",()=>{ if(state.portions<8){ state.portions++; renderRecipe(); }});
+  let noteT=null;
+  $("#recNote").addEventListener("input",()=>{
+    clearTimeout(noteT);
+    $("#noteSaved").textContent="…";
+    noteT=setTimeout(()=>{ $("#noteSaved").textContent="Сохранено, видно папе"; },600);
+  });
+
+  function renderBuy(){
+    const box=$("#buyList"); box.innerHTML="";
+    let need=0, have=0;
+    state.buy.forEach((group,gi)=>{
+      const g=el("div","aisle");
+      g.appendChild(el("h4",null,group.aisle));
+      group.items.forEach((it,ii)=>{
+        const row=el("div","buy"+(it.have?" have":""));
+        const cb=el("input"); cb.type="checkbox"; cb.checked=it.have;
+        cb.id="buy-"+gi+"-"+ii;
+        cb.addEventListener("change",()=>{ state.buy[gi].items[ii].have=cb.checked; renderBuy(); });
+        const lab=el("label",null,it.n); lab.htmlFor=cb.id;
+        row.appendChild(cb); row.appendChild(lab);
+        row.appendChild(el("span","qty",it.q));
+        g.appendChild(row);
+        const sub=el("div","buy"); sub.style.padding="0 0 4px 27px";
+        sub.appendChild(el("span","from",it.have?"уже есть дома":it.from));
+        g.appendChild(sub);
+        it.have?have++:need++;
+      });
+      box.appendChild(g);
+    });
+    $("#buyCount").textContent=need+" купить · "+have+" есть";
+    $("#deliverBtn").textContent="Отправить в доставку · "+need+" позиций";
+  }
+  $("#deliverBtn").addEventListener("click",()=>toast("Корзина собрана. В релизе здесь выбор сервиса доставки."));
+
+  /* ───────── экран «Врачу» ───────── */
+  $("#pdfBtn").addEventListener("click",()=>{
+    if(state.paper){ $("#paperSlot").innerHTML=""; state.paper=false; $("#pdfBtn").textContent="Собрать выписку к приёму"; return; }
+    state.paper=true; $("#pdfBtn").textContent="Скрыть выписку";
+    $("#paperSlot").innerHTML=
+      '<div class="paper">'+
+        '<h5>Пищевой дневник · Мия, 9 мес</h5>'+
+        '<div>Период 21.08.2026 — 20.09.2026 · сформировано 20.09.2026</div>'+
+        '<table><thead><tr><th>Продукт</th><th>Введён</th><th>Реакция</th></tr></thead><tbody>'+
+          '<tr><td>Яичный желток</td><td class="num">08.09</td><td>сыпь 14.09, пауза</td></tr>'+
+          '<tr><td>Треска</td><td class="num">27.08</td><td>нет</td></tr>'+
+          '<tr><td>Кефир</td><td class="num">02.09</td><td>беспокойство 1 раз</td></tr>'+
+          '<tr><td>Брокколи</td><td class="num">23.08</td><td>нет</td></tr>'+
+        '</tbody></table>'+
+        '<div>Средний объём приёма 128 г · пропусков приёмов 3 · вода 120 мл/сут</div>'+
+      '</div>';
+    toast("Выписка готова: PDF на 2 страницы, можно отправить врачу.");
+  });
+  $("#inviteBtn").addEventListener("click",()=>toast("Ссылка-приглашение скопирована. Доступ можно отозвать в любой момент."));
+
+  /* ───────── правая панель и вкладки ───────── */
+  function renderPanel(){
+    const d=PANEL[state.tab], p=$("#panel");
+    p.innerHTML="";
+    const head=el("div","panel-head");
+    head.appendChild(el("span","eyebrow","Что показывает этот экран"));
+    head.appendChild(el("h2",null,d.h));
+    head.appendChild(el("p",null,d.p));
+    p.appendChild(head);
+    const m=el("div","mech");
+    d.m.forEach(x=>{
+      const it=el("div","mech-item");
+      it.appendChild(el("div","mech-name",x.n));
+      it.appendChild(el("span","chip "+x.c[0],x.c[1]));
+      it.appendChild(el("div","mech-from",x.f));
+      m.appendChild(it);
+    });
+    p.appendChild(m);
+    const q=el("blockquote","q",d.q[0]);
+    const c=el("cite",null,d.q[1]); q.appendChild(c);
+    p.appendChild(q);
+    if(TG){
+      const close=el("button","btn btn-sm btn-ghost panel-close","Вернуться в приложение");
+      close.type="button";
+      close.addEventListener("click",closePanel);
+      p.appendChild(close);
+    }
+  }
+
+  function closePanel(){
+    $("#panel").hidden=true;
+    if(TG) TG.BackButton.hide();
+  }
+
+  function applyTgTheme(){
+    const p=TG.themeParams||{}, dark=TG.colorScheme==="dark";
+    document.documentElement.setAttribute("data-theme", dark?"dark":"light");
+    const s=document.documentElement.style;
+    if(p.bg_color) s.setProperty("--surface", p.bg_color);
+    if(p.secondary_bg_color||p.bg_color) s.setProperty("--ground", p.secondary_bg_color||p.bg_color);
+    if(p.text_color) s.setProperty("--ink", p.text_color);
+    if(p.hint_color) s.setProperty("--ink-3", p.hint_color);
+    try{ TG.setHeaderColor(p.bg_color || (dark?"#1A201C":"#FFFFFF")); }catch(e){}
+  }
+
+  function initTelegram(){
+    TG.ready(); TG.expand();
+    document.body.classList.add("tg");
+    applyTgTheme();
+    TG.onEvent("themeChanged", applyTgTheme);
+    $("#panel").hidden=true;
+    $("#infoBtn").addEventListener("click",()=>{
+      $("#panel").hidden=false;
+      $("#panel").scrollTop=0;
+      TG.BackButton.show();
+    });
+    TG.BackButton.onClick(closePanel);
+  }
+
+  $("#tabbar").addEventListener("click",e=>{
+    const b=e.target.closest(".tab"); if(!b) return;
+    state.tab=b.dataset.tab;
+    $("#tabbar").querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected", String(t===b)));
+    document.querySelectorAll(".view").forEach(v=>{ v.hidden = v.dataset.view!==state.tab; });
+    $("#views").scrollTop=0;
+    stopTimer();
+    if(TG && TG.HapticFeedback) TG.HapticFeedback.selectionChanged();
+    if(state.tab==="cook") renderRecipe();
+    renderPanel();
+  });
+
+  /* ───────── старт ───────── */
+  renderMeals(); updateSummary();
+  renderFoods();
+  renderRecSwitch(); renderRecipe(); renderBuy();
+  if(TG) initTelegram();
+  renderPanel();
+})();
+</script>
+
+</body>
+</html>
