@@ -147,7 +147,24 @@
   .meal:last-child{border-bottom:0}
   .meal-time{flex:none;width:46px;font-size:13px;font-weight:600;color:var(--ink-3);padding-top:2px;font-variant-numeric:tabular-nums}
   .meal-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:9px}
-  .meal-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+  .meal-head{display:flex;align-items:center;gap:10px}
+  .meal-head .meal-name{flex:1;min-width:0}
+  .meal-edit{appearance:none;background:none;border:0;padding:3px;cursor:pointer;color:var(--ink-3);
+    display:grid;place-items:center;flex:none}
+  .meal-edit svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  .meal-dish{appearance:none;background:none;border:0;padding:0;cursor:pointer;width:100%;text-align:left;
+    font-family:inherit;font-size:14px;line-height:1.45;color:var(--ink-2);
+    display:flex;gap:7px;align-items:baseline}
+  .meal-dish em{font-style:normal;color:var(--gold);font-weight:700}
+  .meal-dish .arr{flex:none;color:var(--sage-ink);font-weight:700}
+  .meal-add{align-self:flex-start;font-size:12.5px;font-weight:600;padding:7px 12px;border-radius:999px;
+    border:1px solid var(--line);background:var(--surface);color:var(--sage-ink);cursor:pointer;font-family:inherit}
+  .pickrow{display:flex;align-items:center;gap:12px;padding:11px 0;width:100%;cursor:pointer;
+    background:none;border:0;border-bottom:1px solid var(--line-2);font-family:inherit;text-align:left}
+  .pickrow:last-child{border-bottom:0}
+  .pickrow img{width:54px;height:54px;border-radius:13px;object-fit:cover;flex:none;background:var(--surface-2)}
+  .pickrow .t{font-family:"Onest","Manrope",sans-serif;font-weight:600;font-size:14.5px;color:var(--ink);line-height:1.25}
+  .pickrow .m{font-size:12px;color:var(--ink-2);margin-top:2px}
   .meal-name{font-family:"Onest","Manrope",sans-serif;font-weight:600;font-size:17px;letter-spacing:-.01em}
   .meal-gram{font-size:13px;color:var(--ink-2);font-variant-numeric:tabular-nums}
   .meal-items{font-size:14px;color:var(--ink-2);margin:0;line-height:1.45}
@@ -421,9 +438,9 @@
                   <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4"/><path d="M12 7.5V12l3 2"/></svg>
                   Недавнее
                 </button>
-                <button data-add="search">
-                  <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.6"/><path d="M19.5 19.5 16 16"/></svg>
-                  Поиск
+                <button data-add="recipes">
+                  <svg viewBox="0 0 24 24"><path d="M5 4.5h9a3 3 0 0 1 3 3v12H8a3 3 0 0 0-3 3z"/><path d="M19 7.5v12"/><path d="M8.5 9h6M8.5 12.5h4"/></svg>
+                  Из рецептов
                 </button>
               </div>
 
@@ -591,7 +608,7 @@
           <nav class="tabbar" id="tabbar" role="tablist" aria-label="Разделы приложения">
             <button class="tab" role="tab" data-tab="day" aria-selected="true">
               <svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8.5 3v4M15.5 3v4"/></svg>
-              День
+              Планер
             </button>
             <button class="tab" role="tab" data-tab="food" aria-selected="false">
               <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.6"/><path d="M19.5 19.5 16 16"/></svg>
@@ -632,10 +649,10 @@
 
   /* ───────── данные ───────── */
   const YESTERDAY = [
-    {time:"08:30", name:"Завтрак", gram:"140 г", items:"Гречневая каша на воде, груша печёная"},
-    {time:"12:30", name:"Обед", gram:"165 г", items:"Кабачок с треской на пару, олив. масло 3 г"},
-    {time:"16:00", name:"Полдник", gram:"90 г",  items:"Йогурт без добавок"},
-    {time:"19:00", name:"Ужин", gram:"120 г", items:"Цветная капуста, индейка"}
+    {time:"08:30", name:"Завтрак", gram:"140 г", items:"Овсяная каша с яблоком", rec:8},
+    {time:"12:30", name:"Обед",    gram:"165 г", items:"Суп с куриными фрикадельками", rec:0},
+    {time:"16:00", name:"Полдник", gram:"90 г",  items:"Сырники в духовке", rec:2},
+    {time:"19:00", name:"Ужин",    gram:"120 г", items:"Макароны с сыром и брокколи", rec:7}
   ];
 
   const FOODS = [
@@ -823,7 +840,7 @@
 
   const PANEL = {
     day:{
-      h:"Лог, который не заставляет вводить одно и то же",
+      h:"Планер, который не заставляет вводить одно и то же",
       p:"Вся конкуренция трекеров свелась к секундам на запись приёма пищи. В детском питании это острее: ребёнок ест одно и то же неделями.",
       m:[
         {n:"Повтор вчерашнего в один тап", f:"MyFitnessPal: недавнее, избранное, копирование дня", c:["ok","бесплатно"]},
@@ -873,7 +890,7 @@
   /* ───────── состояние ───────── */
   const state = {
     tab:"day",
-    meals:[{time:"08:30", name:"Завтрак", gram:"140 г", items:"Гречневая каша, груша печёная", newFood:"груша", react:null}],
+    meals:[{time:"08:30", name:"Завтрак", gram:"140 г", items:"Овсяная каша с яблоком", rec:8, newFood:"яблоком", react:null}],
     filled:false,
     foodFilter:"all", foodQ:"", openFood:null,
     rec:0, portions:2, step:0, timeLeft:0, running:false, tick:null,
@@ -893,25 +910,49 @@
   }
 
   /* ───────── экран «День» ───────── */
+  const PLAN_SLOTS = ["Завтрак","Обед","Полдник","Ужин"];
+
+  function mealDishNode(m){
+    const inner = m.newFood
+      ? esc(m.items).replace(new RegExp(esc(m.newFood),"i"), x=>"<em>"+x+" · новый</em>")
+      : esc(m.items);
+    if(m.rec==null){
+      const p=el("p","meal-items"); p.innerHTML=inner; return p;
+    }
+    const b=el("button","meal-dish"); b.type="button";
+    b.innerHTML="<span>"+inner+"</span><span class='arr' aria-hidden='true'>→</span>";
+    b.setAttribute("aria-label","Открыть рецепт: "+m.items);
+    b.addEventListener("click",()=>goToRecipe(m.rec));
+    return b;
+  }
+
   function renderMeals(){
     const box=$("#meals"); box.innerHTML="";
-    const plan=["Завтрак","Обед","Полдник","Ужин"];
-    plan.forEach(slot=>{
+    const rows = PLAN_SLOTS.map(slot=>{
       const m=state.meals.find(x=>x.name===slot);
-      const row=el("div","meal"+(m?"":" empty"));
       const y=YESTERDAY.find(x=>x.name===slot);
-      row.appendChild(el("div","meal-time", m? m.time : y.time));
+      return {slot, m, y, time:(m?m.time:y.time)};
+    }).sort((a,b)=>a.time.localeCompare(b.time));
+
+    rows.forEach(({slot,m,y})=>{
+      const row=el("div","meal"+(m?"":" empty"));
+      row.appendChild(el("div","meal-time", m ? m.time : y.time));
       const body=el("div","meal-body");
+
       const head=el("div","meal-head");
       head.appendChild(el("div","meal-name", slot));
-      if(m) head.appendChild(el("div","meal-gram", m.gram));
-      body.appendChild(head);
       if(m){
-        const p=el("p","meal-items");
-        p.innerHTML = m.newFood
-          ? esc(m.items).replace(new RegExp(esc(m.newFood),"i"), s=>"<em>"+s+" · новый</em>")
-          : esc(m.items);
-        body.appendChild(p);
+        head.appendChild(el("div","meal-gram", m.gram));
+        const ed=el("button","meal-edit"); ed.type="button";
+        ed.setAttribute("aria-label","Изменить приём: "+slot);
+        ed.innerHTML='<svg viewBox="0 0 24 24"><path d="M4.5 19.5h4l10-10-4-4-10 10z"/><path d="M14.5 5.5l4 4"/></svg>';
+        ed.addEventListener("click",()=>openMealEditor(m));
+        head.appendChild(ed);
+      }
+      body.appendChild(head);
+
+      if(m){
+        body.appendChild(mealDishNode(m));
         const rr=el("div","reactions");
         [["Съел","good"],["Отказ","bad"],["Сыпь","bad"],["Колики","bad"]].forEach(([label,kind])=>{
           const b=el("button","react",label);
@@ -927,6 +968,9 @@
         body.appendChild(rr);
       } else {
         const p=el("p","meal-items"); p.textContent="Вчера: "+y.items; body.appendChild(p);
+        const add=el("button","meal-add","Добавить блюдо"); add.type="button";
+        add.addEventListener("click",()=>openRecipesPicker(slot));
+        body.appendChild(add);
       }
       row.appendChild(body);
       box.appendChild(row);
@@ -944,7 +988,7 @@
   $("#repeatBtn").addEventListener("click",()=>{
     YESTERDAY.forEach(y=>{
       if(!state.meals.find(m=>m.name===y.name))
-        state.meals.push({time:y.time,name:y.name,gram:y.gram,items:y.items,react:null});
+        state.meals.push({time:y.time,name:y.name,gram:y.gram,items:y.items,rec:y.rec,react:null});
     });
     state.meals.sort((a,b)=>a.time.localeCompare(b.time));
     state.filled=true;
@@ -1000,18 +1044,92 @@
     $("#shSave").addEventListener("click",()=>{
       const slotName=$("#shSlot").value, dish=$("#shDish").value, gram=$("#shGram").value||"0";
       const times={"Завтрак":"08:30","Обед":"12:30","Полдник":"16:00","Ужин":"19:00"};
+      const ri=RECIPES.findIndex(r=>r.t===dish);
       const ex=state.meals.find(m=>m.name===slotName);
-      if(ex){ ex.items=dish; ex.gram=gram+" г"; }
-      else state.meals.push({time:times[slotName],name:slotName,gram:gram+" г",items:dish,react:null});
+      if(ex){ ex.items=dish; ex.gram=gram+" г"; ex.rec = ri>=0?ri:null; }
+      else state.meals.push({time:times[slotName],name:slotName,gram:gram+" г",items:dish,
+                             rec:(ri>=0?ri:null),react:null});
       state.meals.sort((a,b)=>a.time.localeCompare(b.time));
       if(state.meals.length===4) state.filled=true;
       closeSheet(); renderMeals(); updateSummary();
       toast(slotName+" записан: "+dish+", "+gram+" г.");
     });
   }
+  function openRecipesPicker(slot){
+    const box=$("#sheetInner");
+    box.innerHTML =
+      '<div class="sheet-grab"></div>'+
+      '<h3>Добавить из рецептов</h3>'+
+      '<p class="ai-note"><span class="chip berry">'+(slot?esc(slot):"любой приём")+'</span>'+
+      '<span>Выберите блюдо — порцию и время поправите на следующем шаге.</span></p>'+
+      '<div id="pickList"></div>';
+    const list=box.querySelector("#pickList");
+    RECIPES.forEach((r,i)=>{
+      const row=el("button","pickrow"); row.type="button";
+      const im=document.createElement("img"); im.src=r.img; im.alt=""; im.loading="lazy";
+      row.appendChild(im);
+      const d=el("div");
+      d.appendChild(el("div","t",r.t));
+      d.appendChild(el("div","m",r.m));
+      row.appendChild(d);
+      row.addEventListener("click",()=>{
+        openSheet(null,{
+          title:"Добавить блюдо", conf:"из рецептов",
+          note:"Блюдо из раздела «Рецепты». Проверьте порцию: дети съедают меньше, чем кажется.",
+          dish:r.t, gram:"150", slot:slot||r.slot, rec:i
+        });
+      });
+      list.appendChild(row);
+    });
+    $("#sheet").hidden=false;
+  }
+
+  function openMealEditor(m){
+    const box=$("#sheetInner");
+    const opts=[...new Set(RECIPES.map(r=>r.t).concat(
+      ["Гречневая каша, груша печёная","Йогурт без добавок","Кефир детский",m.items]))];
+    box.innerHTML =
+      '<div class="sheet-grab"></div>'+
+      '<h3>'+esc(m.name)+'</h3>'+
+      '<div class="field"><label for="edDish">Блюдо</label><select id="edDish">'+
+        opts.map(o=>'<option'+(o===m.items?' selected':'')+'>'+esc(o)+'</option>').join("")+
+      '</select></div>'+
+      '<div class="row">'+
+        '<div class="field"><label for="edTime">Время</label><input id="edTime" type="time" value="'+esc(m.time)+'"></div>'+
+        '<div class="field"><label for="edGram">Граммы</label><input id="edGram" inputmode="numeric" value="'+esc(String(parseInt(m.gram,10)||0))+'"></div>'+
+      '</div>'+
+      '<div class="actions"><button class="btn btn-ghost" id="edDel" type="button">Удалить</button>'+
+      '<button class="btn btn-primary" id="edSave" type="button">Сохранить</button></div>';
+    $("#sheet").hidden=false;
+
+    $("#edSave").addEventListener("click",()=>{
+      const dish=$("#edDish").value, time=$("#edTime").value||m.time, gram=$("#edGram").value||"0";
+      m.items=dish; m.time=time; m.gram=gram+" г";
+      const ri=RECIPES.findIndex(r=>r.t===dish);
+      m.rec = ri>=0 ? ri : null;
+      if(m.newFood && !dish.toLowerCase().includes(m.newFood.toLowerCase())) m.newFood=null;
+      closeSheet(); renderMeals(); updateSummary();
+      toast(m.name+" обновлён: "+time+", "+gram+" г.");
+    });
+    $("#edDel").addEventListener("click",()=>{
+      state.meals=state.meals.filter(x=>x!==m);
+      state.filled = state.meals.length>=4;
+      closeSheet(); renderMeals(); updateSummary();
+      toast(m.name+" удалён из планера.");
+    });
+  }
+
+  function goToRecipe(i){
+    selectTab("cook");
+    openRecipe(i);
+  }
+
   function closeSheet(){ $("#sheet").hidden=true; $("#sheetInner").innerHTML=""; }
   $("#sheet").addEventListener("click",e=>{ if(e.target.id==="sheet") closeSheet(); });
-  document.querySelectorAll("[data-add]").forEach(b=>b.addEventListener("click",()=>openSheet(b.dataset.add)));
+  document.querySelectorAll("[data-add]").forEach(b=>b.addEventListener("click",()=>{
+    if(b.dataset.add==="recipes") openRecipesPicker(null);
+    else openSheet(b.dataset.add);
+  }));
 
   /* ───────── экран «Продукты» ───────── */
   const AGE=13;
@@ -1454,16 +1572,19 @@
     TG.onEvent("themeChanged", applyTgTheme);
   }
 
-  $("#tabbar").addEventListener("click",e=>{
-    const b=e.target.closest(".tab"); if(!b) return;
-    state.tab=b.dataset.tab;
-    $("#tabbar").querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected", String(t===b)));
-    document.querySelectorAll(".view").forEach(v=>{ v.hidden = v.dataset.view!==state.tab; });
+  function selectTab(name){
+    state.tab=name;
+    $("#tabbar").querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected", String(t.dataset.tab===name)));
+    document.querySelectorAll("#views > .view").forEach(v=>{ v.hidden = v.dataset.view!==name; });
     $("#views").scrollTop=0;
     stopTimer();
     if(TG && TG.HapticFeedback) TG.HapticFeedback.selectionChanged();
-    if(state.tab==="cook") closeRecipe();
+    if(name==="cook") closeRecipe();
     renderPanel();
+  }
+  $("#tabbar").addEventListener("click",e=>{
+    const b=e.target.closest(".tab"); if(!b) return;
+    selectTab(b.dataset.tab);
   });
 
   /* ───────── старт ───────── */
