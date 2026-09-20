@@ -203,7 +203,7 @@
   .serve-row.now span:last-child{font-weight:600;color:var(--ink)}
   .source{font-size:12px;color:var(--ink-3);display:flex;gap:8px;align-items:center;line-height:1.4}
 
-  /* ── экран «Кухня» ──────────────────────────── */
+  /* ── экран «Рецепты» ────────────────────────── */
   .recgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .recgrid-empty{grid-column:1/-1;padding:20px 4px;color:var(--ink-2);font-size:14px}
   .planbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0;font-size:13px;color:var(--ink-2)}
@@ -433,12 +433,16 @@
                 <p class="ai-note"><span class="chip berry">с 12 мес</span><span>Одно блюдо на всю семью: детскую порцию откладывают до соли и специй.</span></p>
                 <div class="filters" id="recFilters">
                   <button data-rf="all" aria-pressed="true">Все</button>
-                  <button data-rf="завтрак" aria-pressed="false">Завтрак</button>
-                  <button data-rf="обед" aria-pressed="false">Обед</button>
-                  <button data-rf="ужин" aria-pressed="false">Ужин</button>
-                  <button data-rf="fast" aria-pressed="false">До 20 минут</button>
-                  <button data-rf="nodairy" aria-pressed="false">Без молочного</button>
-                  <button data-rf="plan" aria-pressed="false">В плане недели</button>
+                  <button data-rf="Завтраки" aria-pressed="false">Завтраки</button>
+                  <button data-rf="Основные блюда" aria-pressed="false">Основные блюда</button>
+                  <button data-rf="Супы" aria-pressed="false">Супы</button>
+                  <button data-rf="Перекусы" aria-pressed="false">Перекусы</button>
+                  <button data-rf="Салаты" aria-pressed="false">Салаты</button>
+                  <button data-rf="Гарниры" aria-pressed="false">Гарниры</button>
+                  <button data-rf="Каши" aria-pressed="false">Каши</button>
+                  <button data-rf="Заготовки" aria-pressed="false">Заготовки</button>
+                  <button data-rf="Пюре" aria-pressed="false">Пюре</button>
+                  <button data-rf="Напитки" aria-pressed="false">Напитки</button>
                 </div>
                 <div class="recgrid" id="recGrid"></div>
 
@@ -561,7 +565,7 @@
             </button>
             <button class="tab" role="tab" data-tab="cook" aria-selected="false">
               <svg viewBox="0 0 24 24"><path d="M4 10.5h16V15a4.5 4.5 0 0 1-4.5 4.5h-7A4.5 4.5 0 0 1 4 15z"/><path d="M4 12.5H2.2M21.8 12.5H20"/><path d="M9.5 7.5c0-1.4 1.4-1.4 1.4-2.8M14 7.5c0-1.4 1.4-1.4 1.4-2.8"/></svg>
-              Кухня
+              Рецепты
             </button>
             <button class="tab" role="tab" data-tab="doc" aria-selected="false">
               <svg viewBox="0 0 24 24"><rect x="5" y="4.5" width="14" height="16" rx="2.5"/><path d="M9.5 3h5v3h-5z"/><path d="M9 11.5h6M9 15h4"/></svg>
@@ -738,9 +742,14 @@
 
   // метаданные рецептов для фильтров — считаем из подписи и состава
   const DAIRY = ["Молоко","Сметана 10%","Творог 9%","Сыр твёрдый","Масло сливочное"];
+  // категория для фильтра и приём пищи, в который блюдо пишется в дневник
+  const CATS  = ["Супы","Основные блюда","Завтраки","Завтраки","Основные блюда",
+                 "Основные блюда","Гарниры","Основные блюда","Каши","Основные блюда"];
+  const SLOTS = ["Обед","Ужин","Завтрак","Завтрак","Обед","Обед","Обед","Ужин","Завтрак","Обед"];
   RECIPES.forEach(r=>{
     r.mins = parseInt((r.m.match(/(\d+)\s*мин/)||[])[1]||"0",10);
-    r.meal = (r.m.split("·").pop()||"").trim();
+    r.cat = CATS[RECIPES.indexOf(r)];
+    r.slot = SLOTS[RECIPES.indexOf(r)];
     r.dairy = r.ing.some(([n])=>DAIRY.includes(n));
   });
 
@@ -768,7 +777,7 @@
       q:["Галлюцинация в ответе про аллерген — это не неточные калории, а риск. Одна ошибка стоит репутации всего продукта.","Исследование, раздел «ИИ-механики»"]
     },
     cook:{
-      h:"Кухня: дёшево в разработке, заметно в использовании",
+      h:"Рецепты: дёшево в разработке, заметно в использовании",
       p:"Режим готовки и таймеры — низкая сложность и средний эффект. Список покупок — точка, где тихо ломается большинство планеров.",
       m:[
         {n:"Режим готовки по шагам, экран не гаснет", f:"SideChef, Mealime", c:["ok","бесплатно"]},
@@ -1000,14 +1009,12 @@
     renderFoods();
   });
 
-  /* ───────── экран «Кухня» ───────── */
+  /* ───────── экран «Рецепты» ───────── */
   function recPasses(r,i){
     switch(state.recFilter){
       case "all": return true;
-      case "fast": return r.mins<=20;
-      case "nodairy": return !r.dairy;
       case "plan": return state.plan.includes(i);
-      default: return r.meal===state.recFilter;
+      default: return r.cat===state.recFilter;
     }
   }
 
@@ -1015,7 +1022,7 @@
     const box=$("#recGrid"); box.innerHTML="";
     const shown=RECIPES.map((r,i)=>[r,i]).filter(([r,i])=>recPasses(r,i));
     if(!shown.length){
-      box.appendChild(el("div","recgrid-empty","Под этот фильтр рецептов пока нет. Снимите фильтр или выберите другой приём пищи."));
+      box.appendChild(el("div","recgrid-empty","В этой категории рецептов пока нет — она наполняется. Нажмите «Все», чтобы увидеть весь список."));
       return;
     }
     shown.forEach(([r,i])=>{
@@ -1149,11 +1156,11 @@
 
   function openDiary(){
     const r=RECIPES[state.rec];
-    const byMeal={"завтрак":"Завтрак","обед":"Обед","ужин":"Ужин","гарнир":"Обед"};
+
     openSheet(null,{
       title:"Записать в дневник",
       note:"Готовили по рецепту. Проверьте порцию: дети съедают меньше, чем кажется взрослым.",
-      conf:"из рецепта", dish:r.t, gram:"150", slot:byMeal[r.meal]||"Обед"
+      conf:"из рецепта", dish:r.t, gram:"150", slot:r.slot||"Обед"
     });
   }
   $("#diaryBtn").addEventListener("click",openDiary);
