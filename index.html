@@ -91,6 +91,10 @@
   .kid{display:flex;align-items:center;gap:11px;appearance:none;background:none;border:0;padding:0;
     cursor:pointer;font-family:inherit;text-align:left;color:inherit}
   .kid > span{display:flex;flex-direction:column}
+  .avatar.photo{background-size:cover;background-position:center;color:transparent;font-size:0}
+  .avatar.big{width:64px;height:64px;border-radius:20px;font-size:24px}
+  .pf-photo{display:flex;align-items:center;gap:14px}
+  .pf-photo .field-row{flex-wrap:wrap}
   .kid-name,.kid-age{display:block}
   .avatar{width:42px;height:42px;border-radius:14px;background:var(--sage-soft);color:var(--sage-ink);
     display:grid;place-items:center;font-family:"Onest",sans-serif;font-weight:700;font-size:17px}
@@ -977,7 +981,7 @@
   const state = {
     tab:"day",
     days:{}, cursor:TODAY_ISO, buyHorizon:7, notes:{},
-    child:{name:"Мия", birth:DEFAULT_BIRTH},
+    child:{name:"Мия", birth:DEFAULT_BIRTH, photo:null},
     foodFilter:"all", foodQ:"", openFood:null,
     rec:0, portions:2, step:0, timeLeft:0, running:false, tick:null,
     recFilter:"all", f:{time:null, age:null, main:null, excl:[]}, pantry:["Масло оливковое","Мука","Масло сливочное"],
@@ -1013,7 +1017,8 @@
       if(Array.isArray(d.pantry)) state.pantry=d.pantry;
       if(d.buyHorizon) state.buyHorizon=d.buyHorizon;
       if(d.notes && typeof d.notes==="object") state.notes=d.notes;
-      if(d.child && d.child.birth) state.child={name:d.child.name||"Ребёнок", birth:d.child.birth};
+      if(d.child && d.child.birth) state.child={name:d.child.name||"Ребёнок", birth:d.child.birth,
+                                                  photo:d.child.photo||null};
       return true;
     }catch(e){ return false; }
   }
@@ -1021,7 +1026,7 @@
   function resetDemo(){
     try{ localStorage.removeItem(STORE_KEY); }catch(e){}
     state.days={}; state.notes={}; state.pantry=["Масло оливковое","Мука","Масло сливочное"];
-    state.child={name:"Мия", birth:DEFAULT_BIRTH}; renderProfile();
+    state.child={name:"Мия", birth:DEFAULT_BIRTH, photo:null}; renderProfile();
     state.cursor=TODAY_ISO; state.buyHorizon=7;
     seedDays(); renderDay(); renderRecGrid();
     toast("Демо-данные возвращены в исходное состояние.");
@@ -1198,7 +1203,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "21.09 · сборка 5";
+  const BUILD = "21.09 · сборка 6";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -1452,23 +1457,66 @@
       '<span class="field-note">или впишите своё</span></div></div>';
   }
 
+  function paintAvatar(node, child){
+    const letter=((child.name||"Р").trim()[0]||"Р").toUpperCase();
+    if(child.photo){
+      node.classList.add("photo");
+      node.style.backgroundImage="url("+child.photo+")";
+      node.textContent="";
+    } else {
+      node.classList.remove("photo");
+      node.style.backgroundImage="";
+      node.textContent=letter;
+    }
+  }
+
+  // ужимаем снимок до квадрата 240 px, чтобы он поместился в хранилище рядом с планом
+  function shrinkImage(file, size, cb){
+    if(!file || !/^image\//.test(file.type)){ cb(null); return; }
+    const fr=new FileReader();
+    fr.onerror=()=>cb(null);
+    fr.onload=()=>{
+      const img=new Image();
+      img.onerror=()=>cb(null);
+      img.onload=()=>{
+        try{
+          const side=Math.min(img.width,img.height);
+          const c=document.createElement("canvas");
+          c.width=c.height=size;
+          const ctx=c.getContext("2d");
+          ctx.drawImage(img,(img.width-side)/2,(img.height-side)/2,side,side,0,0,size,size);
+          cb(c.toDataURL("image/jpeg",0.82));
+        }catch(e){ cb(null); }
+      };
+      img.src=fr.result;
+    };
+    fr.readAsDataURL(file);
+  }
+
   function renderProfile(){
     const name=(state.child.name||"Ребёнок").trim();
     const m=childMonths();
     $("#kidName").textContent=name;
     $("#kidAge").textContent=ageLabel(m);
-    $("#kidAvatar").textContent=(name[0]||"Р").toUpperCase();
+    paintAvatar($("#kidAvatar"), state.child);
     const head=document.querySelector(".report-head h3");
     if(head) head.textContent="Пищевой дневник: "+name;
   }
 
   function openProfile(){
     const box=$("#sheetInner");
+    let photo = state.child.photo || null;
     function draw(){
       const m=monthsSince($("#pfBirth") ? $("#pfBirth").value : state.child.birth);
       box.innerHTML =
         '<div class="sheet-grab"></div>'+
         '<h3>Профиль ребёнка</h3>'+
+        '<div class="pf-photo"><span class="avatar big" id="pfAvatar"></span>'+
+          '<div class="field-row">'+
+            '<button class="btn btn-sm btn-ghost" id="pfPick" type="button">'+(photo?"Заменить фото":"Добавить фото")+'</button>'+
+            (photo?'<button class="btn btn-sm btn-ghost" id="pfDrop" type="button">Убрать</button>':'')+
+          '</div>'+
+          '<input type="file" id="pfFile" accept="image/*" hidden></div>'+
         '<div class="field"><label for="pfName">Имя</label>'+
         '<input id="pfName" value="'+esc(state.child.name)+'" placeholder="Как зовут ребёнка"></div>'+
         '<div class="field"><label for="pfBirth">Дата рождения</label>'+
@@ -1477,12 +1525,35 @@
         '<div class="actions"><button class="btn btn-ghost" id="pfCancel" type="button">Отмена</button>'+
         '<button class="btn btn-primary" id="pfSave" type="button">Сохранить</button></div>';
       updateAgeNote();
+      paintAvatar($("#pfAvatar"), {name:$("#pfName").value, photo:photo});
+      $("#pfName").addEventListener("input",()=>paintAvatar($("#pfAvatar"), {name:$("#pfName").value, photo:photo}));
       $("#pfBirth").addEventListener("input",updateAgeNote);
+      $("#pfPick").addEventListener("click",()=>$("#pfFile").click());
+      $("#pfFile").addEventListener("change",e=>{
+        const f=e.target.files && e.target.files[0];
+        if(!f) return;
+        const keep={name:$("#pfName").value, birth:$("#pfBirth").value};
+        shrinkImage(f, 240, url=>{
+          if(!url){ toast("Не получилось прочитать снимок. Попробуйте другое фото."); return; }
+          photo=url;
+          draw();
+          $("#pfName").value=keep.name; $("#pfBirth").value=keep.birth;
+          paintAvatar($("#pfAvatar"), {name:keep.name, photo:photo});
+          updateAgeNote();
+        });
+      });
+      if($("#pfDrop")) $("#pfDrop").addEventListener("click",()=>{
+        const keep={name:$("#pfName").value, birth:$("#pfBirth").value};
+        photo=null; draw();
+        $("#pfName").value=keep.name; $("#pfBirth").value=keep.birth;
+        paintAvatar($("#pfAvatar"), {name:keep.name, photo:null});
+        updateAgeNote();
+      });
       $("#pfCancel").addEventListener("click",closeSheet);
       $("#pfSave").addEventListener("click",()=>{
         const name=$("#pfName").value.trim() || "Ребёнок";
         const birth=$("#pfBirth").value || state.child.birth;
-        state.child={name, birth};
+        state.child={name, birth, photo:photo||null};
         closeSheet(); renderProfile(); renderFoods(); renderDay(); renderRecGrid(); saveState();
         toast(name+", "+ageLabel(childMonths())+". Подбор и справочник пересчитаны.");
       });
