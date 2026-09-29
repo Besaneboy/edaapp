@@ -114,10 +114,11 @@
   .views{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:18px 16px 22px;display:block}
   .view{display:flex;flex-direction:column;gap:16px}
 
-  .tabbar{flex:none;display:grid;grid-template-columns:repeat(4,1fr);
+  .tabbar{flex:none;display:grid;grid-template-columns:repeat(5,1fr);
     background:var(--surface);border-top:1px solid var(--line-2);padding:9px 6px 22px}
   .tab{appearance:none;border:0;background:none;cursor:pointer;display:flex;flex-direction:column;
-    align-items:center;gap:5px;padding:4px 2px;color:var(--ink-3);font-family:inherit;font-size:11.5px;font-weight:500}
+    align-items:center;gap:5px;padding:4px 1px;color:var(--ink-3);font-family:inherit;font-size:11px;font-weight:500;
+    white-space:nowrap;letter-spacing:-.01em}
   .tab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
   .tab[aria-selected="true"]{color:var(--ink);font-weight:700}
   .tab:focus-visible,.icon-btn:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
@@ -562,18 +563,6 @@
                   <span class="num" id="recFound"></span>
                 </div>
                 <div class="recgrid" id="recGrid"></div>
-
-                <div class="sec-label"><span>Список покупок</span><span class="num" id="buyCount"></span></div>
-                <div class="filters" id="buyHorizon">
-                  <button data-h="3" aria-pressed="false">3 дня</button>
-                  <button data-h="7" aria-pressed="true">Неделя</button>
-                  <button data-h="14" aria-pressed="false">2 недели</button>
-                  <button data-h="31" aria-pressed="false">Весь план</button>
-                </div>
-                <p class="planbar"><span id="planCount"></span><button class="btn btn-sm btn-ghost" id="planOpen" type="button">Открыть планер</button></p>
-                <div class="flat" id="buyList"></div>
-                <button class="btn btn-primary btn-wide" id="deliverBtn">Отправить в доставку</button>
-                <p class="hint" style="text-align:left">Строки сгруппированы по отделам, одинаковые продукты сложены. Отмеченное «есть дома» в заказ не уходит.</p>
               </div>
 
               <div id="cookDetail" class="view" hidden>
@@ -675,6 +664,22 @@
                 <button class="btn btn-sm btn-ghost btn-wide" id="inviteBtn">Пригласить бабушку или няню</button>
               </div>
             </section>
+
+            <!-- ЭКРАН: ПОКУПКИ -->
+            <section class="view" data-view="buy" hidden>
+              <div class="sec-label"><span>Список покупок</span><span class="num" id="buyCount"></span></div>
+              <p class="ai-note"><span class="chip berry">из планера</span><span>Продукты собираются из запланированных блюд: одинаковые складываются, всё раскладывается по отделам магазина.</span></p>
+              <div class="filters" id="buyHorizon">
+                <button data-h="3" aria-pressed="false">3 дня</button>
+                <button data-h="7" aria-pressed="true">Неделя</button>
+                <button data-h="14" aria-pressed="false">2 недели</button>
+                <button data-h="31" aria-pressed="false">Весь план</button>
+              </div>
+              <p class="planbar"><span id="planCount"></span><button class="btn btn-sm btn-ghost" id="planOpen" type="button">Открыть планер</button></p>
+              <div class="flat" id="buyList"></div>
+              <button class="btn btn-primary btn-wide" id="deliverBtn">Отправить в доставку</button>
+              <p class="hint" style="text-align:left">Отмеченное галочкой «есть дома» вычёркивается и в заказ не уходит.</p>
+            </section>
           </main>
 
           <nav class="tabbar" id="tabbar" role="tablist" aria-label="Разделы приложения">
@@ -689,6 +694,10 @@
             <button class="tab" role="tab" data-tab="cook" aria-selected="false">
               <svg viewBox="0 0 24 24"><path d="M4 10.5h16V15a4.5 4.5 0 0 1-4.5 4.5h-7A4.5 4.5 0 0 1 4 15z"/><path d="M4 12.5H2.2M21.8 12.5H20"/><path d="M9.5 7.5c0-1.4 1.4-1.4 1.4-2.8M14 7.5c0-1.4 1.4-1.4 1.4-2.8"/></svg>
               Рецепты
+            </button>
+            <button class="tab" role="tab" data-tab="buy" aria-selected="false">
+              <svg viewBox="0 0 24 24"><path d="M4.5 7.5h15l-1.4 10.2a2.6 2.6 0 0 1-2.6 2.3H8.5a2.6 2.6 0 0 1-2.6-2.3z"/><path d="M9 7.5V6a3 3 0 0 1 6 0v1.5"/></svg>
+              Покупки
             </button>
             <button class="tab" role="tab" data-tab="doc" aria-selected="false">
               <svg viewBox="0 0 24 24"><rect x="5" y="4.5" width="14" height="16" rx="2.5"/><path d="M9.5 3h5v3h-5z"/><path d="M9 11.5h6M9 15h4"/></svg>
@@ -1225,7 +1234,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "21.09 · сборка 9";
+  const BUILD = "29.09 · сборка 10";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
