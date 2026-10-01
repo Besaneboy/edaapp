@@ -254,6 +254,28 @@
   .exchip{appearance:none;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:500;
     border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 11px}
   .exchip.later{color:var(--ink-3);border-style:dashed}
+  .fcat{margin-bottom:14px;border:1px solid var(--line-2);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+  .fcat-head{width:100%;appearance:none;border:0;background:none;cursor:pointer;font-family:inherit;
+    display:flex;align-items:center;gap:10px;padding:13px 16px;text-align:left;color:var(--ink)}
+  .fcat-head .t{flex:1;font-family:"Onest","Manrope",sans-serif;font-weight:600;font-size:16px}
+  .fcat-head .n{font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+  .fcat-head .arr{color:var(--ink-3);font-size:12px;transition:transform .15s ease}
+  .fcat.closed .fcat-head .arr{transform:rotate(-90deg)}
+  .fcat.closed .fcat-body{display:none}
+  .fbar{height:3px;background:var(--line-2)}
+  .fbar i{display:block;height:100%;background:var(--sage)}
+  .prow{display:flex;align-items:center;gap:11px;padding:11px 16px;border-top:1px solid var(--line-2)}
+  .prow input[type="checkbox"]{accent-color:var(--sage);width:20px;height:20px;flex:none}
+  .pname{flex:1;min-width:0;appearance:none;border:0;background:none;cursor:pointer;font-family:inherit;
+    text-align:left;color:var(--ink);display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:14.5px}
+  .prow.done .pname{color:var(--ink-3)}
+  .prow.done .ptitle{text-decoration:line-through}
+  .ptitle{font-weight:500}
+  .pserve{appearance:none;border:1px solid var(--line);background:var(--surface);cursor:pointer;flex:none;
+    width:36px;height:36px;border-radius:12px;display:grid;place-items:center;color:var(--sage-ink)}
+  .pserve svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  .servehead{display:flex;align-items:center;gap:12px}
+  .serve-now{background:var(--sage-soft);border-radius:12px;padding:11px 12px}
   .food{border-bottom:1px solid var(--line-2)}
   .food:last-child{border-bottom:0}
   .food-row{width:100%;appearance:none;background:none;border:0;font-family:inherit;text-align:left;cursor:pointer;
@@ -533,25 +555,31 @@
 
             <!-- ЭКРАН: ПРОДУКТЫ -->
             <section class="view" data-view="food" hidden>
-              <div class="sec-label"><span>Что вводить сейчас</span><span class="chip ok" id="introBand">6–8 месяцев</span></div>
-              <p class="intronote" id="introFreq" style="padding:0 2px"></p>
-              <div class="flat" id="introList"></div>
-              <p class="source"><span class="chip">источник</span><span>Руководство ВОЗ по прикорму детей 6–23 месяцев (2023). ВОЗ называет группы продуктов, а не конкретные блюда — примеры подобраны из справочника ниже.</span></p>
+              <div class="sec-label"><span>Ввод прикорма</span><span class="num" id="triedCount"></span></div>
+              <p class="intronote" style="padding:0 2px" id="introFreq"></p>
 
-              <div class="sec-label"><span>Справочник продуктов</span><span class="chip ok">бесплатно</span></div>
               <div class="search">
                 <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.6"/><path d="M19.5 19.5 16 16"/></svg>
-                <input type="search" id="foodQ" placeholder="Продукт: мёд, виноград, треска…" aria-label="Поиск по справочнику">
+                <input type="search" id="foodQ" placeholder="Продукт: кабачок, треска, творог…" aria-label="Поиск по каталогу">
               </div>
               <div class="filters" id="foodFilters">
                 <button data-f="all" aria-pressed="true">Все</button>
                 <button data-f="now" aria-pressed="false">Можно сейчас</button>
-                <button data-f="allergen" aria-pressed="false">Аллергены</button>
-                <button data-f="choke" aria-pressed="false">Риск удушья</button>
+                <button data-f="todo" aria-pressed="false">Не введено</button>
+                <button data-f="done" aria-pressed="false">Введено</button>
                 <button data-f="later" aria-pressed="false">Рано</button>
+                <button data-f="choke" aria-pressed="false">Риск удушья</button>
               </div>
-              <div class="flat" id="foodList"></div>
-              <p class="ai-note"><span class="chip berry">важно</span> Ответ про аллерген всегда показывает источник: в детском питании ошибка ИИ — это не «неточные калории», а риск.</p>
+              <div class="filterbar">
+                <button class="btn btn-sm fbtn" id="foodFilterBtn" type="button">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
+                  Возраст и аллергены<span class="fcount" id="fFoodCount" hidden>0</span>
+                </button>
+                <span class="num" id="foodFound"></span>
+              </div>
+
+              <div id="foodList"></div>
+              <p class="source"><span class="chip">источник</span><span>Группы продуктов и частота кормлений — руководство ВОЗ по прикорму детей 6–23 месяцев (2023). Возраст ввода и способ подачи по каждой позиции — ориентир по распространённой практике, перед релизом их заверяет педиатр.</span></p>
             </section>
 
             <!-- ЭКРАН: КУХНЯ -->
@@ -638,7 +666,7 @@
 
               <div class="card">
                 <div class="sec-label sm" style="margin-bottom:11px">Введено по группам</div>
-                <div class="bars">
+                <div class="bars" id="docBars">
                   <div class="bar-row"><span>Овощи</span><span class="bar"><i style="width:80%"></i></span><span class="num">8/10</span></div>
                   <div class="bar-row"><span>Крупы</span><span class="bar"><i style="width:75%"></i></span><span class="num">3/4</span></div>
                   <div class="bar-row"><span>Фрукты</span><span class="bar"><i style="width:57%"></i></span><span class="num">4/7</span></div>
@@ -746,31 +774,103 @@
   const TG = (WA && WA.platform && WA.platform !== "unknown") ? WA : null;
 
   /* ───────── данные ───────── */
-  const FOODS = [
-    {n:"Кабачок", from:6, state:"ok", tags:[], meta:"с 6 мес · частый первый овощ",
-     serve:{"6":"Пюре гладкое, без комков","9":"Кусочки 1×1 см, мягко тушёные","12":"Палочки, запечённые"}},
-    {n:"Гречка", from:6, state:"ok", tags:[], meta:"с 6 мес · безмолочная каша",
-     serve:{"6":"Жидкая каша 5%","9":"Каша 10%, можно не протирать","12":"Рассыпчатая с овощами"}},
-    {n:"Треска", from:8, state:"ok", tags:["allergen"], meta:"с 8 мес · аллерген, 2 раза в неделю",
-     serve:{"6":"Рано","9":"15–30 г, отварная, разобрать на волокна и проверить кости","12":"До 60 г, котлета на пару"}},
-    {n:"Яичный желток", from:6, state:"ok", tags:["allergen"], meta:"с 6 мес · аллерген, вводить с 1/8",
-     serve:{"6":"1/8 желтка, растереть в пюре","9":"До 1/2 желтка","12":"Целое яйцо, полностью проваренное"}},
-    {n:"Арахисовая паста", from:6, state:"ok", tags:["allergen","choke"], meta:"с 6 мес · аллерген + риск удушья густой ложкой",
-     serve:{"6":"2 г, развести водой или молоком до жидкой","9":"Тонким слоем в кашу","12":"Тонкий слой на мягкий хлеб"}},
-    {n:"Кефир", from:8, state:"ok", tags:[], meta:"с 8 мес · начинать с 20 мл",
-     serve:{"6":"Рано","9":"До 100 мл в день, без сахара","12":"До 200 мл"}},
-    {n:"Виноград", from:9, state:"warn", tags:["choke"], meta:"с 9 мес · только разрезанный вдоль",
-     serve:{"6":"Рано","9":"Разрезать вдоль на четверти, без кожицы","12":"Четвертинки, целиком — не раньше 4–5 лет"}},
-    {n:"Цельное коровье молоко", from:12, state:"warn", tags:["later"], meta:"как напиток — с 12 мес",
-     serve:{"6":"Рано","9":"Только в составе каши","12":"До 400 мл в день"}},
-    {n:"Мёд", from:36, state:"risk", tags:["later"], meta:"нельзя до 12 мес · ботулизм",
-     serve:{"6":"Нельзя","9":"Нельзя","12":"После года, редко и немного"}},
-    {n:"Соль", from:12, state:"warn", tags:["later"], meta:"не добавлять до 12 мес",
-     serve:{"6":"Не добавлять","9":"Не добавлять","12":"До 1 г в сутки с учётом продуктов"}},
-    {n:"Цельные орехи", from:36, state:"risk", tags:["choke","later"], meta:"целиком — не раньше 4–5 лет",
-     serve:{"6":"Нельзя","9":"Только в виде тонко размолотой пасты","12":"Паста или мука, не целиком"}}
+  // Категории каталога прикорма
+  const FOOD_CATS = [
+    {k:"veg",   t:"Овощи"},
+    {k:"fruit", t:"Фрукты и ягоды"},
+    {k:"grain", t:"Крупы и злаки"},
+    {k:"meat",  t:"Мясо и птица"},
+    {k:"fish",  t:"Рыба"},
+    {k:"dairy", t:"Молочное и яйца"},
+    {k:"nuts",  t:"Бобовые, орехи, семена"},
+    {k:"other", t:"Напитки и добавки"}
   ];
 
+  // Продукт: n — название, c — категория, from — возраст в месяцах, al — аллергены из перечня 14,
+  // choke — риск удушья, s — подача по возрасту [[с какого месяца, как подавать], …].
+  // Данные учебные: ВОЗ даёт рекомендации по группам продуктов, а не по отдельным позициям.
+  const FOODS = [
+    {n:"Кабачок", c:"veg", from:6, al:[], s:[[6,"Пюре гладкое, без комочков"],[9,"Мягкие кусочки 1 см"],[12,"Палочки, запечённые до мягкости"]]},
+    {n:"Цветная капуста", c:"veg", from:6, al:[], s:[[6,"Пюре, отварить на пару"],[9,"Соцветия размером с большой палец"],[12,"Соцветия целиком, мягкие"]]},
+    {n:"Брокколи", c:"veg", from:6, al:[], s:[[6,"Пюре из соцветий без стеблей"],[9,"Соцветия-«деревца» на пару"],[12,"Соцветия целиком"]]},
+    {n:"Тыква", c:"veg", from:6, al:[], s:[[6,"Пюре запечённой тыквы"],[9,"Кубики 1 см"],[12,"Ломтики печёные"]]},
+    {n:"Морковь", c:"veg", from:6, al:[], choke:true, s:[[6,"Пюре, хорошо разварить"],[9,"Мягкие кубики; сырую тёртую — нет"],[12,"Варёные палочки; сырую не давать до 4 лет"]]},
+    {n:"Картофель", c:"veg", from:6, al:[], s:[[6,"Пюре с молоком или отваром"],[9,"Размятый вилкой, комочками"],[12,"Кубики, запечённые дольки"]]},
+    {n:"Батат", c:"veg", from:6, al:[], s:[[6,"Пюре запечённого батата"],[9,"Мягкие кубики"],[12,"Палочки из духовки"]]},
+    {n:"Стручковая фасоль", c:"veg", from:8, al:[], s:[[8,"Хорошо разварить и размять"],[12,"Стручки целиком, мягкие"]]},
+    {n:"Свёкла", c:"veg", from:8, al:[], s:[[8,"Пюре, начинать с ложки"],[12,"Кубики варёные"]]},
+    {n:"Огурец", c:"veg", from:9, al:[], choke:true, s:[[9,"Очистить, тереть на тёрке"],[12,"Палочки без кожицы"],[18,"Кружки с кожицей"]]},
+    {n:"Помидор", c:"veg", from:9, al:[], s:[[9,"Без кожицы и семян, в блюде"],[12,"Четвертинки черри — разрезать вдоль"]]},
+    {n:"Сладкий перец", c:"veg", from:9, al:[], s:[[9,"Тушёный, без кожицы"],[12,"Мягкие полоски"],[18,"Сырые тонкие полоски"]]},
+    {n:"Лук и чеснок", c:"veg", from:8, al:[], s:[[8,"Только в составе блюда, пассеровать"],[12,"В блюде, немного"]]},
+    {n:"Шпинат", c:"veg", from:9, al:[], s:[[9,"Мелко рубленый в блюде"],[12,"В омлетах и супах"]]},
+
+    {n:"Яблоко", c:"fruit", from:6, al:[], choke:true, s:[[6,"Пюре из печёного яблока"],[9,"Печёные дольки"],[12,"Тёртое сырое"],[24,"Дольки сырые без кожицы"]]},
+    {n:"Груша", c:"fruit", from:6, al:[], s:[[6,"Пюре спелой груши"],[9,"Мягкие дольки"],[12,"Кусочки с кожицей"]]},
+    {n:"Банан", c:"fruit", from:6, al:[], s:[[6,"Размять вилкой"],[9,"Половинка в кожуре как держалка"],[12,"Кружки"]]},
+    {n:"Чернослив", c:"fruit", from:6, al:[], choke:true, s:[[6,"Пюре из размоченного"],[9,"Мелко рубленый"],[12,"Половинки без косточки"]]},
+    {n:"Авокадо", c:"fruit", from:6, al:[], s:[[6,"Размять до кремовой текстуры"],[9,"Дольки"],[12,"Кубики"]]},
+    {n:"Слива", c:"fruit", from:7, al:[], s:[[7,"Пюре без кожицы"],[9,"Дольки без кожицы"],[12,"Половинки без косточки"]]},
+    {n:"Абрикос", c:"fruit", from:7, al:[], s:[[7,"Пюре"],[12,"Дольки без косточки"]]},
+    {n:"Персик", c:"fruit", from:7, al:[], s:[[7,"Пюре без кожицы"],[12,"Дольки"]]},
+    {n:"Черника", c:"fruit", from:8, al:[], choke:true, s:[[8,"Размять ягоды"],[12,"Разрезать пополам"],[24,"Целиком"]]},
+    {n:"Малина", c:"fruit", from:9, al:[], s:[[9,"Размять"],[12,"Целые ягоды"]]},
+    {n:"Клубника", c:"fruit", from:10, al:[], choke:true, s:[[10,"Пюре или тонкие ломтики"],[12,"Четвертинки"],[24,"Целиком"]]},
+    {n:"Виноград", c:"fruit", from:9, al:[], choke:true, s:[[9,"Разрезать вдоль на четверти, без кожицы"],[12,"Четвертинки"],[48,"Целиком — не раньше 4–5 лет"]]},
+    {n:"Киви", c:"fruit", from:10, al:[], s:[[10,"Мякоть размять"],[12,"Кубики без кожицы"]]},
+    {n:"Цитрусовые", c:"fruit", from:12, al:[], s:[[12,"Дольки без плёнок и косточек"]]},
+
+    {n:"Гречка", c:"grain", from:6, al:[], s:[[6,"Каша 5% на воде, протереть"],[9,"Каша 10%, можно не протирать"],[12,"Рассыпчатая с овощами"]]},
+    {n:"Рис", c:"grain", from:6, al:[], s:[[6,"Рисовая каша, хорошо разварить"],[9,"Разваренный рис"],[12,"В составе блюд"]]},
+    {n:"Кукурузная крупа", c:"grain", from:6, al:[], s:[[6,"Жидкая каша"],[9,"Густая каша"]]},
+    {n:"Овсяные хлопья", c:"grain", from:6, al:["Злаки с глютеном"], s:[[6,"Жидкая каша на воде"],[9,"Каша гуще, с фруктами"],[12,"Овсянка с ягодами"]]},
+    {n:"Пшеничная крупа и манка", c:"grain", from:8, al:["Злаки с глютеном"], s:[[8,"Жидкая каша, не чаще 2 раз в неделю"],[12,"Каша, запеканки"]]},
+    {n:"Хлеб пшеничный", c:"grain", from:9, al:["Злаки с глютеном"], choke:true, s:[[9,"Подсушенный ломтик как держалка"],[12,"Мягкий хлеб без корки"]]},
+    {n:"Макароны", c:"grain", from:9, al:["Злаки с глютеном"], s:[[9,"Мелкие, хорошо разваренные"],[12,"Ракушки, звёздочки"]]},
+    {n:"Ячневая и перловая", c:"grain", from:10, al:["Злаки с глютеном"], s:[[10,"Хорошо разварить и протереть"],[18,"В супах"]]},
+
+    {n:"Индейка", c:"meat", from:6, al:[], s:[[6,"Пюре из отварного филе"],[9,"Фрикадельки, тефтели"],[12,"Кусочки, котлеты"]]},
+    {n:"Кролик", c:"meat", from:6, al:[], s:[[6,"Пюре"],[9,"Мелко рубленое мясо"],[12,"Кусочки тушёные"]]},
+    {n:"Курица", c:"meat", from:7, al:[], s:[[7,"Пюре из грудки"],[9,"Фрикадельки"],[12,"Кусочки, котлеты"]]},
+    {n:"Говядина", c:"meat", from:7, al:[], s:[[7,"Пюре, дважды через мясорубку"],[9,"Тефтели"],[12,"Тушёные кусочки"]]},
+    {n:"Телятина", c:"meat", from:7, al:[], s:[[7,"Пюре"],[9,"Рубленое"],[12,"Кусочки"]]},
+    {n:"Печень куриная", c:"meat", from:8, al:[], s:[[8,"Паштет, 1–2 раза в неделю"],[12,"Кусочки в блюде"]]},
+    {n:"Баранина", c:"meat", from:9, al:[], s:[[9,"Пюре из нежирной части"],[12,"Тушёные кусочки"]]},
+
+    {n:"Треска", c:"fish", from:8, al:["Рыба"], choke:true, s:[[8,"15–30 г, разобрать на волокна и проверить кости"],[12,"До 60 г, котлета на пару"],[18,"Кусочки филе"]]},
+    {n:"Хек", c:"fish", from:8, al:["Рыба"], choke:true, s:[[8,"Отварное филе, перебрать руками"],[12,"Котлеты, суфле"]]},
+    {n:"Минтай", c:"fish", from:8, al:["Рыба"], choke:true, s:[[8,"Филе на пару, проверить кости"],[12,"Котлеты"]]},
+    {n:"Лосось", c:"fish", from:10, al:["Рыба"], choke:true, s:[[10,"Запечённое филе, разобрать"],[12,"Кусочки, 1–2 раза в неделю"]]},
+    {n:"Креветки", c:"fish", from:18, al:["Ракообразные"], choke:true, s:[[18,"Мелко нарезать, следить за реакцией"],[36,"Целиком, очищенные"]]},
+
+    {n:"Яичный желток", c:"dairy", from:6, al:["Яйца"], s:[[6,"1/8 желтка, растереть в пюре"],[9,"До 1/2 желтка"],[12,"Целое яйцо, полностью проваренное"]]},
+    {n:"Яичный белок", c:"dairy", from:12, al:["Яйца"], s:[[12,"Вводить отдельно от желтка, с малого кусочка"]]},
+    {n:"Сливочное масло", c:"dairy", from:6, al:["Молоко"], s:[[6,"3–4 г в кашу или овощи"],[12,"До 10 г в день"]]},
+    {n:"Творог", c:"dairy", from:8, al:["Молоко"], s:[[8,"Протереть через сито, 20–30 г"],[12,"До 50 г, сырники и запеканки"]]},
+    {n:"Кефир детский", c:"dairy", from:8, al:["Молоко"], s:[[8,"Начинать с 20 мл, без сахара"],[12,"До 200 мл в день"]]},
+    {n:"Йогурт натуральный", c:"dairy", from:8, al:["Молоко"], s:[[8,"Без добавок и сахара, 50 мл"],[12,"До 100 мл, можно с фруктами"]]},
+    {n:"Сыр твёрдый", c:"dairy", from:10, al:["Молоко"], choke:true, s:[[10,"Тереть в блюдо, несолёный"],[12,"Тонкие полоски"],[24,"Кубики"]]},
+    {n:"Коровье молоко", c:"dairy", from:12, al:["Молоко"], s:[[9,"Только в составе каши"],[12,"Как напиток, цельное, до 400 мл"]]},
+
+    {n:"Зелёный горошек", c:"nuts", from:8, al:[], choke:true, s:[[8,"Разварить и размять"],[12,"Целые горошины, мягкие"]]},
+    {n:"Чечевица", c:"nuts", from:8, al:[], s:[[8,"Красная, разваренная в пюре"],[12,"В супах и рагу"]]},
+    {n:"Нут", c:"nuts", from:9, al:[], choke:true, s:[[9,"Хумус без специй"],[12,"Размятые зёрна"]]},
+    {n:"Фасоль", c:"nuts", from:10, al:[], choke:true, s:[[10,"Хорошо разварить и размять"],[18,"Целые зёрна в блюде"]]},
+    {n:"Арахисовая паста", c:"nuts", from:6, al:["Арахис"], choke:true, s:[[6,"2 г, развести водой до жидкой"],[9,"Тонким слоем в кашу"],[12,"Тонкий слой на мягкий хлеб"]]},
+    {n:"Ореховая паста", c:"nuts", from:8, al:["Орехи"], choke:true, s:[[8,"Развести в каше, тонким слоем"],[12,"Тонкий слой на хлеб"]]},
+    {n:"Тахини (кунжут)", c:"nuts", from:8, al:["Кунжут"], s:[[8,"Половина чайной ложки в блюдо"],[12,"В хумус и соусы"]]},
+    {n:"Соя (тофу)", c:"nuts", from:8, al:["Соя"], s:[[8,"Мягкий тофу, размять"],[12,"Кубики"]]},
+    {n:"Цельные орехи", c:"nuts", from:60, al:["Орехи"], choke:true, s:[[6,"Нельзя: риск удушья"],[60,"Целиком — не раньше 4–5 лет, до этого только паста или мука"]]},
+
+    {n:"Вода", c:"other", from:6, al:[], s:[[6,"В открытой чашке во время еды"],[12,"Свободно по требованию"]]},
+    {n:"Растительное масло", c:"other", from:6, al:[], s:[[6,"3–5 г в овощное пюре"],[12,"В салаты и блюда"]]},
+    {n:"Компот без сахара", c:"other", from:8, al:[], s:[[8,"Из сухофруктов, разбавленный"],[12,"Обычной крепости, без сахара"]]},
+    {n:"Сок 100%", c:"other", from:12, al:[], s:[[12,"ВОЗ: ограничить. Разбавлять, не более 100 мл в день, только в чашке"]]},
+    {n:"Соль", c:"other", from:12, al:[], s:[[6,"Не добавлять"],[12,"До 1 г в сутки с учётом всех продуктов"]]},
+    {n:"Сахар", c:"other", from:24, al:[], s:[[6,"ВОЗ: продукты с высоким содержанием сахара — нельзя"],[24,"По возможности не добавлять"]]},
+    {n:"Мёд", c:"other", from:12, al:[], s:[[6,"Нельзя: риск ботулизма"],[12,"После года, изредка и понемногу"]]},
+    {n:"Специи мягкие", c:"other", from:9, al:[], s:[[9,"Укроп, петрушка, базилик — щепотка в блюдо"],[12,"Корица, паприка без остроты"]]}
+  ];
   const RECIPES = [
     {t:"Суп с куриными фрикадельками", m:"с 12 мес · 30 мин · обед", img:"img/sup-frikadelki.jpg",
      kid:"Солите только взрослую кастрюлю и в самом конце — детскую порцию отложите раньше.",
@@ -1021,7 +1121,8 @@
     child:{name:"Мия", birth:DEFAULT_BIRTH, photo:null},
     foodFilter:"all", foodQ:"", openFood:null,
     rec:0, portions:2, step:0, timeLeft:0, running:false, tick:null,
-    recFilter:"all", f:{time:null, age:null, main:null, excl:[]}, intro:{}, pantry:["Масло оливковое","Мука","Масло сливочное"],
+    recFilter:"all", f:{time:null, age:null, main:null, excl:[]},
+    tried:{}, ff:{age:null, excl:[]}, catClosed:{}, pantry:["Масло оливковое","Мука","Масло сливочное"],
     paper:false
   };
 
@@ -1039,7 +1140,7 @@
       });
       localStorage.setItem(STORE_KEY, JSON.stringify({
         v:1, days, pantry:state.pantry, buyHorizon:state.buyHorizon, notes:state.notes, child:state.child,
-        intro:state.intro
+        tried:state.tried, ff:state.ff
       }));
     }catch(e){ /* приватный режим или переполнение — работаем без сохранения */ }
   }
@@ -1055,7 +1156,8 @@
       if(Array.isArray(d.pantry)) state.pantry=d.pantry;
       if(d.buyHorizon) state.buyHorizon=d.buyHorizon;
       if(d.notes && typeof d.notes==="object") state.notes=d.notes;
-      if(d.intro && typeof d.intro==="object") state.intro=d.intro;
+      if(d.tried && typeof d.tried==="object") state.tried=d.tried;
+      if(d.ff && Array.isArray(d.ff.excl)) state.ff={age:d.ff.age||null, excl:[...new Set(d.ff.excl)]};
       if(d.child && d.child.birth) state.child={name:d.child.name||"Ребёнок", birth:d.child.birth,
                                                   photo:d.child.photo||null};
       return true;
@@ -1065,7 +1167,7 @@
   function resetDemo(){
     try{ localStorage.removeItem(STORE_KEY); }catch(e){}
     state.days={}; state.notes={}; state.pantry=["Масло оливковое","Мука","Масло сливочное"];
-    state.intro={};
+    state.tried={}; state.ff={age:null, excl:[]}; state.catClosed={};
     state.child={name:"Мия", birth:DEFAULT_BIRTH, photo:null}; renderProfile();
     state.cursor=TODAY_ISO; state.buyHorizon=7;
     seedDays(); renderDay(); renderRecGrid();
@@ -1254,7 +1356,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "02.10 · сборка 11";
+  const BUILD = "02.10 · сборка 12";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -1544,6 +1646,21 @@
     fr.readAsDataURL(file);
   }
 
+  function renderDocBars(){
+    const box=$("#docBars"); if(!box) return;
+    box.innerHTML="";
+    FOOD_CATS.forEach(cat=>{
+      const all=FOODS.filter(f=>f.c===cat.k), done=all.filter(f=>isTried(f.n)).length;
+      const row=el("div","bar-row");
+      row.appendChild(el("span",null,cat.t));
+      const bar=el("span","bar");
+      const fill=el("i"); fill.style.width=Math.round(done/all.length*100)+"%";
+      bar.appendChild(fill); row.appendChild(bar);
+      row.appendChild(el("span","num",done+"/"+all.length));
+      box.appendChild(row);
+    });
+  }
+
   function renderProfile(){
     const name=(state.child.name||"Ребёнок").trim();
     const m=childMonths();
@@ -1607,7 +1724,7 @@
         const name=$("#pfName").value.trim() || "Ребёнок";
         const birth=$("#pfBirth").value || state.child.birth;
         state.child={name, birth, photo:photo||null};
-        closeSheet(); renderProfile(); renderFoods(); renderDay(); renderRecGrid(); saveState();
+        closeSheet(); renderProfile(); renderFoods(); renderDay(); renderRecGrid(); renderDocBars(); saveState();
         toast(name+", "+ageLabel(childMonths())+". Подбор и справочник пересчитаны.");
       });
     }
@@ -1710,142 +1827,198 @@
   /* ───────── экран «Продукты» ───────── */
   const AGE = () => childMonths();
 
-  // Группы продуктов и формулировки — из руководства ВОЗ по прикорму детей 6–23 месяцев (2023).
-  // ВОЗ даёт рекомендации по группам; конкретные продукты — примеры из нашего справочника.
-  const INTRO_GROUPS = [
-    {k:"asf", t:"Мясо, рыба или яйца", badge:["ok","каждый день"],
-     note:"ВОЗ: продукты животного происхождения — мясо, рыба или яйца — должны быть в рационе ежедневно. Это главный источник железа, которого после шести месяцев перестаёт хватать.",
-     ex:["Треска","Яичный желток"]},
-    {k:"veg", t:"Овощи и фрукты", badge:["ok","каждый день"],
-     note:"ВОЗ: овощи и фрукты должны быть в рационе ежедневно. Начинают с мягкой консистенции и постепенно переходят к кусочкам.",
-     ex:["Кабачок","Виноград"]},
-    {k:"pulses", t:"Бобовые, орехи и семена", badge:["warn","часто"],
-     note:"ВОЗ: есть часто, особенно если мяса, рыбы и яиц в рационе мало. Давать только в форме, которая не грозит удушьем: паста, мука, хорошо разваренные бобовые.",
-     ex:["Арахисовая паста","Цельные орехи"]},
-    {k:"grain", t:"Цельнозерновые крупы", badge:["ok","основа рациона"],
-     note:"ВОЗ: при использовании круп отдавать предпочтение цельнозерновым, а рафинированные сводить к минимуму.",
-     ex:["Гречка"]},
-    {k:"milk", t:"Молочное", badge:["warn","по возрасту"],
-     note:"ВОЗ (для детей не на грудном молоке): в 6–11 месяцев — смесь или животное молоко; с 12 месяцев — животное молоко, «последующие» смеси не рекомендуются. Подслащённое и ароматизированное молоко не подходит.",
-     ex:["Кефир","Цельное коровье молоко"]},
-    {k:"avoid", t:"Чего в рационе быть не должно", badge:["risk","исключить"], noCheck:true,
-     note:"ВОЗ: продукты с большим количеством сахара, соли и трансжиров — нельзя; сладкие напитки — нельзя; подсластители — нельзя; 100% сок — ограничить. Грудное вскармливание при этом продолжают до двух лет и дольше.",
-     ex:["Соль","Мёд"]}
-  ];
-
   const WHO_FREQ = [
-    {max:8,  text:"ВОЗ: прикорм начинают в 6 месяцев (180 дней), продолжая грудное вскармливание. В 6–8 месяцев — 2–3 приёма пищи в день, начиная с малых порций."},
-    {max:11, text:"ВОЗ: в 9–11 месяцев — 3–4 приёма пищи в день и 1–2 перекуса, консистенцию постепенно уплотняют."},
-    {max:23, text:"ВОЗ: в 12–23 месяца — 3–4 приёма пищи и 1–2 перекуса, ребёнок ест с общего стола семьи."},
-    {max:999,text:"Руководство ВОЗ по прикорму охватывает возраст до 23 месяцев. Дальше действуют общие принципы здорового питания семьи."}
+    {max:8,  text:"ВОЗ: прикорм начинают в 6 месяцев, 2–3 приёма пищи в день, начиная с малых порций. Отмечайте, что уже ввели."},
+    {max:11, text:"ВОЗ: 3–4 приёма пищи в день и 1–2 перекуса, консистенцию постепенно уплотняют."},
+    {max:23, text:"ВОЗ: 3–4 приёма пищи и 1–2 перекуса, ребёнок ест с общего стола семьи."},
+    {max:999,text:"Руководство ВОЗ по прикорму охватывает возраст до 23 месяцев. Дальше — общие принципы питания семьи."}
   ];
 
-  function focusFood(name){
-    const f=FOODS.find(x=>x.n===name);
-    if(!f){ toast("«"+name+"» пока нет в справочнике — добавим."); return; }
-    state.foodQ=""; state.foodFilter="all"; state.openFood=name;
-    const q=$("#foodQ"); if(q) q.value="";
-    $("#foodFilters").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.f==="all")));
-    renderFoods();
-    const row=[...document.querySelectorAll(".food-name")].find(el=>el.textContent===name);
-    if(row) row.scrollIntoView({block:"center"});
+  const catTitle = k => (FOOD_CATS.find(c=>c.k===k)||{t:"Прочее"}).t;
+  const isTried = n => !!state.tried[n];
+
+  // подача для конкретного возраста: последняя ступень, которая уже наступила
+  function serveFor(f, months){
+    let cur=null;
+    f.s.forEach(([from,text])=>{ if(months>=from) cur=[from,text]; });
+    return cur;
   }
 
-  function renderIntro(){
-    const m=childMonths();
-    $("#introBand").textContent = m<9 ? "6–8 месяцев" : m<12 ? "9–11 месяцев" : m<24 ? "12–23 месяца" : "старше 2 лет";
-    $("#introFreq").textContent = (WHO_FREQ.find(x=>m<=x.max)||WHO_FREQ[3]).text;
-
-    const box=$("#introList"); box.innerHTML="";
-    INTRO_GROUPS.forEach(g=>{
-      const done=!!state.intro[g.k];
-      const row=el("div","introrow"+(g.noCheck?" warn":"")+(done?" done":""));
-      const head=el("div","introhead");
-      if(!g.noCheck){
-        const cb=el("input"); cb.type="checkbox"; cb.checked=done; cb.id="intro-"+g.k;
-        cb.setAttribute("aria-label","Ввели: "+g.t);
-        cb.addEventListener("change",()=>{
-          state.intro[g.k]=cb.checked;
-          renderIntro(); saveState();
-          if(cb.checked) toast("Отметили: "+g.t.toLowerCase()+" в рационе.");
-        });
-        head.appendChild(cb);
-      }
-      head.appendChild(el("span","introname",g.t));
-      head.appendChild(el("span","chip "+g.badge[0], g.badge[1]));
-      row.appendChild(head);
-      row.appendChild(el("p","intronote",g.note));
-
-      const ex=el("div","introex");
-      g.ex.forEach(name=>{
-        const f=FOODS.find(x=>x.n===name);
-        const late=f && f.from>m;
-        const b=el("button","exchip"+(late?" later":""), name+(late?" · с "+f.from+" мес":""));
-        b.type="button";
-        b.addEventListener("click",()=>focusFood(name));
-        ex.appendChild(b);
-      });
-      row.appendChild(ex);
-      box.appendChild(row);
-    });
-  }
   function foodPasses(f){
     const q=state.foodQ.trim().toLowerCase();
     if(q && !f.n.toLowerCase().includes(q)) return false;
+    const ff=state.ff;
+    if(ff.age && f.from > ff.age) return false;
+    if(ff.excl.length && f.al.some(a=>ff.excl.includes(a))) return false;
     switch(state.foodFilter){
-      case "now": return f.from<=AGE();
-      case "allergen": return f.tags.includes("allergen");
-      case "choke": return f.tags.includes("choke");
+      case "now":   return f.from<=AGE();
       case "later": return f.from>AGE();
+      case "done":  return isTried(f.n);
+      case "todo":  return !isTried(f.n);
+      case "choke": return !!f.choke;
       default: return true;
     }
   }
-  function renderFoods(){
-    renderIntro();
-    const box=$("#foodList"); box.innerHTML="";
-    const list=FOODS.filter(foodPasses);
-    if(!list.length){
-      const e=el("div","food-detail"); e.style.padding="18px 14px";
-      e.appendChild(el("div","food-meta","Ничего не нашлось. Попробуйте другое название — словарь замен в работе."));
-      box.appendChild(e); return;
-    }
-    list.forEach(f=>{
-      const wrap=el("div","food");
-      const btn=el("button","food-row"); btn.type="button";
-      btn.setAttribute("aria-expanded", state.openFood===f.n ? "true":"false");
-      btn.appendChild(el("span","agetile "+f.state, f.from>=36 ? "3 г" : f.from+"+"));
-      const main=el("div","food-main");
-      main.appendChild(el("div","food-name",f.n));
-      main.appendChild(el("div","food-meta",f.meta));
-      btn.appendChild(main);
-      if(f.tags.length){
-        const tags=el("div","food-tags");
-        if(f.tags.includes("allergen")) tags.appendChild(el("span","chip warn","аллерген"));
-        if(f.tags.includes("choke")) tags.appendChild(el("span","chip risk","удушье"));
-        main.appendChild(tags);
-      }
-      btn.addEventListener("click",()=>{ state.openFood = state.openFood===f.n ? null : f.n; renderFoods(); });
-      wrap.appendChild(btn);
 
-      const det=el("div","food-detail"); det.hidden = state.openFood!==f.n;
-      const serve=el("div","serve");
-      serve.appendChild(el("div","sec-label sm","Как подать"));
-      [["6","6 мес"],["9","9 мес"],["12","12 мес+"]].forEach(([k,label])=>{
-        const nowKey = AGE()<9 ? "6" : AGE()<12 ? "9" : "12";
-        const r=el("div","serve-row"+(k===nowKey?" now":""));
-        r.appendChild(el("span","serve-age",label));
-        r.appendChild(el("span",null,f.serve[k]));
-        serve.appendChild(r);
+  const activeFoodFilters = ff => (ff.age?1:0)+ff.excl.length;
+
+  function renderFoods(){
+    const box=$("#foodList"); box.innerHTML="";
+    const m=childMonths();
+    $("#introFreq").textContent=(WHO_FREQ.find(x=>m<=x.max)||WHO_FREQ[3]).text;
+
+    renderDocBars();
+    const triedAll=FOODS.filter(f=>isTried(f.n)).length;
+    $("#triedCount").textContent="введено "+triedAll+" из "+FOODS.length;
+
+    const shown=FOODS.filter(foodPasses);
+    $("#foodFound").textContent=shown.length+" "+plur(shown.length,"продукт","продукта","продуктов");
+    const badge=$("#fFoodCount"), n=activeFoodFilters(state.ff);
+    badge.hidden=n===0; badge.textContent=n;
+
+    if(!shown.length){
+      box.appendChild(el("div","buy-empty","Под выбранные условия ничего не подошло. Снимите фильтры или очистите поиск."));
+      return;
+    }
+
+    FOOD_CATS.forEach(cat=>{
+      const items=shown.filter(f=>f.c===cat.k);
+      if(!items.length) return;
+      const all=FOODS.filter(f=>f.c===cat.k);
+      const done=all.filter(f=>isTried(f.n)).length;
+      const closed=state.catClosed[cat.k];
+
+      const wrap=el("div","fcat"+(closed?" closed":""));
+      const head=el("button","fcat-head"); head.type="button";
+      head.setAttribute("aria-expanded", String(!closed));
+      head.appendChild(el("span","t",cat.t));
+      head.appendChild(el("span","n",done+" из "+all.length));
+      head.appendChild(el("span","arr","▾"));
+      head.addEventListener("click",()=>{ state.catClosed[cat.k]=!closed; renderFoods(); });
+      wrap.appendChild(head);
+
+      const bar=el("div","fbar");
+      const fill=el("i"); fill.style.width=Math.round(done/all.length*100)+"%";
+      bar.appendChild(fill); wrap.appendChild(bar);
+
+      const body=el("div","fcat-body");
+      items.forEach(f=>{
+        const tried=isTried(f.n);
+        const row=el("div","prow"+(tried?" done":""));
+        const cb=el("input"); cb.type="checkbox"; cb.checked=tried;
+        cb.id="tried-"+f.n.replace(/\s+/g,"-");
+        cb.setAttribute("aria-label","Ввели: "+f.n);
+        cb.addEventListener("change",()=>{
+          if(cb.checked) state.tried[f.n]=true; else delete state.tried[f.n];
+          renderFoods(); saveState();
+          if(cb.checked) toast(f.n+" отмечен как введённый.");
+        });
+        row.appendChild(cb);
+
+        const name=el("button","pname"); name.type="button";
+        name.setAttribute("aria-label","Как подавать: "+f.n);
+        name.appendChild(el("span","ptitle",f.n));
+        name.appendChild(el("span","chip"+(f.from<=m?" ok":""), f.from>=48 ? "с "+Math.round(f.from/12)+" лет" : "с "+f.from+" мес"));
+        f.al.forEach(a=>name.appendChild(el("span","chip warn",a.toLowerCase())));
+        if(f.choke) name.appendChild(el("span","chip risk","удушье"));
+        name.addEventListener("click",()=>openServe(f));
+        row.appendChild(name);
+
+        const sv=el("button","pserve"); sv.type="button";
+        sv.setAttribute("aria-label","Подача по возрасту: "+f.n);
+        sv.innerHTML='<svg viewBox="0 0 24 24"><path d="M4 11.5h16a8 8 0 0 1-16 0z"/><path d="M8 7.5c0-1.3 1.2-1.3 1.2-2.6M13 7.5c0-1.3 1.2-1.3 1.2-2.6"/><path d="M4.5 20h15"/></svg>';
+        sv.addEventListener("click",()=>openServe(f));
+        row.appendChild(sv);
+
+        body.appendChild(row);
       });
-      det.appendChild(serve);
-      const src=el("div","source");
-      src.appendChild(el("span","chip","источник"));
-      src.appendChild(el("span",null,"Карточку заполняет педиатр-эксперт · в демо данные учебные"));
-      det.appendChild(src);
-      wrap.appendChild(det);
+      wrap.appendChild(body);
       box.appendChild(wrap);
     });
   }
+
+  function openServe(f){
+    const m=childMonths(), now=serveFor(f,m), tried=isTried(f.n);
+    const box=$("#sheetInner");
+    box.innerHTML =
+      '<div class="sheet-grab"></div>'+
+      '<h3>'+esc(f.n)+'</h3>'+
+      '<div class="servehead">'+
+        '<span class="chip'+(f.from<=m?' ok':' warn')+'">'+(f.from<=m?'можно сейчас':'с '+f.from+' мес')+'</span>'+
+        f.al.map(a=>'<span class="chip warn">'+esc(a.toLowerCase())+'</span>').join("")+
+        (f.choke?'<span class="chip risk">риск удушья</span>':'')+
+      '</div>'+
+      (now
+        ? '<div class="serve-now"><div class="sec-label sm" style="margin-bottom:5px">Как подать в '+esc(ageLabel(m))+'</div>'+
+          '<div style="font-size:15px;line-height:1.45">'+esc(now[1])+'</div></div>'
+        : '<p class="intronote">Этот продукт вводят с '+f.from+' месяцев — сейчас рано.</p>')+
+      '<div class="fsec"><h4>Подача по возрасту</h4><div class="serve">'+
+        f.s.map(([from,text])=>{
+          const active = now && now[0]===from;
+          return '<div class="serve-row'+(active?' now':'')+'">'+
+            '<span class="serve-age">'+(from>=48 ? Math.round(from/12)+" года" : from+" мес")+'</span>'+
+            '<span>'+esc(text)+'</span></div>';
+        }).join("")+
+      '</div></div>'+
+      '<div class="sheet-foot"><button class="btn btn-ghost" id="svClose" type="button">Закрыть</button>'+
+      '<button class="btn btn-primary" id="svTried" type="button">'+(tried?"Убрать отметку":"Отметить введённым")+'</button></div>';
+    $("#sheet").hidden=false;
+    $("#svClose").addEventListener("click",closeSheet);
+    $("#svTried").addEventListener("click",()=>{
+      if(tried) delete state.tried[f.n]; else state.tried[f.n]=true;
+      closeSheet(); renderFoods(); saveState();
+      toast(tried ? f.n+": отметка снята." : f.n+" отмечен как введённый.");
+    });
+  }
+
+  function openFoodFilters(){
+    const d={age:state.ff.age, excl:state.ff.excl.slice()};
+    const AGES=[["С 6 месяцев",6],["С 9 месяцев",9],["С 1 года",12],["С 1,5 лет",18],["С 2 лет",24],["С 3 лет",36]];
+    const box=$("#sheetInner");
+    function count(){
+      const keep={age:d.age, excl:d.excl}, prev=state.ff;
+      state.ff=keep; const n=FOODS.filter(foodPasses).length; state.ff=prev; return n;
+    }
+    function draw(){
+      box.innerHTML =
+        '<div class="sheet-grab"></div>'+
+        '<h3>Возраст и аллергены</h3>'+
+        '<div class="fsec"><h4>Показывать продукты</h4><div class="chips">'+
+          AGES.map(([lab,v])=>'<button class="chipbtn" type="button" data-a="'+v+'" aria-pressed="'+(d.age===v)+'">'+lab+'</button>').join("")+
+        '</div><p class="who">Показываем то, что уже можно вводить к выбранному возрасту.</p></div>'+
+        '<div class="fsec"><h4>Исключить аллерген</h4><div>'+
+          Object.keys(ALLERGEN_SRC).map(a=>{
+            const k=FOODS.filter(f=>f.al.includes(a)).length;
+            return '<label class="check"><input type="checkbox" data-x="'+esc(a)+'"'+(d.excl.includes(a)?' checked':'')+'>'+
+              '<span>'+esc(a)+'</span><span class="tail">'+(k?("в "+k+" "+plur(k,"продукте","продуктах","продуктах")):"нет в каталоге")+'</span></label>';
+          }).join("")+
+        '</div></div>'+
+        '<div class="sheet-foot"><button class="btn btn-ghost" id="ffReset" type="button">Сбросить</button>'+
+        '<button class="btn btn-primary" id="ffApply" type="button">Показать '+count()+'</button></div>';
+      box.querySelectorAll("[data-a]").forEach(b=>b.addEventListener("click",()=>{
+        const v=+b.dataset.a; d.age = d.age===v ? null : v; draw();
+      }));
+      box.querySelectorAll("[data-x]").forEach(c=>c.addEventListener("change",()=>{
+        const a=c.dataset.x;
+        d.excl = c.checked ? (d.excl.includes(a) ? d.excl : d.excl.concat([a])) : d.excl.filter(x=>x!==a);
+        draw();
+      }));
+      $("#ffReset").addEventListener("click",()=>{ d.age=null; d.excl=[]; draw(); });
+      $("#ffApply").addEventListener("click",()=>{
+        state.ff={age:d.age, excl:d.excl.slice()};
+        closeSheet(); renderFoods(); saveState();
+      });
+    }
+    draw();
+    $("#sheet").hidden=false;
+  }
+  $("#foodFilterBtn").addEventListener("click",openFoodFilters);
+
+  function focusFood(name){
+    const f=FOODS.find(x=>x.n===name);
+    if(f) openServe(f);
+  }
+
   $("#foodQ").addEventListener("input",e=>{ state.foodQ=e.target.value; renderFoods(); });
   $("#foodFilters").addEventListener("click",e=>{
     const b=e.target.closest("button"); if(!b) return;
@@ -1918,7 +2091,7 @@
       }));
       slot.querySelectorAll("[data-excl]").forEach(c=>c.addEventListener("change",()=>{
         const a=c.dataset.excl;
-        d.excl = c.checked ? d.excl.concat([a]) : d.excl.filter(x=>x!==a);
+        d.excl = c.checked ? (d.excl.includes(a) ? d.excl : d.excl.concat([a])) : d.excl.filter(x=>x!==a);
         draw();
       }));
       $("#fReset").addEventListener("click",()=>{ d.time=null; d.age=null; d.main=null; d.excl=[]; draw(); });
