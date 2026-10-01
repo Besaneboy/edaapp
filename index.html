@@ -242,6 +242,18 @@
     border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:10px 16px}
   .filters button[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink);font-weight:600}
 
+  .introrow{padding:13px 16px;border-bottom:1px solid var(--line-2);display:flex;flex-direction:column;gap:8px}
+  .introrow:last-child{border-bottom:0}
+  .introrow.warn{background:var(--warn-soft)}
+  .introhead{display:flex;align-items:center;gap:10px}
+  .introhead input{accent-color:var(--sage);width:19px;height:19px;flex:none}
+  .introname{font-family:"Onest","Manrope",sans-serif;font-weight:600;font-size:15px;flex:1;min-width:0}
+  .introrow.done .introname{color:var(--ink-2)}
+  .intronote{margin:0;font-size:13px;color:var(--ink-2);line-height:1.45}
+  .introex{display:flex;flex-wrap:wrap;gap:6px}
+  .exchip{appearance:none;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:500;
+    border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 11px}
+  .exchip.later{color:var(--ink-3);border-style:dashed}
   .food{border-bottom:1px solid var(--line-2)}
   .food:last-child{border-bottom:0}
   .food-row{width:100%;appearance:none;background:none;border:0;font-family:inherit;text-align:left;cursor:pointer;
@@ -521,6 +533,11 @@
 
             <!-- ЭКРАН: ПРОДУКТЫ -->
             <section class="view" data-view="food" hidden>
+              <div class="sec-label"><span>Что вводить сейчас</span><span class="chip ok" id="introBand">6–8 месяцев</span></div>
+              <p class="intronote" id="introFreq" style="padding:0 2px"></p>
+              <div class="flat" id="introList"></div>
+              <p class="source"><span class="chip">источник</span><span>Руководство ВОЗ по прикорму детей 6–23 месяцев (2023). ВОЗ называет группы продуктов, а не конкретные блюда — примеры подобраны из справочника ниже.</span></p>
+
               <div class="sec-label"><span>Справочник продуктов</span><span class="chip ok">бесплатно</span></div>
               <div class="search">
                 <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.6"/><path d="M19.5 19.5 16 16"/></svg>
@@ -1004,7 +1021,7 @@
     child:{name:"Мия", birth:DEFAULT_BIRTH, photo:null},
     foodFilter:"all", foodQ:"", openFood:null,
     rec:0, portions:2, step:0, timeLeft:0, running:false, tick:null,
-    recFilter:"all", f:{time:null, age:null, main:null, excl:[]}, pantry:["Масло оливковое","Мука","Масло сливочное"],
+    recFilter:"all", f:{time:null, age:null, main:null, excl:[]}, intro:{}, pantry:["Масло оливковое","Мука","Масло сливочное"],
     paper:false
   };
 
@@ -1021,7 +1038,8 @@
         if(o>=-90 && o<=60 && (state.days[iso]||[]).length) days[iso]=state.days[iso];
       });
       localStorage.setItem(STORE_KEY, JSON.stringify({
-        v:1, days, pantry:state.pantry, buyHorizon:state.buyHorizon, notes:state.notes, child:state.child
+        v:1, days, pantry:state.pantry, buyHorizon:state.buyHorizon, notes:state.notes, child:state.child,
+        intro:state.intro
       }));
     }catch(e){ /* приватный режим или переполнение — работаем без сохранения */ }
   }
@@ -1037,6 +1055,7 @@
       if(Array.isArray(d.pantry)) state.pantry=d.pantry;
       if(d.buyHorizon) state.buyHorizon=d.buyHorizon;
       if(d.notes && typeof d.notes==="object") state.notes=d.notes;
+      if(d.intro && typeof d.intro==="object") state.intro=d.intro;
       if(d.child && d.child.birth) state.child={name:d.child.name||"Ребёнок", birth:d.child.birth,
                                                   photo:d.child.photo||null};
       return true;
@@ -1046,6 +1065,7 @@
   function resetDemo(){
     try{ localStorage.removeItem(STORE_KEY); }catch(e){}
     state.days={}; state.notes={}; state.pantry=["Масло оливковое","Мука","Масло сливочное"];
+    state.intro={};
     state.child={name:"Мия", birth:DEFAULT_BIRTH, photo:null}; renderProfile();
     state.cursor=TODAY_ISO; state.buyHorizon=7;
     seedDays(); renderDay(); renderRecGrid();
@@ -1234,7 +1254,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "29.09 · сборка 10";
+  const BUILD = "02.10 · сборка 11";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -1689,6 +1709,86 @@
 
   /* ───────── экран «Продукты» ───────── */
   const AGE = () => childMonths();
+
+  // Группы продуктов и формулировки — из руководства ВОЗ по прикорму детей 6–23 месяцев (2023).
+  // ВОЗ даёт рекомендации по группам; конкретные продукты — примеры из нашего справочника.
+  const INTRO_GROUPS = [
+    {k:"asf", t:"Мясо, рыба или яйца", badge:["ok","каждый день"],
+     note:"ВОЗ: продукты животного происхождения — мясо, рыба или яйца — должны быть в рационе ежедневно. Это главный источник железа, которого после шести месяцев перестаёт хватать.",
+     ex:["Треска","Яичный желток"]},
+    {k:"veg", t:"Овощи и фрукты", badge:["ok","каждый день"],
+     note:"ВОЗ: овощи и фрукты должны быть в рационе ежедневно. Начинают с мягкой консистенции и постепенно переходят к кусочкам.",
+     ex:["Кабачок","Виноград"]},
+    {k:"pulses", t:"Бобовые, орехи и семена", badge:["warn","часто"],
+     note:"ВОЗ: есть часто, особенно если мяса, рыбы и яиц в рационе мало. Давать только в форме, которая не грозит удушьем: паста, мука, хорошо разваренные бобовые.",
+     ex:["Арахисовая паста","Цельные орехи"]},
+    {k:"grain", t:"Цельнозерновые крупы", badge:["ok","основа рациона"],
+     note:"ВОЗ: при использовании круп отдавать предпочтение цельнозерновым, а рафинированные сводить к минимуму.",
+     ex:["Гречка"]},
+    {k:"milk", t:"Молочное", badge:["warn","по возрасту"],
+     note:"ВОЗ (для детей не на грудном молоке): в 6–11 месяцев — смесь или животное молоко; с 12 месяцев — животное молоко, «последующие» смеси не рекомендуются. Подслащённое и ароматизированное молоко не подходит.",
+     ex:["Кефир","Цельное коровье молоко"]},
+    {k:"avoid", t:"Чего в рационе быть не должно", badge:["risk","исключить"], noCheck:true,
+     note:"ВОЗ: продукты с большим количеством сахара, соли и трансжиров — нельзя; сладкие напитки — нельзя; подсластители — нельзя; 100% сок — ограничить. Грудное вскармливание при этом продолжают до двух лет и дольше.",
+     ex:["Соль","Мёд"]}
+  ];
+
+  const WHO_FREQ = [
+    {max:8,  text:"ВОЗ: прикорм начинают в 6 месяцев (180 дней), продолжая грудное вскармливание. В 6–8 месяцев — 2–3 приёма пищи в день, начиная с малых порций."},
+    {max:11, text:"ВОЗ: в 9–11 месяцев — 3–4 приёма пищи в день и 1–2 перекуса, консистенцию постепенно уплотняют."},
+    {max:23, text:"ВОЗ: в 12–23 месяца — 3–4 приёма пищи и 1–2 перекуса, ребёнок ест с общего стола семьи."},
+    {max:999,text:"Руководство ВОЗ по прикорму охватывает возраст до 23 месяцев. Дальше действуют общие принципы здорового питания семьи."}
+  ];
+
+  function focusFood(name){
+    const f=FOODS.find(x=>x.n===name);
+    if(!f){ toast("«"+name+"» пока нет в справочнике — добавим."); return; }
+    state.foodQ=""; state.foodFilter="all"; state.openFood=name;
+    const q=$("#foodQ"); if(q) q.value="";
+    $("#foodFilters").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.f==="all")));
+    renderFoods();
+    const row=[...document.querySelectorAll(".food-name")].find(el=>el.textContent===name);
+    if(row) row.scrollIntoView({block:"center"});
+  }
+
+  function renderIntro(){
+    const m=childMonths();
+    $("#introBand").textContent = m<9 ? "6–8 месяцев" : m<12 ? "9–11 месяцев" : m<24 ? "12–23 месяца" : "старше 2 лет";
+    $("#introFreq").textContent = (WHO_FREQ.find(x=>m<=x.max)||WHO_FREQ[3]).text;
+
+    const box=$("#introList"); box.innerHTML="";
+    INTRO_GROUPS.forEach(g=>{
+      const done=!!state.intro[g.k];
+      const row=el("div","introrow"+(g.noCheck?" warn":"")+(done?" done":""));
+      const head=el("div","introhead");
+      if(!g.noCheck){
+        const cb=el("input"); cb.type="checkbox"; cb.checked=done; cb.id="intro-"+g.k;
+        cb.setAttribute("aria-label","Ввели: "+g.t);
+        cb.addEventListener("change",()=>{
+          state.intro[g.k]=cb.checked;
+          renderIntro(); saveState();
+          if(cb.checked) toast("Отметили: "+g.t.toLowerCase()+" в рационе.");
+        });
+        head.appendChild(cb);
+      }
+      head.appendChild(el("span","introname",g.t));
+      head.appendChild(el("span","chip "+g.badge[0], g.badge[1]));
+      row.appendChild(head);
+      row.appendChild(el("p","intronote",g.note));
+
+      const ex=el("div","introex");
+      g.ex.forEach(name=>{
+        const f=FOODS.find(x=>x.n===name);
+        const late=f && f.from>m;
+        const b=el("button","exchip"+(late?" later":""), name+(late?" · с "+f.from+" мес":""));
+        b.type="button";
+        b.addEventListener("click",()=>focusFood(name));
+        ex.appendChild(b);
+      });
+      row.appendChild(ex);
+      box.appendChild(row);
+    });
+  }
   function foodPasses(f){
     const q=state.foodQ.trim().toLowerCase();
     if(q && !f.n.toLowerCase().includes(q)) return false;
@@ -1701,6 +1801,7 @@
     }
   }
   function renderFoods(){
+    renderIntro();
     const box=$("#foodList"); box.innerHTML="";
     const list=FOODS.filter(foodPasses);
     if(!list.length){
