@@ -275,6 +275,8 @@
   .prow.done .pname{color:var(--ink-3)}
   .prow.done .ptitle{text-decoration:line-through}
   .ptitle{font-weight:500}
+  .pal{flex:none;width:19px;height:19px;border-radius:50%;background:var(--risk);color:#fff;
+    display:grid;place-items:center;font-size:12px;font-weight:700;line-height:1}
   .pserve{appearance:none;border:1px solid var(--line);background:var(--surface);cursor:pointer;flex:none;
     width:36px;height:36px;border-radius:12px;display:grid;place-items:center;color:var(--orange-ink)}
   .pserve svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
@@ -589,17 +591,12 @@
               <div class="sec-label"><span>Ввод прикорма</span><span class="num" id="triedCount"></span></div>
               <p class="intronote" style="padding:0 2px" id="introFreq"></p>
 
-              <div class="search">
-                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.6"/><path d="M19.5 19.5 16 16"/></svg>
-                <input type="search" id="foodQ" placeholder="Продукт: кабачок, треска, творог…" aria-label="Поиск по каталогу">
-              </div>
               <div class="filters" id="foodFilters">
                 <button data-f="all" aria-pressed="true">Все</button>
                 <button data-f="now" aria-pressed="false">Можно сейчас</button>
                 <button data-f="todo" aria-pressed="false">Не введено</button>
                 <button data-f="done" aria-pressed="false">Введено</button>
                 <button data-f="later" aria-pressed="false">Рано</button>
-                <button data-f="choke" aria-pressed="false">Риск удушья</button>
               </div>
               <div class="filterbar">
                 <button class="btn btn-sm fbtn" id="foodFilterBtn" type="button">
@@ -968,7 +965,52 @@
     {n:"Соль", c:"other", from:12, al:[], s:[[6,"Не добавлять"],[12,"До 1 г в сутки с учётом всех продуктов"]]},
     {n:"Сахар", c:"other", from:24, al:[], s:[[6,"ВОЗ: продукты с высоким содержанием сахара — нельзя"],[24,"По возможности не добавлять"]]},
     {n:"Мёд", c:"other", from:12, al:[], s:[[6,"Нельзя: риск ботулизма"],[12,"После года, изредка и понемногу"]]},
-    {n:"Специи мягкие", c:"other", from:9, al:[], s:[[9,"Укроп, петрушка, базилик — щепотка в блюдо"],[12,"Корица, паприка без остроты"]]}
+    {n:"Специи мягкие", c:"other", from:9, al:[], s:[[9,"Укроп, петрушка, базилик — щепотка в блюдо"],[12,"Корица, паприка без остроты"]]},
+
+    {n:"Кольраби", c:"veg", from:8, al:[], s:[[8,"Отварить и размять"],[12,"Мягкие кубики"]]},
+    {n:"Репа", c:"veg", from:9, al:[], s:[[9,"Пюре из пареной репы"],[12,"Кубики, тушёные"]]},
+    {n:"Пастернак", c:"veg", from:8, al:[], s:[[8,"Пюре, сладковатый вкус"],[12,"Кубики в рагу"]]},
+    {n:"Белокочанная капуста", c:"veg", from:9, al:[], s:[[9,"Только тушёная, мелко"],[12,"В супах и рагу"]]},
+    {n:"Баклажан", c:"veg", from:10, al:[], s:[[10,"Запечь, снять кожицу, размять"],[12,"Кубики в рагу"]]},
+    {n:"Кукуруза", c:"veg", from:10, al:[], choke:true, s:[[10,"Только зёрна, размятые"],[18,"Зёрна целиком"],[36,"Початок"]]},
+
+    {n:"Манго", c:"fruit", from:9, al:[], s:[[9,"Пюре спелого манго"],[12,"Кубики без кожицы"]]},
+    {n:"Смородина", c:"fruit", from:9, al:[], s:[[9,"Протереть, убрать шкурки"],[12,"Целые ягоды размять"]]},
+    {n:"Арбуз", c:"fruit", from:10, al:[], choke:true, s:[[10,"Мякоть без косточек, кубиками"],[18,"Ломтики"]]},
+    {n:"Дыня", c:"fruit", from:10, al:[], s:[[10,"Мякоть кубиками, немного"],[18,"Ломтики"]]},
+    {n:"Вишня", c:"fruit", from:10, al:[], choke:true, s:[[10,"Без косточки, размять"],[18,"Половинки"]]},
+    {n:"Курага", c:"fruit", from:8, al:["Диоксид серы и сульфиты"], choke:true, s:[[8,"Размочить и измельчить"],[12,"Мелко нарезать"]]},
+    {n:"Изюм", c:"fruit", from:10, al:["Диоксид серы и сульфиты"], choke:true, s:[[10,"Размочить и разрезать"],[24,"Целиком, под присмотром"]]},
+    {n:"Хурма", c:"fruit", from:12, al:[], s:[[12,"Только спелая, без вяжущего вкуса, ложкой"]]},
+
+    {n:"Пшено", c:"grain", from:8, al:[], s:[[8,"Хорошо разварить, протереть"],[12,"Каша с тыквой"]]},
+    {n:"Киноа", c:"grain", from:8, al:[], s:[[8,"Промыть, разварить, размять"],[12,"В гарнирах"]]},
+    {n:"Толокно", c:"grain", from:7, al:["Злаки с глютеном"], s:[[7,"Развести тёплой водой или молоком"],[12,"Как основа каши"]]},
+    {n:"Кускус", c:"grain", from:9, al:["Злаки с глютеном"], s:[[9,"Запарить до мягкости"],[12,"Гарнир"]]},
+    {n:"Булгур", c:"grain", from:10, al:["Злаки с глютеном"], s:[[10,"Разварить мягче обычного"],[18,"Гарнир"]]},
+    {n:"Ржаной хлеб", c:"grain", from:10, al:["Злаки с глютеном"], s:[[10,"Подсушенный, маленький кусочек"],[18,"Мякиш без корки"]]},
+
+    {n:"Свинина нежирная", c:"meat", from:9, al:[], s:[[9,"Пюре из отварной вырезки"],[12,"Тушёные кусочки"]]},
+    {n:"Утка", c:"meat", from:12, al:[], s:[[12,"Нежирная часть, тушить и мелко резать"]]},
+    {n:"Перепелиное яйцо", c:"dairy", from:7, al:["Яйца"], s:[[7,"Желток, четверть"],[12,"Целое, полностью проваренное"]]},
+
+    {n:"Судак", c:"fish", from:9, al:["Рыба"], choke:true, s:[[9,"Филе на пару, перебрать кости"],[12,"Котлеты, суфле"]]},
+    {n:"Горбуша", c:"fish", from:10, al:["Рыба"], choke:true, s:[[10,"Запечь, разобрать на волокна"],[12,"Кусочки, 1–2 раза в неделю"]]},
+    {n:"Мидии", c:"fish", from:24, al:["Моллюски"], choke:true, s:[[24,"Мелко нарезать, следить за реакцией"]]},
+
+    {n:"Ряженка", c:"dairy", from:9, al:["Молоко"], s:[[9,"С 20 мл, без сахара"],[12,"До 150 мл"]]},
+    {n:"Сметана 10%", c:"dairy", from:9, al:["Молоко"], s:[[9,"Чайная ложка в блюдо"],[12,"В супы и запеканки"]]},
+    {n:"Творожный сыр", c:"dairy", from:10, al:["Молоко"], s:[[10,"Несолёный, тонким слоем"],[12,"На хлеб, в соусы"]]},
+
+    {n:"Маш", c:"nuts", from:10, al:[], s:[[10,"Разварить и размять"],[18,"В супах"]]},
+    {n:"Льняное семя", c:"nuts", from:8, al:[], s:[[8,"Только молотое, щепотка в кашу"],[12,"В выпечку и каши"]]},
+    {n:"Паста из семечек", c:"nuts", from:9, al:[], s:[[9,"Тонким слоем, развести"],[12,"В каши и на хлеб"]]},
+    {n:"Кешью-паста", c:"nuts", from:9, al:["Орехи"], s:[[9,"Развести в каше"],[12,"Тонкий слой на хлеб"]]},
+
+    {n:"Детский травяной чай", c:"other", from:6, al:[], s:[[6,"Без сахара, из чашки"],[12,"Обычной крепости"]]},
+    {n:"Морс без сахара", c:"other", from:10, al:[], s:[[10,"Разбавленный, в чашке"],[18,"Обычный, без сахара"]]},
+    {n:"Кисель", c:"other", from:12, al:[], s:[[12,"Домашний, без сахара, изредка"]]},
+    {n:"Какао", c:"other", from:24, al:["Молоко"], s:[[24,"На молоке, без сахара, не каждый день"]]}
   ];
   const RECIPES = [
     {t:"Суп с куриными фрикадельками", m:"с 12 мес · 30 мин · обед", img:"img/sup-frikadelki.jpg",
@@ -1222,7 +1264,7 @@
     tab:"day",
     days:{}, cursor:TODAY_ISO, buyHorizon:7, notes:{},
     child:{name:"Мия", birth:DEFAULT_BIRTH, photo:null},
-    foodFilter:"all", foodQ:"", openFood:null,
+    foodFilter:"all",
     rec:0, portions:2, step:0, timeLeft:0, running:false, tick:null,
     recFilter:"all", f:{time:null, age:null, main:null, excl:[]},
     tried:{}, ff:{age:null, excl:[]}, catClosed:{}, onboarded:false, slots:DEFAULT_SLOTS.slice(), pantry:["Масло оливковое","Мука","Масло сливочное"],
@@ -1466,7 +1508,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "02.10 · сборка 21";
+  const BUILD = "02.10 · сборка 22";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -2088,8 +2130,6 @@
   }
 
   function foodPasses(f){
-    const q=state.foodQ.trim().toLowerCase();
-    if(q && !f.n.toLowerCase().includes(q)) return false;
     const ff=state.ff;
     if(ff.age && f.from > ff.age) return false;
     if(ff.excl.length && f.al.some(a=>ff.excl.includes(a))) return false;
@@ -2098,7 +2138,6 @@
       case "later": return f.from>AGE();
       case "done":  return isTried(f.n);
       case "todo":  return !isTried(f.n);
-      case "choke": return !!f.choke;
       default: return true;
     }
   }
@@ -2162,8 +2201,12 @@
         name.setAttribute("aria-label","Как подавать: "+f.n);
         name.appendChild(el("span","ptitle",f.n));
         name.appendChild(el("span","chip"+(f.from<=m?" ok":""), f.from>=48 ? "с "+Math.round(f.from/12)+" лет" : "с "+f.from+" мес"));
-        f.al.forEach(a=>name.appendChild(el("span","chip warn",a.toLowerCase())));
-        if(f.choke) name.appendChild(el("span","chip risk","удушье"));
+        if(f.al.length){
+          const mark=el("span","pal","!");
+          mark.title="Аллерген: "+f.al.map(a=>a.toLowerCase()).join(", ");
+          mark.setAttribute("aria-label",mark.title);
+          name.appendChild(mark);
+        }
         name.addEventListener("click",()=>openServe(f));
         row.appendChild(name);
 
@@ -2262,7 +2305,6 @@
     if(f) openServe(f);
   }
 
-  $("#foodQ").addEventListener("input",e=>{ state.foodQ=e.target.value; renderFoods(); });
   $("#foodFilters").addEventListener("click",e=>{
     const b=e.target.closest("button"); if(!b) return;
     state.foodFilter=b.dataset.f;
