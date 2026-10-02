@@ -778,7 +778,7 @@
           </nav>
 
           <div class="onb" id="onb" hidden>
-            <div class="onb-progress" id="onbProgress" hidden><i></i><i></i><i></i><i></i></div>
+            <div class="onb-progress" id="onbProgress" hidden><i></i><i></i><i></i><i></i><i></i></div>
             <div class="onb-step" id="onbStep1">
               <div class="onb-mark">
                 <svg viewBox="0 0 24 24"><path d="M3.5 11h17a8.5 8.5 0 0 1-17 0z"/><path d="M8 7c0-1.4 1.3-1.4 1.3-2.8M13 7c0-1.4 1.3-1.4 1.3-2.8"/><path d="M4 20h16"/></svg>
@@ -824,9 +824,27 @@
               <p>Отметьте то, что исключаем. Блюда и продукты с этими аллергенами будут скрыты из каталога — снять фильтр можно в любой момент.</p>
               <div id="onbAllergens"></div>
               <div class="onb-foot">
-                <button class="btn btn-primary btn-wide" id="onbDone" type="button">Собрать рацион на неделю</button>
-                <button class="btn btn-ghost btn-wide" id="onbSkip" type="button">Открыть без подбора</button>
+                <button class="btn btn-primary btn-wide" id="onbNext4" type="button">Дальше</button>
                 <button class="btn btn-ghost btn-wide" id="onbBack4" type="button">Назад</button>
+              </div>
+            </div>
+
+            <div class="onb-step" id="onbStep5" hidden>
+              <h2>Запланировать рацион</h2>
+              <p>Подбор берёт блюда по возрасту ребёнка и отмеченным аллергенам, раскладывает их по вашим приёмам пищи и не ставит одно и то же два дня подряд. Любой приём потом правится вручную.</p>
+
+              <div class="field">
+                <label>Горизонт планирования</label>
+                <div class="opts" id="onbDays"></div>
+              </div>
+              <div class="onb-list">
+                <label class="check"><input type="checkbox" id="onbOver"><span>Перезаписать уже запланированное</span></label>
+              </div>
+
+              <div class="onb-foot">
+                <button class="btn btn-primary btn-wide" id="onbDone" type="button">Собрать рацион</button>
+                <button class="btn btn-ghost btn-wide" id="onbSkip" type="button">Открыть без подбора</button>
+                <button class="btn btn-ghost btn-wide" id="onbBack5" type="button">Назад</button>
               </div>
             </div>
           </div>
@@ -1448,7 +1466,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "02.10 · сборка 16";
+  const BUILD = "02.10 · сборка 17";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -1777,7 +1795,8 @@
   function startOnboarding(){
     const onb=$("#onb");
     onb.hidden=false;
-    const steps=[1,2,3,4].map(n=>$("#onbStep"+n));
+    const steps=[1,2,3,4,5].map(n=>$("#onbStep"+n));
+    let planDays=7;
     const draftSlots=new Set(state.slots && state.slots.length ? state.slots : DEFAULT_SLOTS);
     const draftExcl=new Set(state.ff.excl || []);
 
@@ -1832,11 +1851,26 @@
     });
     alBox.appendChild(alList);
 
+    // шаг 5: горизонт планирования
+    const dayBox=$("#onbDays");
+    dayBox.innerHTML="";
+    [["На день",1],["На неделю",7],["На 2 недели",14],["На месяц",30]].forEach(([lab,v])=>{
+      const b=el("button","opt",lab); b.type="button";
+      b.setAttribute("aria-pressed", String(planDays===v));
+      b.addEventListener("click",()=>{
+        planDays=v;
+        dayBox.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+      });
+      dayBox.appendChild(b);
+    });
+
     // переходы
     $("#onbGo").addEventListener("click",()=>{ show(2); setTimeout(()=>$("#onbName").focus(),80); });
     $("#onbBack2").addEventListener("click",()=>show(1));
     $("#onbBack3").addEventListener("click",()=>show(2));
     $("#onbBack4").addEventListener("click",()=>show(3));
+    $("#onbBack5").addEventListener("click",()=>show(4));
+    $("#onbNext4").addEventListener("click",()=>show(5));
     $("#onbNext2").addEventListener("click",()=>{
       if(!$("#onbName").value.trim()){ toast("Впишите имя ребёнка."); $("#onbName").focus(); return; }
       if(!$("#onbBirth").value){ toast("Укажите дату рождения ребёнка."); return; }
@@ -1856,7 +1890,7 @@
       state.onboarded=true;
       onb.hidden=true;
       renderProfile(); renderFoods(); renderRecGrid();
-      if(withPlan) fillPlan(7,false); else renderDay();
+      if(withPlan) fillPlan(planDays, $("#onbOver").checked); else renderDay();
       saveState();
       if(!withPlan) toast(state.child.name+", "+ageLabel(childMonths())+". Всё настроено — можно планировать.");
     }
