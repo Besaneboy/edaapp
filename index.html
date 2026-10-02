@@ -407,6 +407,22 @@
   .paper td.num{font-variant-numeric:tabular-nums}
 
   /* ── шторка и тост ──────────────────────────── */
+  .onb{position:absolute;inset:0;z-index:12;background:var(--ground);display:flex;flex-direction:column;overflow-y:auto}
+  .onb-step{flex:1;display:flex;flex-direction:column;gap:15px;padding:30px 22px 26px;min-height:100%}
+  .onb-step[hidden]{display:none}
+  .onb-mark{width:72px;height:72px;border-radius:24px;background:var(--sage-soft);color:var(--sage-ink);
+    display:grid;place-items:center;margin-bottom:4px;flex:none}
+  .onb-mark svg{width:36px;height:36px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+  .onb h2{margin:0;font-family:"Onest","Manrope",sans-serif;font-size:28px;font-weight:700;
+    letter-spacing:-.03em;line-height:1.15;text-wrap:balance}
+  .onb p{margin:0;font-size:15px;color:var(--ink-2);line-height:1.5;max-width:34ch}
+  .onb .field{display:flex;flex-direction:column;gap:7px}
+  .onb label{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+  .onb input{font-family:inherit;font-size:16px;color:var(--ink);background:var(--surface);
+    border:1px solid var(--line);border-radius:14px;padding:14px;width:100%;box-sizing:border-box}
+  .onb .field-note{font-size:12.5px;color:var(--ink-3);line-height:1.4}
+  .onb-foot{margin-top:auto;padding-top:18px;display:flex;flex-direction:column;gap:9px}
+  .onb-note{font-size:12.5px;color:var(--ink-3);text-align:center}
   .sheet{position:absolute;inset:0;background:rgba(22,21,15,.36);display:flex;align-items:flex-end;
     border-radius:38px;z-index:5}
   .sheet-inner{width:100%;max-height:88%;overflow-y:auto;background:var(--surface);border-radius:26px 26px 38px 38px;padding:14px 20px 28px;
@@ -749,6 +765,39 @@
               Врачу
             </button>
           </nav>
+
+          <div class="onb" id="onb" hidden>
+            <div class="onb-step" id="onbStep1">
+              <div class="onb-mark">
+                <svg viewBox="0 0 24 24"><path d="M3.5 11h17a8.5 8.5 0 0 1-17 0z"/><path d="M8 7c0-1.4 1.3-1.4 1.3-2.8M13 7c0-1.4 1.3-1.4 1.3-2.8"/><path d="M4 20h16"/></svg>
+              </div>
+              <h2>Рацион ребёнка на неделю вперёд</h2>
+              <p>Планер питания по дням, каталог прикорма с подачей по возрасту и список покупок, который собирается сам из запланированных блюд.</p>
+              <div class="onb-foot">
+                <button class="btn btn-primary btn-wide" id="onbGo" type="button">Собрать рацион</button>
+                <p class="onb-note">Два вопроса, меньше минуты</p>
+              </div>
+            </div>
+
+            <div class="onb-step" id="onbStep2" hidden>
+              <h2>Кто будет есть?</h2>
+              <p>Имя и возраст нужны, чтобы подбирать блюда и показывать подачу по возрасту. Их всегда можно поменять в профиле.</p>
+              <div class="field">
+                <label for="onbName">Имя ребёнка</label>
+                <input id="onbName" placeholder="Например, Мия" autocomplete="off" enterkeyhint="done">
+              </div>
+              <div class="field">
+                <label for="onbBirth">Сколько сейчас</label>
+                <div class="chips" id="onbAges"></div>
+                <input id="onbBirth" type="date">
+                <span class="field-note" id="onbAgeNote">Выберите возраст или укажите дату рождения — так возраст будет считаться сам.</span>
+              </div>
+              <div class="onb-foot">
+                <button class="btn btn-primary btn-wide" id="onbDone" type="button">Открыть приложение</button>
+                <button class="btn btn-ghost btn-wide" id="onbBack" type="button">Назад</button>
+              </div>
+            </div>
+          </div>
 
           <div class="sheet" id="sheet" hidden>
             <div class="sheet-inner" id="sheetInner"></div>
@@ -1122,7 +1171,7 @@
     foodFilter:"all", foodQ:"", openFood:null,
     rec:0, portions:2, step:0, timeLeft:0, running:false, tick:null,
     recFilter:"all", f:{time:null, age:null, main:null, excl:[]},
-    tried:{}, ff:{age:null, excl:[]}, catClosed:{}, pantry:["Масло оливковое","Мука","Масло сливочное"],
+    tried:{}, ff:{age:null, excl:[]}, catClosed:{}, onboarded:false, pantry:["Масло оливковое","Мука","Масло сливочное"],
     paper:false
   };
 
@@ -1140,7 +1189,7 @@
       });
       localStorage.setItem(STORE_KEY, JSON.stringify({
         v:1, days, pantry:state.pantry, buyHorizon:state.buyHorizon, notes:state.notes, child:state.child,
-        tried:state.tried, ff:state.ff
+        tried:state.tried, ff:state.ff, onboarded:state.onboarded
       }));
     }catch(e){ /* приватный режим или переполнение — работаем без сохранения */ }
   }
@@ -1157,6 +1206,8 @@
       if(d.buyHorizon) state.buyHorizon=d.buyHorizon;
       if(d.notes && typeof d.notes==="object") state.notes=d.notes;
       if(d.tried && typeof d.tried==="object") state.tried=d.tried;
+      // у тех, кто пользовался приложением до появления опроса, он не показывается
+      state.onboarded = d.onboarded===undefined ? true : !!d.onboarded;
       if(d.ff && Array.isArray(d.ff.excl)) state.ff={age:d.ff.age||null, excl:[...new Set(d.ff.excl)]};
       if(d.child && d.child.birth) state.child={name:d.child.name||"Ребёнок", birth:d.child.birth,
                                                   photo:d.child.photo||null};
@@ -1167,10 +1218,11 @@
   function resetDemo(){
     try{ localStorage.removeItem(STORE_KEY); }catch(e){}
     state.days={}; state.notes={}; state.pantry=["Масло оливковое","Мука","Масло сливочное"];
-    state.tried={}; state.ff={age:null, excl:[]}; state.catClosed={};
+    state.tried={}; state.ff={age:null, excl:[]}; state.catClosed={}; state.onboarded=false;
     state.child={name:"Мия", birth:DEFAULT_BIRTH, photo:null}; renderProfile();
     state.cursor=TODAY_ISO; state.buyHorizon=7;
-    seedDays(); renderDay(); renderRecGrid();
+    seedDays(); renderDay(); renderRecGrid(); renderFoods();
+    startOnboarding();
     toast("Демо-данные возвращены в исходное состояние.");
   }
 
@@ -1356,7 +1408,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "02.10 · сборка 12";
+  const BUILD = "02.10 · сборка 13";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -1669,6 +1721,66 @@
     paintAvatar($("#kidAvatar"), state.child);
     const head=document.querySelector(".report-head h3");
     if(head) head.textContent="Пищевой дневник: "+name;
+  }
+
+  const ONB_AGES = [["6 мес",6],["9 мес",9],["1 год",12],["1,5 года",18],["2 года",24],["3 года",36]];
+
+  function birthFromMonths(m){
+    const d=new Date(); d.setHours(0,0,0,0); d.setMonth(d.getMonth()-m);
+    return isoOf(d);
+  }
+
+  function startOnboarding(){
+    const onb=$("#onb");
+    onb.hidden=false;
+    $("#onbStep1").hidden=false;
+    $("#onbStep2").hidden=true;
+
+    const chips=$("#onbAges");
+    chips.innerHTML="";
+    ONB_AGES.forEach(([lab,m])=>{
+      const b=el("button","chipbtn",lab); b.type="button";
+      b.setAttribute("aria-pressed","false");
+      b.addEventListener("click",()=>{
+        $("#onbBirth").value=birthFromMonths(m);
+        chips.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+        updateNote();
+      });
+      chips.appendChild(b);
+    });
+
+    function updateNote(){
+      const v=$("#onbBirth").value;
+      $("#onbAgeNote").textContent = v
+        ? "Сейчас " + ageLabel(monthsSince(v)) + ". Подбор блюд и подача в каталоге настроятся на этот возраст."
+        : "Выберите возраст или укажите дату рождения — так возраст будет считаться сам.";
+    }
+    $("#onbBirth").addEventListener("input",()=>{
+      chips.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed","false"));
+      updateNote();
+    });
+    updateNote();
+
+    $("#onbGo").addEventListener("click",()=>{
+      $("#onbStep1").hidden=true;
+      $("#onbStep2").hidden=false;
+      setTimeout(()=>$("#onbName").focus(),80);
+    });
+    $("#onbBack").addEventListener("click",()=>{
+      $("#onbStep2").hidden=true;
+      $("#onbStep1").hidden=false;
+    });
+    $("#onbDone").addEventListener("click",()=>{
+      const name=$("#onbName").value.trim();
+      if(!name){ toast("Впишите имя ребёнка."); $("#onbName").focus(); return; }
+      const birth=$("#onbBirth").value;
+      if(!birth){ toast("Выберите возраст или укажите дату рождения."); return; }
+      state.child={name, birth, photo:state.child.photo||null};
+      state.onboarded=true;
+      onb.hidden=true;
+      renderProfile(); renderDay(); renderFoods(); renderRecGrid(); saveState();
+      toast(name+", "+ageLabel(childMonths())+". Всё настроено — можно планировать.");
+    });
   }
 
   function openProfile(){
@@ -2466,6 +2578,7 @@
 
   /* ───────── старт ───────── */
   renderProfile();
+  if(!state.onboarded) startOnboarding();
   renderDay();
   renderFoods();
   renderRecGrid(); renderRecipe(); renderBuy();
