@@ -422,6 +422,13 @@
   .onb .check input{accent-color:var(--sage);width:20px;height:20px;flex:none}
   .onb .check .tail{margin-left:auto;font-size:12.5px;color:var(--ink-3)}
   .onb-list{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--radius);padding:2px 14px}
+  .onb-slot{display:grid;grid-template-columns:20px 1fr 104px;gap:10px;align-items:center;
+    padding:10px 0;border-bottom:1px solid var(--line-2)}
+  .onb-slot:last-child{border-bottom:0}
+  .onb-slot input[type="checkbox"]{accent-color:var(--sage);width:20px;height:20px}
+  .onb .onb-slot input[type="text"],.onb .onb-slot input[type="time"]{
+    padding:9px 10px;font-size:14px;border-radius:11px;background:var(--surface-2);border:1px solid transparent}
+  .onb-slot.off input{opacity:.45}
   .onb-scroll{max-height:46vh;overflow-y:auto}
   .onb-mark{width:72px;height:72px;border-radius:24px;background:var(--sage-soft);color:var(--sage-ink);
     display:grid;place-items:center;margin-bottom:4px;flex:none}
@@ -1219,7 +1226,7 @@
   const SLOT_PRESETS = ["Завтрак","Перекус 1","Обед","Полдник","Перекус 2","Ужин","Второй завтрак","Ночное кормление"];
   const ALL_SLOTS = ["Завтрак","Перекус 1","Обед","Полдник","Перекус 2","Ужин"];
   const DEFAULT_SLOTS = ["Завтрак","Обед","Полдник","Ужин"];
-  const timeOf = name => SLOT_TIME[name] || "12:00";
+  const timeOf = name => (state && state.slotTimes && state.slotTimes[name]) || SLOT_TIME[name] || "12:00";
   const gramOf = name => SLOT_GRAM[name] || "120 г";
   const isoOf = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
   const TODAY = (()=>{ const d=new Date(); d.setHours(0,0,0,0); return d; })();
@@ -1252,7 +1259,8 @@
     foodFilter:"all",
     rec:0, portions:2, step:0, timeLeft:0, running:false, tick:null,
     recFilter:"all", f:{time:null, age:null, main:null, excl:[]},
-    tried:{}, ff:{age:null, excl:[]}, catClosed:{}, onboarded:false, slots:DEFAULT_SLOTS.slice(), pantry:["Масло оливковое","Мука","Масло сливочное"],
+    tried:{}, ff:{age:null, excl:[]}, catClosed:{}, onboarded:false,
+    slots:DEFAULT_SLOTS.slice(), slotTimes:{}, pantry:["Масло оливковое","Мука","Масло сливочное"],
     paper:false
   };
 
@@ -1271,7 +1279,7 @@
       localStorage.setItem(STORE_KEY, JSON.stringify({
         v:1, days, pantry:state.pantry, buyHorizon:state.buyHorizon, notes:state.notes, child:state.child,
         tried:state.tried, ff:state.ff, foodFilter:state.foodFilter,
-        onboarded:state.onboarded, slots:state.slots
+        onboarded:state.onboarded, slots:state.slots, slotTimes:state.slotTimes
       }));
     }catch(e){ /* приватный режим или переполнение — работаем без сохранения */ }
   }
@@ -1291,6 +1299,7 @@
       // у тех, кто пользовался приложением до появления опроса, он не показывается
       state.onboarded = d.onboarded===undefined ? true : !!d.onboarded;
       if(Array.isArray(d.slots) && d.slots.length) state.slots=d.slots;
+      if(d.slotTimes && typeof d.slotTimes==="object") state.slotTimes=d.slotTimes;
       if(d.ff && Array.isArray(d.ff.excl)) state.ff={age:d.ff.age||null, excl:[...new Set(d.ff.excl)]};
       if(typeof d.foodFilter==="string") state.foodFilter=d.foodFilter;
       if(d.child && d.child.birth) state.child={name:d.child.name||"Ребёнок", birth:d.child.birth,
@@ -1304,7 +1313,7 @@
     state.days={}; state.notes={}; state.pantry=["Масло оливковое","Мука","Масло сливочное"];
     state.tried={}; state.ff={age:null, excl:[]}; state.catClosed={}; state.onboarded=false;
     state.foodFilter="all";
-    state.slots=DEFAULT_SLOTS.slice(); state.f={...state.f, excl:[]};
+    state.slots=DEFAULT_SLOTS.slice(); state.slotTimes={}; state.f={...state.f, excl:[]};
     state.child={name:"Мия", birth:DEFAULT_BIRTH, photo:null}; renderProfile();
     state.cursor=TODAY_ISO; state.buyHorizon=7;
     seedDays(); renderDay(); renderRecGrid(); renderFoods();
@@ -1315,7 +1324,7 @@
   // история за прошлые дни и уже запланированные ближайшие
   function seedDays(){
     const mk = (slot, rec, note) => ({
-      name:slot, time:SLOT_TIME[slot], gram:SLOT_GRAM[slot],
+      name:slot, time:timeOf(slot), gram:gramOf(slot),
       items:RECIPES[rec].t, rec:rec, note:note||null
     });
     state.days[isoAt(-3)] = [mk("Завтрак",8),mk("Обед",0),mk("Полдник",2),mk("Ужин",7)];
@@ -1406,14 +1415,14 @@
     const prev=state.days[prevIso]||[];
     const planned = meals.map(m=>({slot:m.name, m, y:(prev.find(x=>x.name===m.name)||{items:null}), time:m.time}));
     const missing = planSlots().filter(sl=>!meals.find(m=>m.name===sl)).map(sl=>({
-      slot:sl, m:null, y:(prev.find(x=>x.name===sl) || {time:SLOT_TIME[sl], items:null}), time:SLOT_TIME[sl]
+      slot:sl, m:null, y:(prev.find(x=>x.name===sl) || {time:timeOf(sl), items:null}), time:timeOf(sl)
     }));
     const rows = planned.concat(missing).sort((a,b)=>a.time.localeCompare(b.time));
 
     rows.forEach(({slot,m,y})=>{
       const row=el("div","meal"+(m?"":" empty"));
       const side=el("div","meal-side");
-      side.appendChild(el("div","meal-time", m ? m.time : (y.time || SLOT_TIME[slot] || "")));
+      side.appendChild(el("div","meal-time", m ? m.time : (y.time || timeOf(slot) || "")));
       if(m && m.rec!=null){
         const tb=el("button","meal-thumb"); tb.type="button";
         tb.setAttribute("aria-label","Открыть рецепт: "+m.items);
@@ -1496,7 +1505,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "03.10 · сборка 29";
+  const BUILD = "03.10 · сборка 30";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -1547,7 +1556,7 @@
 
     $("#shSlot").addEventListener("change",()=>{
       const name=readSlotField("shSlot");
-      if(SLOT_TIME[name]) $("#shTime").value=SLOT_TIME[name];
+      $("#shTime").value=timeOf(name);
     });
 
     $("#shDishPick").addEventListener("click",()=>{
@@ -1693,7 +1702,7 @@
           rec=free[0]; cursorBy[slot]++;
         }
         usedToday.add(rec);
-        const row={name:slot,time:SLOT_TIME[slot],gram:SLOT_GRAM[slot],items:RECIPES[rec].t,rec:rec,note:null};
+        const row={name:slot,time:timeOf(slot),gram:gramOf(slot),items:RECIPES[rec].t,rec:rec,note:null};
         if(has) Object.assign(has,row); else meals.push(row);
         added++;
       });
@@ -1847,21 +1856,36 @@
         : "Возраст посчитается сам и будет обновляться каждый месяц.";
     }
     $("#onbBirth").max = TODAY_ISO;
-    $("#onbBirth").addEventListener("input",updateNote);
+    $("#onbBirth").oninput=updateNote;
     updateNote();
 
-    // шаг 3: приёмы пищи
+    // шаг 3: приёмы пищи — название и время правятся прямо здесь
+    const draftMeals = ALL_SLOTS.map(name=>({
+      on: draftSlots.has(name),
+      name: name,
+      time: timeOf(name)
+    }));
     const slotBox=$("#onbSlots");
     slotBox.innerHTML="";
     const slotList=el("div","onb-list");
-    ALL_SLOTS.forEach(name=>{
-      const lab=document.createElement("label"); lab.className="check";
-      const cb=document.createElement("input"); cb.type="checkbox"; cb.checked=draftSlots.has(name);
-      cb.addEventListener("change",()=>{ cb.checked ? draftSlots.add(name) : draftSlots.delete(name); });
-      lab.appendChild(cb);
-      lab.appendChild(el("span",null,name));
-      lab.appendChild(el("span","tail","около "+timeOf(name)));
-      slotList.appendChild(lab);
+    draftMeals.forEach(m=>{
+      const row=el("div","onb-slot");
+      const cb=document.createElement("input"); cb.type="checkbox"; cb.checked=m.on;
+      cb.setAttribute("aria-label","Включить приём: "+m.name);
+      const nm=document.createElement("input"); nm.type="text"; nm.value=m.name; nm.className="onb-slot-name";
+      nm.setAttribute("aria-label","Название приёма");
+      const tm=document.createElement("input"); tm.type="time"; tm.value=m.time; tm.className="onb-slot-time";
+      tm.setAttribute("aria-label","Время приёма");
+      function paint(){
+        row.classList.toggle("off", !m.on);
+        nm.disabled=!m.on; tm.disabled=!m.on;
+      }
+      cb.onchange=()=>{ m.on=cb.checked; paint(); };
+      nm.oninput=()=>{ m.name=nm.value; };
+      tm.oninput=()=>{ m.time=tm.value || m.time; };
+      paint();
+      row.appendChild(cb); row.appendChild(nm); row.appendChild(tm);
+      slotList.appendChild(row);
     });
     slotBox.appendChild(slotList);
 
@@ -1895,25 +1919,29 @@
     });
 
     // переходы
-    $("#onbGo").addEventListener("click",()=>{ show(2); setTimeout(()=>$("#onbName").focus(),80); });
-    $("#onbBack2").addEventListener("click",()=>show(1));
-    $("#onbBack3").addEventListener("click",()=>show(2));
-    $("#onbBack4").addEventListener("click",()=>show(3));
-    $("#onbBack5").addEventListener("click",()=>show(4));
-    $("#onbNext4").addEventListener("click",()=>show(5));
-    $("#onbNext2").addEventListener("click",()=>{
+    // присваиваем, а не навешиваем: опрос можно запустить повторно без дублей
+    $("#onbGo").onclick=()=>{ show(2); setTimeout(()=>$("#onbName").focus(),80); };
+    $("#onbBack2").onclick=()=>show(1);
+    $("#onbBack3").onclick=()=>show(2);
+    $("#onbBack4").onclick=()=>show(3);
+    $("#onbBack5").onclick=()=>show(4);
+    $("#onbNext4").onclick=()=>show(5);
+    $("#onbNext2").onclick=()=>{
       if(!$("#onbName").value.trim()){ toast("Впишите имя ребёнка."); $("#onbName").focus(); return; }
       if(!$("#onbBirth").value){ toast("Укажите дату рождения ребёнка."); return; }
       show(3);
-    });
-    $("#onbNext3").addEventListener("click",()=>{
-      if(!draftSlots.size){ toast("Отметьте хотя бы один приём пищи."); return; }
+    };
+    $("#onbNext3").onclick=()=>{
+      if(!draftMeals.some(m=>m.on)){ toast("Отметьте хотя бы один приём пищи."); return; }
       show(4);
-    });
+    };
 
     function finish(withPlan){
       state.child={name:$("#onbName").value.trim(), birth:$("#onbBirth").value, photo:state.child.photo||null};
-      state.slots=ALL_SLOTS.filter(n=>draftSlots.has(n));
+      const picked=draftMeals.filter(m=>m.on);
+      state.slotTimes={};
+      picked.forEach(m=>{ state.slotTimes[(m.name||"").trim() || "Приём"]=m.time; });
+      state.slots=picked.map(m=>(m.name||"").trim() || "Приём");
       const excl=[...draftExcl];
       state.ff={age:state.ff.age, excl:excl.slice()};
       state.f={...state.f, excl:excl.slice()};
@@ -1924,8 +1952,8 @@
       saveState();
       if(!withPlan) toast(state.child.name+", "+ageLabel(childMonths())+". Всё настроено — можно планировать.");
     }
-    $("#onbDone").addEventListener("click",()=>finish(true));
-    $("#onbSkip").addEventListener("click",()=>finish(false));
+    $("#onbDone").onclick=()=>finish(true);
+    $("#onbSkip").onclick=()=>finish(false);
 
     show(1);
   }
@@ -2442,7 +2470,7 @@
     for(let o=0;o<31;o++){
       const iso=isoAt(o), meals=mealsOf(iso);
       if(!meals.find(m=>m.name===r.slot)){
-        meals.push({name:r.slot,time:SLOT_TIME[r.slot],gram:SLOT_GRAM[r.slot],items:r.t,rec:i,react:null});
+        meals.push({name:r.slot,time:timeOf(r.slot),gram:gramOf(r.slot),items:r.t,rec:i,react:null});
         renderRecGrid(); renderDay(); updatePlanBtn();
         toast("«"+r.t+"» → "+dayLabel(iso).split(",")[0].toLowerCase()+", "+r.slot.toLowerCase()+".");
         return;
