@@ -211,6 +211,17 @@
   .react[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
   .react[aria-pressed="true"][data-kind="bad"]{background:var(--risk);border-color:var(--risk);color:#fff}
   .meal.empty .meal-name{color:var(--ink-3);font-weight:500}
+  #meals{background:none;border:0;overflow:visible;display:flex;flex-direction:column;gap:10px}
+  #meals .meal{border:0;border-radius:24px}
+  #meals .meal.t-breakfast{background:#FFF4CC}
+  #meals .meal.t-lunch{background:#DDF4E6}
+  #meals .meal.t-snack{background:#FFE3D6}
+  #meals .meal.t-dinner{background:#ECE6FF}
+  #meals .meal.t-bite{background:#DCEEFB}
+  #meals .meal.t-other{background:#F7EBDC}
+  #meals .meal.empty{background:var(--surface);border:1px dashed var(--line)}
+  #meals .meal:not(.empty) .meal-note{background:rgba(255,255,255,.7)}
+  #meals .meal:not(.empty) .meal-note.add{background:rgba(255,255,255,.7);border-style:solid;border-color:transparent}
   .meal-note{appearance:none;cursor:pointer;font-family:inherit;text-align:left;align-self:flex-start;
     max-width:100%;border:1px solid transparent;border-radius:12px;padding:9px 12px;
     background:var(--surface-2);color:var(--ink-2);font-size:13px;line-height:1.4}
@@ -1412,6 +1423,17 @@
     return b;
   }
 
+  // заливка карточки по типу приёма — стабильна при переименовании и смене времени
+  function tintOf(name){
+    const n=(name||"").toLowerCase();
+    if(n.indexOf("завтрак")>=0) return "t-breakfast";
+    if(n.indexOf("обед")>=0) return "t-lunch";
+    if(n.indexOf("полдник")>=0) return "t-snack";
+    if(n.indexOf("ужин")>=0) return "t-dinner";
+    if(n.indexOf("перекус")>=0) return "t-bite";
+    return "t-other";
+  }
+
   function renderMeals(){
     const box=$("#meals"); box.innerHTML="";
     const meals=mealsOf(state.cursor);
@@ -1424,7 +1446,7 @@
     const rows = planned.concat(missing).sort((a,b)=>a.time.localeCompare(b.time));
 
     rows.forEach(({slot,m,y})=>{
-      const row=el("div","meal"+(m?"":" empty"));
+      const row=el("div","meal "+tintOf(slot)+(m?"":" empty"));
       const side=el("div","meal-side");
       side.appendChild(el("div","meal-time", m ? m.time : (y.time || timeOf(slot) || "")));
       if(m && m.rec!=null){
@@ -1509,7 +1531,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "03.10 · сборка 31";
+  const BUILD = "03.10 · сборка 32";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
