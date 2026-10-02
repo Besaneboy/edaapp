@@ -410,6 +410,17 @@
   .onb{position:absolute;inset:0;z-index:12;background:var(--ground);display:flex;flex-direction:column;overflow-y:auto}
   .onb-step{flex:1;display:flex;flex-direction:column;gap:15px;padding:30px 22px 26px;min-height:100%}
   .onb-step[hidden]{display:none}
+  .onb-progress{display:flex;gap:5px;padding:18px 22px 0}
+  .onb-progress i{height:3px;flex:1;border-radius:2px;background:var(--line);display:block}
+  .onb-progress i.on{background:var(--sage)}
+  .onb .check{display:flex;align-items:center;gap:12px;padding:12px 0;cursor:pointer;
+    border-bottom:1px solid var(--line-2);font-size:15px;color:var(--ink);
+    text-transform:none;letter-spacing:0;font-weight:500}
+  .onb .check:last-child{border-bottom:0}
+  .onb .check input{accent-color:var(--sage);width:20px;height:20px;flex:none}
+  .onb .check .tail{margin-left:auto;font-size:12.5px;color:var(--ink-3)}
+  .onb-list{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--radius);padding:2px 14px}
+  .onb-scroll{max-height:46vh;overflow-y:auto}
   .onb-mark{width:72px;height:72px;border-radius:24px;background:var(--sage-soft);color:var(--sage-ink);
     display:grid;place-items:center;margin-bottom:4px;flex:none}
   .onb-mark svg{width:36px;height:36px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
@@ -767,6 +778,7 @@
           </nav>
 
           <div class="onb" id="onb" hidden>
+            <div class="onb-progress" id="onbProgress" hidden><i></i><i></i><i></i><i></i></div>
             <div class="onb-step" id="onbStep1">
               <div class="onb-mark">
                 <svg viewBox="0 0 24 24"><path d="M3.5 11h17a8.5 8.5 0 0 1-17 0z"/><path d="M8 7c0-1.4 1.3-1.4 1.3-2.8M13 7c0-1.4 1.3-1.4 1.3-2.8"/><path d="M4 20h16"/></svg>
@@ -793,8 +805,29 @@
                 <span class="field-note" id="onbAgeNote">Выберите возраст или укажите дату рождения — так возраст будет считаться сам.</span>
               </div>
               <div class="onb-foot">
-                <button class="btn btn-primary btn-wide" id="onbDone" type="button">Открыть приложение</button>
-                <button class="btn btn-ghost btn-wide" id="onbBack" type="button">Назад</button>
+                <button class="btn btn-primary btn-wide" id="onbNext2" type="button">Дальше</button>
+                <button class="btn btn-ghost btn-wide" id="onbBack2" type="button">Назад</button>
+              </div>
+            </div>
+
+            <div class="onb-step" id="onbStep3" hidden>
+              <h2>Сколько приёмов пищи?</h2>
+              <p>Отметьте те, что есть у вас в течение дня. Из них будет собираться день в планере — потом можно поменять.</p>
+              <div id="onbSlots"></div>
+              <div class="onb-foot">
+                <button class="btn btn-primary btn-wide" id="onbNext3" type="button">Дальше</button>
+                <button class="btn btn-ghost btn-wide" id="onbBack3" type="button">Назад</button>
+              </div>
+            </div>
+
+            <div class="onb-step" id="onbStep4" hidden>
+              <h2>Есть аллергены?</h2>
+              <p>Отметьте то, что исключаем. Блюда и продукты с этими аллергенами будут скрыты из каталога — снять фильтр можно в любой момент.</p>
+              <div id="onbAllergens"></div>
+              <div class="onb-foot">
+                <button class="btn btn-primary btn-wide" id="onbDone" type="button">Собрать рацион на неделю</button>
+                <button class="btn btn-ghost btn-wide" id="onbSkip" type="button">Открыть без подбора</button>
+                <button class="btn btn-ghost btn-wide" id="onbBack4" type="button">Назад</button>
               </div>
             </div>
           </div>
@@ -1133,11 +1166,15 @@
     const d=new Date(); d.setHours(0,0,0,0); d.setMonth(d.getMonth()-13);
     return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
   })();
-  const SLOT_TIME = {"Завтрак":"08:30","Второй завтрак":"10:30","Обед":"12:30","Полдник":"16:00",
-                     "Ужин":"19:00","Перекус":"11:00","Ночное кормление":"23:00"};
-  const SLOT_GRAM = {"Завтрак":"140 г","Второй завтрак":"90 г","Обед":"165 г","Полдник":"90 г",
-                     "Ужин":"120 г","Перекус":"60 г","Ночное кормление":"120 г"};
-  const SLOT_PRESETS = ["Завтрак","Второй завтрак","Обед","Полдник","Ужин","Перекус","Ночное кормление"];
+  const SLOT_TIME = {"Завтрак":"08:30","Второй завтрак":"10:30","Перекус 1":"10:30","Обед":"12:30",
+                     "Полдник":"16:00","Перекус 2":"17:30","Ужин":"19:00","Перекус":"11:00",
+                     "Ночное кормление":"23:00"};
+  const SLOT_GRAM = {"Завтрак":"140 г","Второй завтрак":"90 г","Перекус 1":"60 г","Обед":"165 г",
+                     "Полдник":"90 г","Перекус 2":"60 г","Ужин":"120 г","Перекус":"60 г",
+                     "Ночное кормление":"120 г"};
+  const SLOT_PRESETS = ["Завтрак","Перекус 1","Обед","Полдник","Перекус 2","Ужин","Второй завтрак","Ночное кормление"];
+  const ALL_SLOTS = ["Завтрак","Перекус 1","Обед","Полдник","Перекус 2","Ужин"];
+  const DEFAULT_SLOTS = ["Завтрак","Обед","Полдник","Ужин"];
   const timeOf = name => SLOT_TIME[name] || "12:00";
   const gramOf = name => SLOT_GRAM[name] || "120 г";
   const isoOf = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
@@ -1171,7 +1208,7 @@
     foodFilter:"all", foodQ:"", openFood:null,
     rec:0, portions:2, step:0, timeLeft:0, running:false, tick:null,
     recFilter:"all", f:{time:null, age:null, main:null, excl:[]},
-    tried:{}, ff:{age:null, excl:[]}, catClosed:{}, onboarded:false, pantry:["Масло оливковое","Мука","Масло сливочное"],
+    tried:{}, ff:{age:null, excl:[]}, catClosed:{}, onboarded:false, slots:DEFAULT_SLOTS.slice(), pantry:["Масло оливковое","Мука","Масло сливочное"],
     paper:false
   };
 
@@ -1189,7 +1226,7 @@
       });
       localStorage.setItem(STORE_KEY, JSON.stringify({
         v:1, days, pantry:state.pantry, buyHorizon:state.buyHorizon, notes:state.notes, child:state.child,
-        tried:state.tried, ff:state.ff, onboarded:state.onboarded
+        tried:state.tried, ff:state.ff, onboarded:state.onboarded, slots:state.slots
       }));
     }catch(e){ /* приватный режим или переполнение — работаем без сохранения */ }
   }
@@ -1208,6 +1245,7 @@
       if(d.tried && typeof d.tried==="object") state.tried=d.tried;
       // у тех, кто пользовался приложением до появления опроса, он не показывается
       state.onboarded = d.onboarded===undefined ? true : !!d.onboarded;
+      if(Array.isArray(d.slots) && d.slots.length) state.slots=d.slots;
       if(d.ff && Array.isArray(d.ff.excl)) state.ff={age:d.ff.age||null, excl:[...new Set(d.ff.excl)]};
       if(d.child && d.child.birth) state.child={name:d.child.name||"Ребёнок", birth:d.child.birth,
                                                   photo:d.child.photo||null};
@@ -1219,6 +1257,7 @@
     try{ localStorage.removeItem(STORE_KEY); }catch(e){}
     state.days={}; state.notes={}; state.pantry=["Масло оливковое","Мука","Масло сливочное"];
     state.tried={}; state.ff={age:null, excl:[]}; state.catClosed={}; state.onboarded=false;
+    state.slots=DEFAULT_SLOTS.slice(); state.f={...state.f, excl:[]};
     state.child={name:"Мия", birth:DEFAULT_BIRTH, photo:null}; renderProfile();
     state.cursor=TODAY_ISO; state.buyHorizon=7;
     seedDays(); renderDay(); renderRecGrid(); renderFoods();
@@ -1264,7 +1303,9 @@
   }
 
   /* ───────── экран «День» ───────── */
-  const PLAN_SLOTS = ["Завтрак","Обед","Полдник","Ужин"];
+  // приёмы пищи семьи: выбираются в опросе и правятся в профиле
+  const planSlots = () => (state.slots && state.slots.length ? state.slots : DEFAULT_SLOTS)
+    .slice().sort((a,b)=>timeOf(a).localeCompare(timeOf(b)));
 
   function renderDateStrip(){
     const box=$("#dateStrip"); box.innerHTML="";
@@ -1317,7 +1358,7 @@
     const prevIso=isoAt(offsetOf(state.cursor)-1);
     const prev=state.days[prevIso]||[];
     const planned = meals.map(m=>({slot:m.name, m, y:(prev.find(x=>x.name===m.name)||{items:null}), time:m.time}));
-    const missing = PLAN_SLOTS.filter(sl=>!meals.find(m=>m.name===sl)).map(sl=>({
+    const missing = planSlots().filter(sl=>!meals.find(m=>m.name===sl)).map(sl=>({
       slot:sl, m:null, y:(prev.find(x=>x.name===sl) || {time:SLOT_TIME[sl], items:null}), time:SLOT_TIME[sl]
     }));
     const rows = planned.concat(missing).sort((a,b)=>a.time.localeCompare(b.time));
@@ -1408,7 +1449,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "02.10 · сборка 13";
+  const BUILD = "02.10 · сборка 14";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -1556,26 +1597,37 @@
     $("#sheet").hidden=false;
   }
 
+  // к какому типу приёма отнести произвольное название
+  function slotKind(name){
+    const n=(name||"").toLowerCase();
+    if(n.indexOf("завтрак")>=0) return "Завтрак";
+    if(n.indexOf("обед")>=0) return "Обед";
+    if(n.indexOf("ужин")>=0) return "Ужин";
+    return "Лёгкий";             // полдник, перекусы, свои названия
+  }
+
   function poolFor(slot){
     const fits = r => r.minAge <= childMonths();
-    let pool = RECIPES.map((r,i)=>[r,i]).filter(([r])=>fits(r) && r.slot===slot);
-    if(slot==="Полдник") pool = RECIPES.map((r,i)=>[r,i]).filter(([r])=>fits(r) && r.slot==="Завтрак");
-    if(slot==="Ужин") pool = pool.concat(RECIPES.map((r,i)=>[r,i]).filter(([r])=>fits(r) && r.cat==="Гарниры"));
+    const kind = slotKind(slot);
+    let pool = RECIPES.map((r,i)=>[r,i]).filter(([r])=>fits(r) && r.slot===kind);
+    if(kind==="Лёгкий") pool = RECIPES.map((r,i)=>[r,i]).filter(([r])=>fits(r) && r.slot==="Завтрак");
+    if(kind==="Ужин") pool = pool.concat(RECIPES.map((r,i)=>[r,i]).filter(([r])=>fits(r) && r.cat==="Гарниры"));
     if(!pool.length) pool = RECIPES.map((r,i)=>[r,i]).filter(([r])=>fits(r));
     return pool.map(([,i])=>i);
   }
 
   function fillPlan(days, overwrite){
     const start=offsetOf(state.cursor);
-    const pools={}; PLAN_SLOTS.forEach(sl=>{ pools[sl]=poolFor(sl).sort(()=>Math.random()-0.5); });
-    const cursorBy={}; PLAN_SLOTS.forEach(sl=>cursorBy[sl]=0);
+    const slots=planSlots();
+    const pools={}; slots.forEach(sl=>{ pools[sl]=poolFor(sl).sort(()=>Math.random()-0.5); });
+    const cursorBy={}; slots.forEach(sl=>cursorBy[sl]=0);
     let added=0, skipped=0;
     for(let k=0;k<days;k++){
       const iso=isoAt(start+k);
       const meals=mealsOf(iso);
       const prev=state.days[isoAt(start+k-1)]||[];
       const usedToday=new Set(meals.filter(m=>m.rec!=null).map(m=>m.rec));
-      PLAN_SLOTS.forEach(slot=>{
+      slots.forEach(slot=>{
         const has=meals.find(m=>m.name===slot);
         if(has && !overwrite) return;
         if(has && overwrite && has.rec!=null) usedToday.delete(has.rec);
@@ -1733,9 +1785,20 @@
   function startOnboarding(){
     const onb=$("#onb");
     onb.hidden=false;
-    $("#onbStep1").hidden=false;
-    $("#onbStep2").hidden=true;
+    const steps=[1,2,3,4].map(n=>$("#onbStep"+n));
+    const draftSlots=new Set(state.slots && state.slots.length ? state.slots : DEFAULT_SLOTS);
+    const draftExcl=new Set(state.ff.excl || []);
 
+    function show(n){
+      steps.forEach((el,i)=>{ el.hidden = i!==n-1; });
+      const pr=$("#onbProgress");
+      pr.hidden = n===1;
+      [...pr.children].forEach((i,k)=>i.classList.toggle("on", k<n));
+      $("#views").scrollTop=0;
+      onb.scrollTop=0;
+    }
+
+    // шаг 2: возраст
     const chips=$("#onbAges");
     chips.innerHTML="";
     ONB_AGES.forEach(([lab,m])=>{
@@ -1748,7 +1811,6 @@
       });
       chips.appendChild(b);
     });
-
     function updateNote(){
       const v=$("#onbBirth").value;
       $("#onbAgeNote").textContent = v
@@ -1761,26 +1823,69 @@
     });
     updateNote();
 
-    $("#onbGo").addEventListener("click",()=>{
-      $("#onbStep1").hidden=true;
-      $("#onbStep2").hidden=false;
-      setTimeout(()=>$("#onbName").focus(),80);
+    // шаг 3: приёмы пищи
+    const slotBox=$("#onbSlots");
+    slotBox.innerHTML="";
+    const slotList=el("div","onb-list");
+    ALL_SLOTS.forEach(name=>{
+      const lab=document.createElement("label"); lab.className="check";
+      const cb=document.createElement("input"); cb.type="checkbox"; cb.checked=draftSlots.has(name);
+      cb.addEventListener("change",()=>{ cb.checked ? draftSlots.add(name) : draftSlots.delete(name); });
+      lab.appendChild(cb);
+      lab.appendChild(el("span",null,name));
+      lab.appendChild(el("span","tail","около "+timeOf(name)));
+      slotList.appendChild(lab);
     });
-    $("#onbBack").addEventListener("click",()=>{
-      $("#onbStep2").hidden=true;
-      $("#onbStep1").hidden=false;
+    slotBox.appendChild(slotList);
+
+    // шаг 4: аллергены
+    const alBox=$("#onbAllergens");
+    alBox.innerHTML="";
+    const alList=el("div","onb-list onb-scroll");
+    Object.keys(ALLERGEN_SRC).forEach(a=>{
+      const n=FOODS.filter(f=>f.al.includes(a)).length;
+      const lab=document.createElement("label"); lab.className="check";
+      const cb=document.createElement("input"); cb.type="checkbox"; cb.checked=draftExcl.has(a);
+      cb.addEventListener("change",()=>{ cb.checked ? draftExcl.add(a) : draftExcl.delete(a); });
+      lab.appendChild(cb);
+      lab.appendChild(el("span",null,a));
+      lab.appendChild(el("span","tail", n ? "в "+n+" "+plur(n,"продукте","продуктах","продуктах") : "нет в каталоге"));
+      alList.appendChild(lab);
     });
-    $("#onbDone").addEventListener("click",()=>{
-      const name=$("#onbName").value.trim();
-      if(!name){ toast("Впишите имя ребёнка."); $("#onbName").focus(); return; }
-      const birth=$("#onbBirth").value;
-      if(!birth){ toast("Выберите возраст или укажите дату рождения."); return; }
-      state.child={name, birth, photo:state.child.photo||null};
+    alBox.appendChild(alList);
+
+    // переходы
+    $("#onbGo").addEventListener("click",()=>{ show(2); setTimeout(()=>$("#onbName").focus(),80); });
+    $("#onbBack2").addEventListener("click",()=>show(1));
+    $("#onbBack3").addEventListener("click",()=>show(2));
+    $("#onbBack4").addEventListener("click",()=>show(3));
+    $("#onbNext2").addEventListener("click",()=>{
+      if(!$("#onbName").value.trim()){ toast("Впишите имя ребёнка."); $("#onbName").focus(); return; }
+      if(!$("#onbBirth").value){ toast("Выберите возраст или укажите дату рождения."); return; }
+      show(3);
+    });
+    $("#onbNext3").addEventListener("click",()=>{
+      if(!draftSlots.size){ toast("Отметьте хотя бы один приём пищи."); return; }
+      show(4);
+    });
+
+    function finish(withPlan){
+      state.child={name:$("#onbName").value.trim(), birth:$("#onbBirth").value, photo:state.child.photo||null};
+      state.slots=ALL_SLOTS.filter(n=>draftSlots.has(n));
+      const excl=[...draftExcl];
+      state.ff={age:state.ff.age, excl:excl.slice()};
+      state.f={...state.f, excl:excl.slice()};
       state.onboarded=true;
       onb.hidden=true;
-      renderProfile(); renderDay(); renderFoods(); renderRecGrid(); saveState();
-      toast(name+", "+ageLabel(childMonths())+". Всё настроено — можно планировать.");
-    });
+      renderProfile(); renderFoods(); renderRecGrid();
+      if(withPlan) fillPlan(7,false); else renderDay();
+      saveState();
+      if(!withPlan) toast(state.child.name+", "+ageLabel(childMonths())+". Всё настроено — можно планировать.");
+    }
+    $("#onbDone").addEventListener("click",()=>finish(true));
+    $("#onbSkip").addEventListener("click",()=>finish(false));
+
+    show(1);
   }
 
   function openProfile(){
@@ -1802,6 +1907,11 @@
         '</div>'+
         '<div class="field"><label for="pfName">Имя</label>'+
         '<input id="pfName" value="'+esc(state.child.name)+'" placeholder="Как зовут ребёнка"></div>'+
+        '<div class="field"><label>Приёмы пищи в течение дня</label>'+
+          '<div class="chips" id="pfSlots">'+
+            ALL_SLOTS.map(n=>'<button class="chipbtn" type="button" data-slot="'+esc(n)+'" aria-pressed="'+
+              ((state.slots||DEFAULT_SLOTS).includes(n))+'">'+esc(n)+'</button>').join("")+
+          '</div><span class="field-note">Из отмеченных собирается день в планере</span></div>'+
         '<div class="field"><label for="pfBirth">Дата рождения</label>'+
         '<input id="pfBirth" type="date" value="'+esc(state.child.birth)+'" max="'+TODAY_ISO+'">'+
         '<span class="field-note" id="pfAge"></span></div>'+
@@ -1832,10 +1942,19 @@
         updateAgeNote();
       });
       $("#pfCancel").addEventListener("click",closeSheet);
+      $("#pfSlots").addEventListener("click",e=>{
+        const b=e.target.closest("button"); if(!b) return;
+        const on=b.getAttribute("aria-pressed")==="true";
+        const picked=[...$("#pfSlots").querySelectorAll('[aria-pressed="true"]')].map(x=>x.dataset.slot);
+        if(on && picked.length===1){ toast("Оставьте хотя бы один приём пищи."); return; }
+        b.setAttribute("aria-pressed", String(!on));
+      });
       $("#pfSave").addEventListener("click",()=>{
         const name=$("#pfName").value.trim() || "Ребёнок";
         const birth=$("#pfBirth").value || state.child.birth;
         state.child={name, birth, photo:photo||null};
+        const picked=[...$("#pfSlots").querySelectorAll('[aria-pressed="true"]')].map(b=>b.dataset.slot);
+        if(picked.length) state.slots=ALL_SLOTS.filter(n=>picked.includes(n));
         closeSheet(); renderProfile(); renderFoods(); renderDay(); renderRecGrid(); renderDocBars(); saveState();
         toast(name+", "+ageLabel(childMonths())+". Подбор и справочник пересчитаны.");
       });
