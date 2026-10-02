@@ -587,17 +587,10 @@
               <div class="sec-label"><span>Ввод прикорма</span><span class="num" id="triedCount"></span></div>
               <p class="intronote" style="padding:0 2px" id="introFreq"></p>
 
-              <div class="filters" id="foodFilters">
-                <button data-f="all" aria-pressed="true">Все</button>
-                <button data-f="now" aria-pressed="false">Можно сейчас</button>
-                <button data-f="todo" aria-pressed="false">Не введено</button>
-                <button data-f="done" aria-pressed="false">Введено</button>
-                <button data-f="later" aria-pressed="false">Рано</button>
-              </div>
               <div class="filterbar">
                 <button class="btn btn-sm fbtn" id="foodFilterBtn" type="button">
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
-                  Возраст и аллергены<span class="fcount" id="fFoodCount" hidden>0</span>
+                  Фильтры<span class="fcount" id="fFoodCount" hidden>0</span>
                 </button>
                 <span class="num" id="foodFound"></span>
               </div>
@@ -1277,7 +1270,8 @@
       });
       localStorage.setItem(STORE_KEY, JSON.stringify({
         v:1, days, pantry:state.pantry, buyHorizon:state.buyHorizon, notes:state.notes, child:state.child,
-        tried:state.tried, ff:state.ff, onboarded:state.onboarded, slots:state.slots
+        tried:state.tried, ff:state.ff, foodFilter:state.foodFilter,
+        onboarded:state.onboarded, slots:state.slots
       }));
     }catch(e){ /* приватный режим или переполнение — работаем без сохранения */ }
   }
@@ -1298,6 +1292,7 @@
       state.onboarded = d.onboarded===undefined ? true : !!d.onboarded;
       if(Array.isArray(d.slots) && d.slots.length) state.slots=d.slots;
       if(d.ff && Array.isArray(d.ff.excl)) state.ff={age:d.ff.age||null, excl:[...new Set(d.ff.excl)]};
+      if(typeof d.foodFilter==="string") state.foodFilter=d.foodFilter;
       if(d.child && d.child.birth) state.child={name:d.child.name||"Ребёнок", birth:d.child.birth,
                                                   photo:d.child.photo||null};
       return true;
@@ -1308,6 +1303,7 @@
     try{ localStorage.removeItem(STORE_KEY); }catch(e){}
     state.days={}; state.notes={}; state.pantry=["Масло оливковое","Мука","Масло сливочное"];
     state.tried={}; state.ff={age:null, excl:[]}; state.catClosed={}; state.onboarded=false;
+    state.foodFilter="all";
     state.slots=DEFAULT_SLOTS.slice(); state.f={...state.f, excl:[]};
     state.child={name:"Мия", birth:DEFAULT_BIRTH, photo:null}; renderProfile();
     state.cursor=TODAY_ISO; state.buyHorizon=7;
@@ -1500,7 +1496,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "02.10 · сборка 24";
+  const BUILD = "03.10 · сборка 25";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -2134,7 +2130,8 @@
     }
   }
 
-  const activeFoodFilters = ff => (ff.age?1:0)+ff.excl.length;
+  const activeFoodFilters = (ff, status) =>
+    (ff.age?1:0) + ff.excl.length + ((status||state.foodFilter)!=="all" ? 1 : 0);
 
   function renderFoods(){
     const box=$("#foodList"); box.innerHTML="";
@@ -2249,19 +2246,30 @@
     });
   }
 
+  const FOOD_STATUS = [["Все","all"],["Можно сейчас","now"],["Не введено","todo"],
+                       ["Введено","done"],["Рано","later"]];
+
   function openFoodFilters(){
-    const d={age:state.ff.age, excl:state.ff.excl.slice()};
+    const d={status:state.foodFilter, age:state.ff.age, excl:state.ff.excl.slice()};
     const AGES=[["С 6 месяцев",6],["С 9 месяцев",9],["С 1 года",12],["С 1,5 лет",18],["С 2 лет",24],["С 3 лет",36]];
     const box=$("#sheetInner");
+
     function count(){
-      const keep={age:d.age, excl:d.excl}, prev=state.ff;
-      state.ff=keep; const n=FOODS.filter(foodPasses).length; state.ff=prev; return n;
+      const prevFF=state.ff, prevStatus=state.foodFilter;
+      state.ff={age:d.age, excl:d.excl}; state.foodFilter=d.status;
+      const n=FOODS.filter(foodPasses).length;
+      state.ff=prevFF; state.foodFilter=prevStatus;
+      return n;
     }
+
     function draw(){
       box.innerHTML =
         '<div class="sheet-grab"></div>'+
-        '<h3>Возраст и аллергены</h3>'+
-        '<div class="fsec"><h4>Показывать продукты</h4><div class="chips">'+
+        '<h3>Фильтры</h3>'+
+        '<div class="fsec"><h4>Показывать</h4><div class="chips">'+
+          FOOD_STATUS.map(([lab,v])=>'<button class="chipbtn" type="button" data-s="'+v+'" aria-pressed="'+(d.status===v)+'">'+lab+'</button>').join("")+
+        '</div></div>'+
+        '<div class="fsec"><h4>Возраст ребёнка</h4><div class="chips">'+
           AGES.map(([lab,v])=>'<button class="chipbtn" type="button" data-a="'+v+'" aria-pressed="'+(d.age===v)+'">'+lab+'</button>').join("")+
         '</div><p class="who">Показываем то, что уже можно вводить к выбранному возрасту.</p></div>'+
         '<div class="fsec"><h4>Исключить аллерген</h4><div>'+
@@ -2273,6 +2281,10 @@
         '</div></div>'+
         '<div class="sheet-foot"><button class="btn btn-ghost" id="ffReset" type="button">Сбросить</button>'+
         '<button class="btn btn-primary" id="ffApply" type="button">Показать '+count()+'</button></div>';
+
+      box.querySelectorAll("[data-s]").forEach(b=>b.addEventListener("click",()=>{
+        d.status=b.dataset.s; draw();
+      }));
       box.querySelectorAll("[data-a]").forEach(b=>b.addEventListener("click",()=>{
         const v=+b.dataset.a; d.age = d.age===v ? null : v; draw();
       }));
@@ -2281,8 +2293,9 @@
         d.excl = c.checked ? (d.excl.includes(a) ? d.excl : d.excl.concat([a])) : d.excl.filter(x=>x!==a);
         draw();
       }));
-      $("#ffReset").addEventListener("click",()=>{ d.age=null; d.excl=[]; draw(); });
+      $("#ffReset").addEventListener("click",()=>{ d.status="all"; d.age=null; d.excl=[]; draw(); });
       $("#ffApply").addEventListener("click",()=>{
+        state.foodFilter=d.status;
         state.ff={age:d.age, excl:d.excl.slice()};
         closeSheet(); renderFoods(); saveState();
       });
@@ -2297,12 +2310,6 @@
     if(f) openServe(f);
   }
 
-  $("#foodFilters").addEventListener("click",e=>{
-    const b=e.target.closest("button"); if(!b) return;
-    state.foodFilter=b.dataset.f;
-    $("#foodFilters").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", String(x===b)));
-    renderFoods();
-  });
 
   /* ───────── экран «Рецепты» ───────── */
   function recPasses(r,i,f){
