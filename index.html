@@ -799,10 +799,9 @@
                 <input id="onbName" placeholder="Например, Мия" autocomplete="off" enterkeyhint="done">
               </div>
               <div class="field">
-                <label for="onbBirth">Сколько сейчас</label>
-                <div class="chips" id="onbAges"></div>
+                <label for="onbBirth">Дата рождения</label>
                 <input id="onbBirth" type="date">
-                <span class="field-note" id="onbAgeNote">Выберите возраст или укажите дату рождения — так возраст будет считаться сам.</span>
+                <span class="field-note" id="onbAgeNote">Возраст посчитается сам и будет обновляться каждый месяц.</span>
               </div>
               <div class="onb-foot">
                 <button class="btn btn-primary btn-wide" id="onbNext2" type="button">Дальше</button>
@@ -1449,7 +1448,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "02.10 · сборка 14";
+  const BUILD = "02.10 · сборка 15";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -1775,13 +1774,6 @@
     if(head) head.textContent="Пищевой дневник: "+name;
   }
 
-  const ONB_AGES = [["6 мес",6],["9 мес",9],["1 год",12],["1,5 года",18],["2 года",24],["3 года",36]];
-
-  function birthFromMonths(m){
-    const d=new Date(); d.setHours(0,0,0,0); d.setMonth(d.getMonth()-m);
-    return isoOf(d);
-  }
-
   function startOnboarding(){
     const onb=$("#onb");
     onb.hidden=false;
@@ -1798,29 +1790,15 @@
       onb.scrollTop=0;
     }
 
-    // шаг 2: возраст
-    const chips=$("#onbAges");
-    chips.innerHTML="";
-    ONB_AGES.forEach(([lab,m])=>{
-      const b=el("button","chipbtn",lab); b.type="button";
-      b.setAttribute("aria-pressed","false");
-      b.addEventListener("click",()=>{
-        $("#onbBirth").value=birthFromMonths(m);
-        chips.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
-        updateNote();
-      });
-      chips.appendChild(b);
-    });
+    // шаг 2: дата рождения
     function updateNote(){
       const v=$("#onbBirth").value;
       $("#onbAgeNote").textContent = v
         ? "Сейчас " + ageLabel(monthsSince(v)) + ". Подбор блюд и подача в каталоге настроятся на этот возраст."
-        : "Выберите возраст или укажите дату рождения — так возраст будет считаться сам.";
+        : "Возраст посчитается сам и будет обновляться каждый месяц.";
     }
-    $("#onbBirth").addEventListener("input",()=>{
-      chips.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed","false"));
-      updateNote();
-    });
+    $("#onbBirth").max = TODAY_ISO;
+    $("#onbBirth").addEventListener("input",updateNote);
     updateNote();
 
     // шаг 3: приёмы пищи
@@ -1861,7 +1839,7 @@
     $("#onbBack4").addEventListener("click",()=>show(3));
     $("#onbNext2").addEventListener("click",()=>{
       if(!$("#onbName").value.trim()){ toast("Впишите имя ребёнка."); $("#onbName").focus(); return; }
-      if(!$("#onbBirth").value){ toast("Выберите возраст или укажите дату рождения."); return; }
+      if(!$("#onbBirth").value){ toast("Укажите дату рождения ребёнка."); return; }
       show(3);
     });
     $("#onbNext3").addEventListener("click",()=>{
