@@ -837,10 +837,6 @@
                 <label>Горизонт планирования</label>
                 <div class="opts" id="onbDays"></div>
               </div>
-              <div class="onb-list">
-                <label class="check"><input type="checkbox" id="onbOver"><span>Перезаписать уже запланированное</span></label>
-              </div>
-
               <div class="onb-foot">
                 <button class="btn btn-primary btn-wide" id="onbDone" type="button">Собрать рацион</button>
                 <button class="btn btn-ghost btn-wide" id="onbSkip" type="button">Открыть без подбора</button>
@@ -1466,7 +1462,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "02.10 · сборка 19";
+  const BUILD = "02.10 · сборка 20";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -1890,7 +1886,7 @@
       state.onboarded=true;
       onb.hidden=true;
       renderProfile(); renderFoods(); renderRecGrid();
-      if(withPlan) fillPlan(planDays, $("#onbOver").checked); else renderDay();
+      if(withPlan) fillPlan(planDays, false); else renderDay();
       saveState();
       if(!withPlan) toast(state.child.name+", "+ageLabel(childMonths())+". Всё настроено — можно планировать.");
     }
