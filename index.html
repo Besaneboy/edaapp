@@ -1258,7 +1258,7 @@
     child:{name:"Мия", birth:DEFAULT_BIRTH, photo:null},
     foodFilter:"all",
     rec:0, portions:2, step:0, timeLeft:0, running:false, tick:null,
-    recFilter:"all", f:{time:null, age:null, main:null, excl:[]},
+    recFilter:"all", f:{time:null, age:null, main:null, excl:[], onlyTried:false},
     tried:{}, ff:{age:null, excl:[]}, catClosed:{}, onboarded:false,
     slots:DEFAULT_SLOTS.slice(), slotTimes:{}, pantry:["Масло оливковое","Мука","Масло сливочное"],
     paper:false
@@ -1278,7 +1278,7 @@
       });
       localStorage.setItem(STORE_KEY, JSON.stringify({
         v:1, days, pantry:state.pantry, buyHorizon:state.buyHorizon, notes:state.notes, child:state.child,
-        tried:state.tried, ff:state.ff, foodFilter:state.foodFilter,
+        tried:state.tried, ff:state.ff, f:state.f, foodFilter:state.foodFilter,
         onboarded:state.onboarded, slots:state.slots, slotTimes:state.slotTimes
       }));
     }catch(e){ /* приватный режим или переполнение — работаем без сохранения */ }
@@ -1302,6 +1302,9 @@
       if(d.slotTimes && typeof d.slotTimes==="object") state.slotTimes=d.slotTimes;
       if(d.ff && Array.isArray(d.ff.excl)) state.ff={age:d.ff.age||null, excl:[...new Set(d.ff.excl)]};
       if(typeof d.foodFilter==="string") state.foodFilter=d.foodFilter;
+      if(d.f && typeof d.f==="object")
+        state.f={time:d.f.time||null, age:d.f.age||null, main:d.f.main||null,
+                 excl:Array.isArray(d.f.excl)?[...new Set(d.f.excl)]:[], onlyTried:!!d.f.onlyTried};
       if(d.child && d.child.birth) state.child={name:d.child.name||"Ребёнок", birth:d.child.birth,
                                                   photo:d.child.photo||null};
       return true;
@@ -1313,7 +1316,8 @@
     state.days={}; state.notes={}; state.pantry=["Масло оливковое","Мука","Масло сливочное"];
     state.tried={}; state.ff={age:null, excl:[]}; state.catClosed={}; state.onboarded=false;
     state.foodFilter="all";
-    state.slots=DEFAULT_SLOTS.slice(); state.slotTimes={}; state.f={...state.f, excl:[]};
+    state.slots=DEFAULT_SLOTS.slice(); state.slotTimes={};
+    state.f={time:null, age:null, main:null, excl:[], onlyTried:false};
     state.child={name:"Мия", birth:DEFAULT_BIRTH, photo:null}; renderProfile();
     state.cursor=TODAY_ISO; state.buyHorizon=7;
     seedDays(); renderDay(); renderRecGrid(); renderFoods();
@@ -1505,7 +1509,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "03.10 · сборка 30";
+  const BUILD = "03.10 · сборка 31";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -2135,6 +2139,24 @@
     {max:999,text:"Руководство ВОЗ по прикорму охватывает возраст до 23 месяцев. Дальше — общие принципы питания семьи."}
   ];
 
+  // ингредиенты рецептов названы по-своему — связываем их с позициями каталога
+  const ING_TO_FOOD = {
+    "Куриное филе":"Курица", "Куриное бедро без кости":"Курица", "Фарш индейки":"Индейка",
+    "Филе трески":"Треска", "Картофель":"Картофель", "Морковь":"Морковь", "Кабачок":"Кабачок",
+    "Помидор":"Помидор", "Брокколи":"Брокколи", "Лук":"Лук и чеснок", "Укроп":"Специи мягкие",
+    "Вермишель мелкая":"Макароны", "Макароны мелкие":"Макароны", "Рис круглый":"Рис",
+    "Мука":"Пшеничная крупа и манка", "Белый хлеб":"Хлеб пшеничный", "Хлопья овсяные":"Овсяные хлопья",
+    "Яйцо":"Яичный белок", "Молоко":"Коровье молоко", "Масло сливочное":"Сливочное масло",
+    "Масло оливковое":"Растительное масло", "Творог 9%":"Творог", "Сметана 10%":"Сметана 10%",
+    "Сыр твёрдый":"Сыр твёрдый", "Банан":"Банан", "Яблоко":"Яблоко", "Вода":"Вода"
+  };
+  // блюдо целиком из того, что уже введено
+  const recipeReady = r => r.ing.every(([n])=>{
+    const food=ING_TO_FOOD[n];
+    return !food || isTried(food);
+  });
+  const missingFoods = r => [...new Set(r.ing.map(([n])=>ING_TO_FOOD[n]).filter(f=>f && !isTried(f)))];
+
   const catTitle = k => (FOOD_CATS.find(c=>c.k===k)||{t:"Прочее"}).t;
   const isTried = n => !!state.tried[n];
 
@@ -2339,11 +2361,12 @@
     }
     if(f.main && r.main !== f.main) return false;
     if(f.excl.length && r.allerg.some(a=>f.excl.includes(a))) return false;
+    if(f.onlyTried && !recipeReady(r)) return false;
     return true;
   }
 
   const countRecipes = f => RECIPES.filter((r,i)=>recPasses(r,i,f)).length;
-  const activeFilters = f => (f.time?1:0)+(f.age?1:0)+(f.main?1:0)+f.excl.length;
+  const activeFilters = f => (f.time?1:0)+(f.age?1:0)+(f.main?1:0)+f.excl.length+(f.onlyTried?1:0);
 
   function renderFilterBar(){
     const n=activeFilters(state.f), found=countRecipes(state.f);
@@ -2353,7 +2376,8 @@
   }
 
   function openFilters(after){
-    const d = {time:state.f.time, age:state.f.age, main:state.f.main, excl:state.f.excl.slice()};
+    const d = {time:state.f.time, age:state.f.age, main:state.f.main,
+               excl:state.f.excl.slice(), onlyTried:!!state.f.onlyTried};
     const TIMES=[["До 15 минут",15],["До 30 минут",30],["До 45 минут",45],["До часа",60]];
     const MAINS=[...new Set(MAIN)];
     const ALLERGENS=Object.keys(ALLERGEN_SRC);
@@ -2364,6 +2388,11 @@
       slot.innerHTML =
         '<div class="sheet-grab"></div>'+
         '<h3>Фильтры</h3>'+
+        '<div class="fsec"><h4>Продукты ребёнка</h4>'+
+          '<label class="check"><input type="checkbox" id="fTried"'+(d.onlyTried?' checked':'')+'>'+
+          '<span>Только из введённых продуктов</span>'+
+          '<span class="tail">'+RECIPES.filter(recipeReady).length+' из '+RECIPES.length+'</span></label>'+
+          '<p class="who">Блюдо показывается, если каждый его продукт уже отмечен введённым во вкладке «Продукты».</p></div>'+
         '<div class="fsec"><h4>Время приготовления</h4><div class="opts">'+
           TIMES.map(([lab,v])=>'<button class="opt" type="button" data-time="'+v+'" aria-pressed="'+(d.time===v)+'">'+lab+'</button>').join("")+
         '</div></div>'+
@@ -2380,6 +2409,7 @@
         '<div class="sheet-foot"><button class="btn btn-ghost" id="fReset" type="button">Сбросить</button>'+
         '<button class="btn btn-primary" id="fApply" type="button">Показать '+countRecipes(d)+'</button></div>';
 
+      $("#fTried").addEventListener("change",e=>{ d.onlyTried=e.target.checked; draw(); });
       slot.querySelectorAll("[data-time]").forEach(b=>b.addEventListener("click",()=>{
         const v=+b.dataset.time; d.time = d.time===v ? null : v; draw();
       }));
@@ -2394,10 +2424,12 @@
         d.excl = c.checked ? (d.excl.includes(a) ? d.excl : d.excl.concat([a])) : d.excl.filter(x=>x!==a);
         draw();
       }));
-      $("#fReset").addEventListener("click",()=>{ d.time=null; d.age=null; d.main=null; d.excl=[]; draw(); });
+      $("#fReset").addEventListener("click",()=>{
+        d.time=null; d.age=null; d.main=null; d.excl=[]; d.onlyTried=false; draw();
+      });
       $("#fApply").addEventListener("click",()=>{
-        state.f={time:d.time, age:d.age, main:d.main, excl:d.excl.slice()};
-        renderRecGrid();
+        state.f={time:d.time, age:d.age, main:d.main, excl:d.excl.slice(), onlyTried:d.onlyTried};
+        renderRecGrid(); saveState();
         const n=activeFilters(state.f);
         if(after){ after(); }
         else {
@@ -2410,14 +2442,16 @@
     draw();
     $("#sheet").hidden=false;
   }
-  $("#filterBtn").addEventListener("click",openFilters);
+  $("#filterBtn").addEventListener("click",()=>openFilters());
 
   function renderRecGrid(){
     const box=$("#recGrid"); box.innerHTML="";
     const shown=RECIPES.map((r,i)=>[r,i]).filter(([r,i])=>recPasses(r,i));
     renderFilterBar(); syncCatPills();
     if(!shown.length){
-      box.appendChild(el("div","recgrid-empty", activeFilters(state.f)
+      box.appendChild(el("div","recgrid-empty", state.f.onlyTried
+        ? "Пока ни одно блюдо не собирается только из введённых продуктов. Отмечайте их во вкладке «Продукты» — рецепты будут открываться по мере ввода."
+        : activeFilters(state.f)
         ? "Под выбранные фильтры ничего не подошло. Откройте «Фильтры» и нажмите «Сбросить»."
         : "В этой категории рецептов пока нет — она наполняется. Нажмите «Все», чтобы увидеть весь список."));
       return;
