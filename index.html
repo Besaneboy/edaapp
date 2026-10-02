@@ -264,30 +264,18 @@
   .fcat.closed .fcat-body{display:none}
   .fbar{height:3px;background:var(--line-2)}
   .fbar i{display:block;height:100%;background:var(--sage)}
-  .ptab-head{display:grid;grid-template-columns:1.15fr 46px 1.15fr;gap:10px;padding:9px 16px;
-    background:var(--surface-2);border-top:1px solid var(--line-2);
-    font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
-  .ptab-head span:nth-child(2){text-align:center}
-  .prow{display:grid;grid-template-columns:1.15fr 46px 1.15fr;gap:10px;align-items:start;
-    padding:11px 16px;border-top:1px solid var(--line-2)}
-  .pcell{display:flex;align-items:flex-start;gap:9px;min-width:0}
-  .prow input[type="checkbox"]{accent-color:var(--sage);width:19px;height:19px;flex:none;margin-top:1px}
-  .pname{min-width:0;appearance:none;border:0;background:none;cursor:pointer;font-family:inherit;
-    text-align:left;color:var(--ink);font-size:14px;line-height:1.3;
-    display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+  .prow{display:flex;align-items:center;gap:11px;padding:11px 16px;border-top:1px solid var(--line-2)}
+  .prow input[type="checkbox"]{accent-color:var(--sage);width:20px;height:20px;flex:none}
+  .pname{flex:1;min-width:0;appearance:none;border:0;background:none;cursor:pointer;font-family:inherit;
+    text-align:left;color:var(--ink);display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:14.5px}
+  .prow.done .pname{color:var(--ink-3)}
   .prow.done .ptitle{text-decoration:line-through}
-  .prow.done .pname,.prow.done .page,.prow.done .pserve{color:var(--ink-3)}
   .ptitle{font-weight:500}
-  .page{font-size:12.5px;color:var(--ink-2);text-align:center;font-variant-numeric:tabular-nums;padding-top:1px}
-  .pserve{appearance:none;border:0;background:none;padding:0;cursor:pointer;font-family:inherit;
-    text-align:left;font-size:12.5px;line-height:1.35;color:var(--ink-2);min-width:0}
-  .pserve.early{color:var(--ink-3)}
-  .pal{flex:none;width:17px;height:17px;border-radius:50%;background:var(--risk);color:#fff;
-    display:grid;place-items:center;font-size:11px;font-weight:700;line-height:1}
-  .pch{flex:none;width:17px;height:17px;display:grid;place-items:center}
-  .pch svg{width:17px;height:17px;fill:var(--warn)}
-  .plegend{display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:12px;color:var(--ink-3);margin:0;padding:0 2px}
-  .plegend span{display:inline-flex;align-items:center;gap:6px}
+  .pal{flex:none;width:19px;height:19px;border-radius:50%;background:var(--risk);color:#fff;
+    display:grid;place-items:center;font-size:12px;font-weight:700;line-height:1}
+  .pserve{appearance:none;border:1px solid var(--line);background:var(--surface);cursor:pointer;flex:none;
+    width:36px;height:36px;border-radius:12px;display:grid;place-items:center;color:var(--sage-ink)}
+  .pserve svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
   .servehead{display:flex;align-items:center;gap:12px}
   .serve-now{background:var(--sage-soft);border-radius:12px;padding:11px 12px}
   .food{border-bottom:1px solid var(--line-2)}
@@ -598,10 +586,6 @@
             <section class="view" data-view="food" hidden>
               <div class="sec-label"><span>Ввод прикорма</span><span class="num" id="triedCount"></span></div>
               <p class="intronote" style="padding:0 2px" id="introFreq"></p>
-              <p class="plegend">
-                <span><i class="pal">!</i> аллерген</span>
-                <span><i class="pch"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 23 21H1z"/><path d="M11 9.5h2v5h-2z" fill="#fff"/><path d="M11 16.5h2v2h-2z" fill="#fff"/></svg></i> риск удушья</span>
-              </p>
 
               <div class="filterbar">
                 <button class="btn btn-sm fbtn" id="foodFilterBtn" type="button">
@@ -1512,7 +1496,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "03.10 · сборка 28";
+  const BUILD = "03.10 · сборка 29";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -2189,18 +2173,9 @@
       bar.appendChild(fill); wrap.appendChild(bar);
 
       const body=el("div","fcat-body");
-      const thead=el("div","ptab-head");
-      thead.appendChild(el("span",null,"Продукт"));
-      thead.appendChild(el("span",null,"Возраст"));
-      thead.appendChild(el("span",null,"Как подать"));
-      body.appendChild(thead);
-
       items.forEach(f=>{
         const tried=isTried(f.n);
         const row=el("div","prow"+(tried?" done":""));
-
-        // 1. продукт: отметка, название, знаки
-        const cell=el("div","pcell");
         const cb=el("input"); cb.type="checkbox"; cb.checked=tried;
         cb.id="tried-"+f.n.replace(/\s+/g,"-");
         cb.setAttribute("aria-label","Ввели: "+f.n);
@@ -2209,36 +2184,24 @@
           renderFoods(); saveState();
           if(cb.checked) toast(f.n+" отмечен как введённый.");
         });
-        cell.appendChild(cb);
+        row.appendChild(cb);
 
         const name=el("button","pname"); name.type="button";
         name.setAttribute("aria-label","Как подавать: "+f.n);
         name.appendChild(el("span","ptitle",f.n));
+        name.appendChild(el("span","chip"+(f.from<=m?" ok":""), f.from>=48 ? "с "+Math.round(f.from/12)+" лет" : "с "+f.from+" мес"));
         if(f.al.length){
-          const mark=el("i","pal","!");
+          const mark=el("span","pal","!");
           mark.title="Аллерген: "+f.al.map(a=>a.toLowerCase()).join(", ");
           mark.setAttribute("aria-label",mark.title);
           name.appendChild(mark);
         }
-        if(f.choke){
-          const ch=el("i","pch");
-          ch.title="Риск удушья — важно нарезать правильно";
-          ch.setAttribute("aria-label",ch.title);
-          ch.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 23 21H1z"/><path d="M11 9.5h2v5h-2z" fill="#fff"/><path d="M11 16.5h2v2h-2z" fill="#fff"/></svg>';
-          name.appendChild(ch);
-        }
         name.addEventListener("click",()=>openServe(f));
-        cell.appendChild(name);
-        row.appendChild(cell);
+        row.appendChild(name);
 
-        // 2. возраст
-        row.appendChild(el("div","page", f.from>=48 ? Math.round(f.from/12)+" года" : f.from+" мес"));
-
-        // 3. правила подачи для текущего возраста
-        const now=serveFor(f,m);
-        const sv=el("button","pserve"+(now?"":" early"), now ? now[1] : "Рано — с "+f.from+" мес");
-        sv.type="button";
+        const sv=el("button","pserve"); sv.type="button";
         sv.setAttribute("aria-label","Подача по возрасту: "+f.n);
+        sv.innerHTML='<svg viewBox="0 0 24 24"><path d="M4 11.5h16a8 8 0 0 1-16 0z"/><path d="M8 7.5c0-1.3 1.2-1.3 1.2-2.6M13 7.5c0-1.3 1.2-1.3 1.2-2.6"/><path d="M4.5 20h15"/></svg>';
         sv.addEventListener("click",()=>openServe(f));
         row.appendChild(sv);
 
