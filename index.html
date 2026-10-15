@@ -467,6 +467,81 @@
   .onb-foot{margin-top:auto;padding-top:18px;display:flex;flex-direction:column;gap:9px}
   /* аллергены: сетка плиток с картинками, кнопка всегда под рукой */
   #onbAllergens{display:flex;flex-direction:column;gap:10px}
+
+  /* ── дневник введения продукта ── */
+  .intro-banner{appearance:none;-webkit-appearance:none;border:0;font-family:inherit;text-align:left;cursor:pointer;width:100%;
+    background:var(--gold-soft);border-radius:20px;padding:13px 14px;display:flex;flex-direction:column;gap:10px;color:var(--ink)}
+  .intro-banner.calm{background:var(--sage-soft)}
+  .intro-top{display:flex;align-items:center;gap:11px}
+  .intro-ic{width:40px;height:40px;border-radius:13px;background:var(--surface);display:grid;place-items:center;font-size:22px;flex:none}
+  .intro-txt{flex:1;min-width:0}
+  .intro-txt b{display:block;font-family:"Onest","Manrope",sans-serif;font-size:15px;font-weight:600;line-height:1.25}
+  .intro-txt span{font-size:12.5px;color:var(--ink-2)}
+  .intro-go{font-size:13px;font-weight:700;color:var(--sage-ink);flex:none}
+  .iprog{display:flex;gap:4px}
+  .iprog i{flex:1;height:5px;border-radius:3px;background:rgba(148,114,26,.2)}
+  .iprog i.on{background:var(--gold)}
+  .meal-new{margin:0;font-size:13.5px;font-weight:700;color:var(--gold)}
+  .iask{background:rgba(255,255,255,.75);border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:8px}
+  .intro-banner .iask{background:var(--surface);cursor:default}
+  .iask b{font-size:13px}
+  .ipills.amt{flex-wrap:nowrap;align-items:center}
+  .ipills.amt .amt-l{font-size:12.5px;color:var(--ink-2);margin-right:2px}
+  .ipills.amt .ipill{flex:1;padding:7px 0;text-align:center;min-width:0}
+  .ipills{display:flex;flex-wrap:wrap;gap:6px}
+  .ipill{appearance:none;-webkit-appearance:none;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:600;margin:0;
+    padding:7px 11px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);white-space:nowrap}
+  .ipill[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+  .ipill.bad[aria-pressed="true"]{background:var(--risk);border-color:var(--risk)}
+  .isum{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-2)}
+  .isum .chip{flex:none}
+  .isum button{appearance:none;border:0;background:none;font:inherit;font-weight:700;color:var(--sage-ink);cursor:pointer;padding:0;margin-left:auto}
+
+  .days3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .d3{border-radius:16px;padding:10px 6px;text-align:center;border:1.5px solid var(--line);background:var(--surface)}
+  .d3 .k{font-size:10.5px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em}
+  .d3 .v{font-family:"Onest","Manrope",sans-serif;font-weight:700;font-size:16px;margin-top:2px}
+  .d3 .s{font-size:11px;color:var(--ink-2)}
+  .d3.done{background:var(--ok-soft);border-color:transparent}
+  .d3.done .v{color:var(--ok)}
+  .d3.bad{background:var(--risk-soft);border-color:transparent}
+  .d3.bad .v{color:var(--risk)}
+  .d3.now{border-color:var(--sage);box-shadow:0 0 0 3px var(--sage-soft)}
+  .ihead{display:flex;align-items:center;gap:12px}
+  .ihead .intro-ic{width:54px;height:54px;border-radius:17px;font-size:30px;background:var(--sage-soft)}
+  .ihead b{display:block;font-family:"Onest","Manrope",sans-serif;font-size:20px;letter-spacing:-.02em;line-height:1.2}
+  .ilog{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--ink-2)}
+  .ilog div{display:flex;gap:10px}
+  .ilog span:first-child{width:52px;flex:none;color:var(--ink-3);font-variant-numeric:tabular-nums}
+
+  .seg{display:flex;background:var(--surface-2);border-radius:13px;padding:3px}
+  .seg button{appearance:none;-webkit-appearance:none;flex:1;border:0;background:none;cursor:pointer;margin:0;
+    font-family:inherit;font-size:13.5px;font-weight:600;padding:8px;border-radius:10px;color:var(--ink-2)}
+  .seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  #foodPath{display:flex;flex-direction:column;gap:14px}
+  .pstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .pstats div{background:var(--surface);border:1px solid var(--line-2);border-radius:16px;padding:10px;text-align:center}
+  .pstats b{font-family:"Onest","Manrope",sans-serif;font-size:22px;display:block;line-height:1.1}
+  .pstats span{font-size:11.5px;color:var(--ink-2)}
+  .track{position:relative;display:flex;flex-direction:column;gap:9px;padding-left:28px}
+  .track::before{content:"";position:absolute;left:10px;top:12px;bottom:12px;width:2px;background:var(--line)}
+  .node{appearance:none;-webkit-appearance:none;font-family:inherit;text-align:left;cursor:pointer;width:100%;margin:0;color:var(--ink);
+    position:relative;background:var(--surface);border:1px solid var(--line-2);border-radius:16px;padding:10px 12px;
+    display:flex;align-items:center;gap:10px}
+  .node::before{content:"";position:absolute;left:-24px;top:50%;transform:translateY(-50%);width:14px;height:14px;border-radius:50%;
+    background:var(--ok);box-shadow:0 0 0 3px var(--ground)}
+  .node.now{border:2px solid var(--gold)}
+  .node.now::before{background:var(--gold)}
+  .node.bad::before{background:var(--risk)}
+  .node.next{background:none;border:1.5px dashed var(--line)}
+  .node.next::before{background:var(--ground);border:2px solid var(--ink-3);width:10px;height:10px}
+  .node .e{font-size:21px;flex:none}
+  .node .x{flex:1;min-width:0}
+  .node .x b{font-size:14px;display:block;line-height:1.25;font-weight:700}
+  .node .x span{font-size:12px;color:var(--ink-2)}
+  .node .when{font-size:11.5px;color:var(--ink-3);font-weight:600;flex:none}
+  .node .start{flex:none;font-size:12.5px;font-weight:700;color:#fff;background:var(--sage);border-radius:999px;padding:6px 11px}
+  .ptitle2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin:4px 0 -4px}
   .al-sec{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin:6px 0 -4px}
   .al-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
   .al-tile{appearance:none;-webkit-appearance:none;cursor:pointer;font-family:inherit;margin:0;
@@ -585,6 +660,7 @@
             <!-- ЭКРАН: ДЕНЬ -->
             <section class="view" data-view="day">
               <div class="datestrip" id="dateStrip"></div>
+              <div id="introBanner" hidden></div>
 
               <div class="sec-label"><span id="dayTitle">Сегодня</span><span class="num" id="dayCount">0 из 4</span></div>
 
@@ -635,6 +711,12 @@
 
             <!-- ЭКРАН: ПРОДУКТЫ -->
             <section class="view" data-view="food" hidden>
+              <div class="seg" id="foodMode" role="group" aria-label="Вид раздела">
+                <button type="button" data-m="path" aria-pressed="true">Путь прикорма</button>
+                <button type="button" data-m="list" aria-pressed="false">Все продукты</button>
+              </div>
+              <div id="foodPath"></div>
+              <div id="foodCatalog" style="display:contents">
               <div class="sec-label"><span>Ввод прикорма</span><span class="num" id="triedCount"></span></div>
               <p class="intronote" style="padding:0 2px" id="introFreq"></p>
 
@@ -648,6 +730,7 @@
 
               <div id="foodList"></div>
               <p class="source"><span class="chip">источник</span><span>Группы продуктов и частота кормлений — руководство ВОЗ по прикорму детей 6–23 месяцев (2023). Возраст ввода и способ подачи по каждой позиции — ориентир по распространённой практике, перед релизом их заверяет педиатр.</span></p>
+              </div>
             </section>
 
             <!-- ЭКРАН: КУХНЯ -->
@@ -1318,7 +1401,7 @@
     foodFilter:"all",
     rec:0, portions:2, step:0, timeLeft:0, running:false, tick:null,
     recFilter:"all", f:{time:null, age:null, main:null, excl:[], onlyTried:false},
-    tried:{}, ff:{age:null, excl:[]}, catClosed:{}, onboarded:false,
+    tried:{}, intro:{}, foodMode:"path", ff:{age:null, excl:[]}, catClosed:{}, onboarded:false,
     slots:DEFAULT_SLOTS.slice(), slotTimes:{}, pantry:["Масло оливковое","Мука","Масло сливочное"],
     paper:false
   };
@@ -1337,7 +1420,7 @@
       });
       localStorage.setItem(STORE_KEY, JSON.stringify({
         v:1, days, pantry:state.pantry, buyHorizon:state.buyHorizon, notes:state.notes, child:state.child,
-        tried:state.tried, ff:state.ff, f:state.f, foodFilter:state.foodFilter,
+        tried:state.tried, intro:state.intro, foodMode:state.foodMode, ff:state.ff, f:state.f, foodFilter:state.foodFilter,
         onboarded:state.onboarded, slots:state.slots, slotTimes:state.slotTimes
       }));
     }catch(e){ /* приватный режим или переполнение — работаем без сохранения */ }
@@ -1355,6 +1438,8 @@
       if(d.buyHorizon) state.buyHorizon=d.buyHorizon;
       if(d.notes && typeof d.notes==="object") state.notes=d.notes;
       if(d.tried && typeof d.tried==="object") state.tried=d.tried;
+      if(d.intro && typeof d.intro==="object") state.intro=d.intro;
+      if(d.foodMode==="list" || d.foodMode==="path") state.foodMode=d.foodMode;
       // у тех, кто пользовался приложением до появления опроса, он не показывается
       state.onboarded = d.onboarded===undefined ? true : !!d.onboarded;
       if(Array.isArray(d.slots) && d.slots.length) state.slots=d.slots;
@@ -1373,7 +1458,7 @@
   function resetDemo(){
     try{ localStorage.removeItem(STORE_KEY); }catch(e){}
     state.days={}; state.notes={}; state.pantry=["Масло оливковое","Мука","Масло сливочное"];
-    state.tried={}; state.ff={age:null, excl:[]}; state.catClosed={}; state.onboarded=false;
+    state.tried={}; state.intro={}; state.ff={age:null, excl:[]}; state.catClosed={}; state.onboarded=false;
     state.foodFilter="all";
     state.slots=DEFAULT_SLOTS.slice(); state.slotTimes={};
     state.f={time:null, age:null, main:null, excl:[], onlyTried:false};
@@ -1467,7 +1552,7 @@
   }
 
   function renderDay(){
-    renderDateStrip(); renderMeals(); updateSummary(); renderBuy(); saveState();
+    renderDateStrip(); renderIntroBanner(); renderMeals(); updateSummary(); renderBuy(); saveState();
   }
 
   function clearDay(){
@@ -1513,6 +1598,8 @@
       slot:sl, m:null, y:(prev.find(x=>x.name===sl) || {time:timeOf(sl), items:null}), time:timeOf(sl)
     }));
     const rows = planned.concat(missing).sort((a,b)=>a.time.localeCompare(b.time));
+    const dayIntro = introOnDay(state.cursor);
+    const carrier = dayIntro ? carrierMeal(meals) : null;
 
     rows.forEach(({slot,m,y})=>{
       const row=el("div","meal "+tintOf(slot)+(m?"":" empty"));
@@ -1549,6 +1636,7 @@
 
       if(m){
         body.appendChild(mealDishNode(m));
+        if(carrier===m) introInMeal(body, dayIntro);
         const note=el("button","meal-note"+(m.note?"":" add"), m.note ? m.note : "Комментарий");
         note.type="button";
         note.setAttribute("aria-label",(m.note?"Изменить комментарий: ":"Добавить комментарий: ")+m.name);
@@ -1582,7 +1670,7 @@
   function updateSummary(){
     const meals=mealsOf(state.cursor);
     $("#sumMeals").textContent=meals.length;
-    $("#sumNew").textContent=meals.filter(m=>m.newFood).length;
+    $("#sumNew").textContent=meals.filter(m=>m.newFood).length + (introOnDay(state.cursor) && meals.length ? 1 : 0);
     $("#sumReact").textContent=meals.filter(m=>m.note).length;
   }
 
@@ -1605,7 +1693,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "16.10 · сборка 37";
+  const BUILD = "16.10 · сборка 38";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -2324,6 +2412,10 @@
     (ff.age?1:0) + ((status||state.foodFilter)!=="all" ? 1 : 0);
 
   function renderFoods(){
+    $("#foodMode").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.m===state.foodMode)));
+    $("#foodPath").hidden = state.foodMode!=="path";
+    $("#foodCatalog").style.display = state.foodMode==="path" ? "none" : "contents";
+    renderPath();
     const box=$("#foodList"); box.innerHTML="";
     const m=childMonths();
     $("#introFreq").textContent=(WHO_FREQ.find(x=>m<=x.max)||WHO_FREQ[3]).text;
@@ -2402,6 +2494,321 @@
     });
   }
 
+
+  /* ───────── дневник введения продукта ─────────
+     Новый продукт вводят 3 дня подряд, по чуть-чуть и в первой половине дня, чтобы реакцию было видно до сна.
+     state.intro[название] = {start, status:"active"|"done"|"reaction", end, log:{iso:{amt, react}}} */
+  const INTRO_DAYS = 3;
+  const INTRO_AMT = ["½","1","2","3","5+"];
+  const INTRO_REACT = [["ok","Всё хорошо"],["rash","Сыпь"],["tummy","Живот"],["stool","Стул"],["refuse","Отказался"]];
+  const INTRO_BAD = new Set(["rash","tummy","stool"]);
+  const REACT_LABEL = Object.fromEntries(INTRO_REACT);
+  const CAT_EMOJI = {veg:"🥦",fruit:"🍐",grain:"🌾",meat:"🍗",fish:"🐟",dairy:"🥛",nuts:"🫘",other:"🥤"};
+  const FOOD_EMOJI = {"Кабачок":"🥒","Брокколи":"🥦","Тыква":"🎃","Морковь":"🥕","Картофель":"🥔","Цветная капуста":"🥦",
+    "Яблоко":"🍎","Груша":"🍐","Банан":"🍌","Персик":"🍑","Слива":"🫐","Яйцо":"🥚","Сыр твёрдый":"🧀","Молоко":"🥛",
+    "Курица":"🍗","Индейка":"🍗","Говядина":"🥩","Кролик":"🐇","Филе трески":"🐟","Гречка":"🌾","Рис":"🍚","Хлопья овсяные":"🥣",
+    "Кукуруза":"🌽","Горошек зелёный":"🫛","Свёкла":"🫜","Авокадо":"🥑","Клубника":"🍓","Апельсин":"🍊","Томат":"🍅","Огурец":"🥒"};
+  const foodByName = n => FOODS.find(f=>f.n===n);
+  const foodEmoji = n => FOOD_EMOJI[n] || CAT_EMOJI[(foodByName(n)||{}).c] || "🥄";
+  const lc = n => n.charAt(0).toLowerCase()+n.slice(1);
+  const shortDate = iso => FMT_DAY.format(new Date(iso+"T00:00:00"));
+  const addDays = (iso,k) => isoAt(offsetOf(iso)+k);
+  const amtLabel = a => a ? a+" "+(a==="½"||a==="1" ? "ложка" : a==="5+" ? "ложек" : "ложки") : "";
+
+  function activeIntro(){
+    const n=Object.keys(state.intro).find(k=>state.intro[k].status==="active");
+    return n ? [n, state.intro[n]] : null;
+  }
+  const okDays = r => Object.keys(r.log).filter(d=>r.log[d].react==="ok").sort();
+  // какой по счёту день идёт: отмеченный сегодня считается, неотмеченный — следующий
+  function introDayNo(r){
+    const ok=okDays(r).length, todayOk=r.log[TODAY_ISO] && r.log[TODAY_ISO].react==="ok";
+    return Math.min(todayOk ? ok : ok+1, INTRO_DAYS);
+  }
+  // с какого дня можно начинать следующий продукт: после завершения — со следующего дня, после реакции — через 3 дня
+  function nextAllowedIso(){
+    if(activeIntro()) return null;
+    let iso=TODAY_ISO;
+    Object.values(state.intro).forEach(r=>{
+      if(!r.end) return;
+      const from=addDays(r.end, r.status==="reaction" ? 3 : 1);
+      if(from>iso) iso=from;
+    });
+    return iso;
+  }
+  function introSuggestions(k){
+    const m=childMonths(), excl=new Set(state.ff.excl||[]);
+    return FOODS.filter(f=>!isTried(f.n) && !state.intro[f.n] && f.from<=m && !f.al.some(a=>excl.has(a))).slice(0,k);
+  }
+
+  // продукт на выбранный день планера: записанный в этот день или ещё вводимый
+  function introOnDay(iso){
+    for(const n of Object.keys(state.intro)){
+      const r=state.intro[n];
+      if(r.log[iso]) return {n, r, logged:r.log[iso]};
+    }
+    const a=activeIntro(); if(!a) return null;
+    const [n,r]=a, o=offsetOf(iso);
+    const left=INTRO_DAYS - okDays(r).filter(d=>d!==TODAY_ISO).length;
+    if(iso>=r.start && o>=0 && o<left) return {n, r, logged:null};
+    return null;
+  }
+  // новый продукт ставим в первый приём до 15:00, чтобы реакцию было видно днём
+  function carrierMeal(meals){
+    const sorted=meals.slice().sort((a,b)=>(a.time||"").localeCompare(b.time||""));
+    return sorted.find(m=>(m.time||"")<"15:00") || sorted[0] || null;
+  }
+
+  function startIntro(n){
+    const a=activeIntro();
+    if(a && a[0]!==n){ toast("Сейчас вводится "+lc(a[0])+". Новые продукты — по одному за раз."); return; }
+    const from=nextAllowedIso();
+    if(from && from>TODAY_ISO){ toast("Следующий продукт лучше начинать с "+shortDate(from)+"."); return; }
+    state.intro[n]={start:TODAY_ISO, status:"active", end:null, log:{}};
+    delete state.tried[n];
+    renderDay(); renderFoods(); saveState();
+    toast("Начали вводить: "+lc(n)+". 3 дня понемногу, в первой половине дня.");
+  }
+
+  function logIntro(n, iso, amt, react){
+    const r=state.intro[n]; if(!r) return;
+    r.log[iso]={amt:amt||null, react};
+    if(INTRO_BAD.has(react)){
+      r.status="reaction"; r.end=iso; delete state.tried[n];
+      toast("Реакция записана, "+lc(n)+" на паузе. Покажите педиатру; следующий продукт — с "+shortDate(addDays(iso,3))+".");
+    } else if(okDays(r).length>=INTRO_DAYS){
+      r.status="done"; r.end=iso; state.tried[n]=true;
+      toast("Ввели без реакций: "+lc(n)+". Следующий продукт можно с "+shortDate(addDays(iso,1))+".");
+    } else {
+      r.status="active"; r.end=null;
+      toast(react==="refuse" ? "Записали отказ — попробуйте ещё раз завтра, день не засчитан."
+                             : "День "+okDays(r).length+" из "+INTRO_DAYS+" записан.");
+    }
+    renderDay(); renderFoods(); saveState();
+  }
+
+  // блок «Как прошло?»: количество выбирается, реакция сразу сохраняет день
+  function introAsk(n, iso){
+    const box=el("div","iask");
+    const head=el("b",null,n+" · как прошло?"); box.appendChild(head);
+    let amt=null;
+    const amts=el("div","ipills amt");
+    amts.appendChild(el("span","amt-l","Ложек:"));
+    INTRO_AMT.forEach(a=>{
+      const b=el("button","ipill",a); b.type="button"; b.setAttribute("aria-pressed","false");
+      b.addEventListener("click",e=>{ e.stopPropagation(); amt = amt===a ? null : a;
+        amts.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===b && amt===a))); });
+      amts.appendChild(b);
+    });
+    box.appendChild(amts);
+    const reacts=el("div","ipills");
+    INTRO_REACT.forEach(([k,lab])=>{
+      const b=el("button","ipill"+(INTRO_BAD.has(k)?" bad":""),lab); b.type="button";
+      b.addEventListener("click",e=>{ e.stopPropagation(); logIntro(n, iso, amt, k); });
+      reacts.appendChild(b);
+    });
+    box.appendChild(reacts);
+    box.addEventListener("click",e=>e.stopPropagation());
+    return box;
+  }
+  function introSummary(n, iso, log){
+    const row=el("div","isum");
+    const bad=INTRO_BAD.has(log.react);
+    row.appendChild(el("span","chip "+(bad?"risk":log.react==="refuse"?"warn":"ok"), REACT_LABEL[log.react]));
+    if(log.amt) row.appendChild(el("span",null,amtLabel(log.amt)));
+    const ed=el("button",null,"Изменить"); ed.type="button";
+    ed.addEventListener("click",e=>{ e.stopPropagation(); openIntro(n, iso); });
+    row.appendChild(ed);
+    return row;
+  }
+
+  function introInMeal(body, it){
+    body.appendChild(el("p","meal-new","+ "+lc(it.n)+" · новый"));
+    if(it.logged){ const w=el("div","iask"); w.appendChild(introSummary(it.n, state.cursor, it.logged)); body.appendChild(w); }
+    else if(state.cursor===TODAY_ISO && it.r.status==="active") body.appendChild(introAsk(it.n, TODAY_ISO));
+  }
+
+  function renderIntroBanner(){
+    const box=$("#introBanner"); box.innerHTML="";
+    const a=activeIntro();
+    if(!a){
+      // подсказка о следующем продукте — только на сегодня и только когда уже можно
+      const sug=introSuggestions(1)[0], from=nextAllowedIso();
+      if(state.cursor!==TODAY_ISO || !sug || from>TODAY_ISO){ box.hidden=true; return; }
+      const b=el("button","intro-banner calm"); b.type="button";
+      const top=el("div","intro-top");
+      top.appendChild(el("div","intro-ic",foodEmoji(sug.n)));
+      const t=el("div","intro-txt"); t.appendChild(el("b",null,"Можно вводить новый продукт"));
+      t.appendChild(el("span",null,"Следующий по возрасту — "+lc(sug.n)));
+      top.appendChild(t); top.appendChild(el("span","intro-go","Начать →"));
+      b.appendChild(top);
+      b.addEventListener("click",()=>startIntro(sug.n));
+      box.appendChild(b); box.hidden=false; return;
+    }
+    const [n,r]=a, no=introDayNo(r), okN=okDays(r).length;
+    const b=el("div","intro-banner"); b.setAttribute("role","button"); b.tabIndex=0;
+    const top=el("div","intro-top");
+    top.appendChild(el("div","intro-ic",foodEmoji(n)));
+    const t=el("div","intro-txt"); t.appendChild(el("b",null,"Вводим: "+lc(n)));
+    const y=r.log[isoAt(-1)], td=r.log[TODAY_ISO];
+    t.appendChild(el("span",null,"День "+no+" из "+INTRO_DAYS+" · "+
+      (td ? "сегодня отмечено" : y ? "вчера: "+REACT_LABEL[y.react].toLowerCase() : "отметьте после еды")));
+    top.appendChild(t); top.appendChild(el("span","intro-go","→"));
+    b.appendChild(top);
+    const pr=el("div","iprog");
+    for(let i=0;i<INTRO_DAYS;i++) pr.appendChild(el("i",i<okN?"on":null));
+    b.appendChild(pr);
+    // приёмов сегодня нет — спрашиваем прямо в плашке
+    const meals=mealsOf(state.cursor);
+    if(state.cursor===TODAY_ISO && !td && !meals.length) b.appendChild(introAsk(n, TODAY_ISO));
+    b.addEventListener("click",()=>openIntro(n));
+    box.appendChild(b); box.hidden=false;
+  }
+
+  // карточка продукта: три дня, отметка за день, история
+  function openIntro(n, editIso){
+    const r=state.intro[n]; if(!r) return;
+    const box=$("#sheetInner"); box.innerHTML="";
+    box.appendChild(el("div","sheet-grab"));
+    const head=el("div","ihead");
+    head.appendChild(el("div","intro-ic",foodEmoji(n)));
+    const ht=el("div"); ht.appendChild(el("b",null,n));
+    const st = r.status==="done" ? ["ok","Ввели "+shortDate(r.end)]
+             : r.status==="reaction" ? ["risk","Реакция "+shortDate(r.end)]
+             : ["warn","Вводим · день "+introDayNo(r)+" из "+INTRO_DAYS];
+    ht.appendChild(el("span","chip "+st[0],st[1]));
+    head.appendChild(ht); box.appendChild(head);
+
+    // три плитки: засчитанные дни, текущий, будущие
+    const ok=okDays(r), tiles=el("div","days3");
+    for(let i=0;i<INTRO_DAYS;i++){
+      const iso=ok[i];
+      let cls="d3", k, v, sub;
+      if(iso){ cls+=" done"; k=FMT_WD.format(new Date(iso+"T00:00:00")).replace(".",""); v="✓"; sub=r.log[iso].amt?amtLabel(r.log[iso].amt):"без реакции"; }
+      else if(r.status==="reaction" && i===ok.length){ cls+=" bad"; k=shortDate(r.end); v="!"; sub=REACT_LABEL[r.log[r.end].react].toLowerCase(); }
+      else if(r.status==="active" && i===ok.length){ cls+=" now"; k="Сегодня"; v="?"; sub="отметьте"; }
+      else { k="День "+(i+1); v="—"; sub=i===INTRO_DAYS-1?"до 5 ложек":"понемногу"; }
+      const d=el("div",cls); d.appendChild(el("div","k",k)); d.appendChild(el("div","v",v)); d.appendChild(el("div","s",sub));
+      tiles.appendChild(d);
+    }
+    box.appendChild(tiles);
+
+    // отметка: сегодня для вводимого продукта или правка уже записанного дня
+    const markIso = editIso || (r.status==="active" ? TODAY_ISO : null);
+    if(markIso){
+      const prev=r.log[markIso]||{};
+      let amt=prev.amt||null, react=prev.react||null;
+      const sec=el("div","fsec");
+      sec.appendChild(el("h4",null,(markIso===TODAY_ISO?"Сегодня":dayLabel(markIso))+": сколько съел"));
+      const amts=el("div","ipills");
+      INTRO_AMT.forEach(a=>{ const b=el("button","ipill",amtLabel(a)); b.type="button"; b.setAttribute("aria-pressed",String(amt===a));
+        b.addEventListener("click",()=>{ amt=amt===a?null:a; amts.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===b&&amt===a))); });
+        amts.appendChild(b); });
+      sec.appendChild(amts);
+      sec.appendChild(el("h4",null,"Реакция"));
+      const rs=el("div","ipills");
+      INTRO_REACT.forEach(([k,lab])=>{ const b=el("button","ipill"+(INTRO_BAD.has(k)?" bad":""),lab); b.type="button"; b.setAttribute("aria-pressed",String(react===k));
+        b.addEventListener("click",()=>{ react=k; rs.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===b))); });
+        rs.appendChild(b); });
+      sec.appendChild(rs);
+      box.appendChild(sec);
+      const save=el("button","btn btn-primary btn-wide","Сохранить"); save.type="button";
+      save.addEventListener("click",()=>{ if(!react){ toast("Отметьте, как прошло."); return; } closeSheet(); logIntro(n, markIso, amt, react); });
+      box.appendChild(save);
+    }
+
+    const days=Object.keys(r.log).sort();
+    if(days.length){
+      const sec=el("div","fsec"); sec.appendChild(el("h4",null,"Записи"));
+      const lg=el("div","ilog");
+      days.forEach(d=>{ const x=r.log[d], row=el("div");
+        row.appendChild(el("span",null,shortDate(d)));
+        row.appendChild(el("span",null,REACT_LABEL[x.react]+(x.amt?" · "+amtLabel(x.amt):"")));
+        lg.appendChild(row); });
+      sec.appendChild(lg); box.appendChild(sec);
+    }
+
+    const foot=el("div","sheet-foot");
+    const close=el("button","btn btn-ghost","Закрыть"); close.type="button"; close.addEventListener("click",closeSheet);
+    foot.appendChild(close);
+    if(r.status==="active"){
+      const stop=el("button","btn btn-ghost","Прекратить ввод"); stop.type="button";
+      stop.addEventListener("click",()=>{ delete state.intro[n]; closeSheet(); renderDay(); renderFoods(); saveState(); toast("Дневник продукта удалён: "+lc(n)+"."); });
+      foot.appendChild(stop);
+    } else if(r.status==="reaction"){
+      const again=el("button","btn btn-primary","Попробовать снова"); again.type="button";
+      again.addEventListener("click",()=>{ closeSheet(); const keep=state.intro[n]; delete state.intro[n];
+        startIntro(n); if(!state.intro[n]) state.intro[n]=keep; });
+      foot.appendChild(again);
+    }
+    box.appendChild(foot);
+    $("#sheet").hidden=false;
+  }
+
+  // путь прикорма: что дальше, что вводится, реакции, что уже введено
+  function renderPath(){
+    const box=$("#foodPath"); box.innerHTML="";
+    if(state.foodMode!=="path") return;
+    const recs=Object.entries(state.intro);
+    const bad=recs.filter(([,r])=>r.status==="reaction");
+    const a=activeIntro();
+    const triedN=FOODS.filter(f=>isTried(f.n)).length;
+
+    const stats=el("div","pstats");
+    [[triedN,"введено"],[a?1:0,"в процессе"],[bad.length,plur(bad.length,"реакция","реакции","реакций")]].forEach(([v,l],i)=>{
+      const d=el("div"); const b=el("b",null,String(v)); if(i===2&&v) b.style.color="var(--risk)";
+      d.appendChild(b); d.appendChild(el("span",null,l)); stats.appendChild(d); });
+    box.appendChild(stats);
+
+    const track=el("div","track");
+    const node=(cls,n,sub,right,onClick)=>{
+      const b=el("button","node"+(cls?" "+cls:"")); b.type="button";
+      b.appendChild(el("span","e",foodEmoji(n)));
+      const x=el("div","x"); x.appendChild(el("b",null,n)); x.appendChild(el("span",null,sub)); b.appendChild(x);
+      if(right) b.appendChild(right);
+      b.addEventListener("click",onClick);
+      track.appendChild(b);
+    };
+
+    const from=nextAllowedIso();
+    introSuggestions(2).forEach((f,i)=>{
+      const canNow = !a && from<=TODAY_ISO && i===0;
+      const sub = a ? "Следующий · после текущего" : (from>TODAY_ISO ? "Следующий · можно с "+shortDate(from) : i===0 ? "Можно начинать сегодня" : "Потом");
+      const right = canNow ? el("span","start","Начать") : null;
+      node("next", f.n, sub, right, ()=> canNow ? startIntro(f.n) : openServe(f));
+    });
+    if(a){
+      const [n,r]=a;
+      node("now", n, "День "+introDayNo(r)+" из "+INTRO_DAYS+(r.log[TODAY_ISO]?" · сегодня отмечено":" · отметить сегодня"),
+           el("span","chip warn","идёт"), ()=>openIntro(n));
+    }
+    recs.filter(([,r])=>r.status!=="active").sort((x,y)=>(y[1].end||"").localeCompare(x[1].end||"")).forEach(([n,r])=>{
+      if(r.status==="reaction"){
+        const l=r.log[r.end];
+        node("bad", n, REACT_LABEL[l.react]+" "+shortDate(r.end)+" · повторить с педиатром", el("span","chip risk","реакция"), ()=>openIntro(n));
+      } else {
+        node("", n, "Ввели "+shortDate(r.end), el("span","when",okDays(r).length+"/"+INTRO_DAYS), ()=>openIntro(n));
+      }
+    });
+    box.appendChild(track);
+
+    // отмеченные введёнными без дневника — одной строкой, чтобы не терялись
+    const plain=FOODS.filter(f=>isTried(f.n) && !state.intro[f.n]);
+    if(plain.length){
+      box.appendChild(el("div","ptitle2","Отмечены введёнными без дневника"));
+      box.appendChild(el("p","intronote",plain.map(f=>f.n).join(", ")));
+    }
+    if(!track.children.length && !plain.length)
+      box.appendChild(el("p","intronote","Подходящих продуктов по возрасту пока нет."));
+    const tip=el("p","intronote","По одному новому продукту: 3 дня понемногу, в первой половине дня. Если всё хорошо — следующий. Отмечать удобно прямо в планере.");
+    box.appendChild(tip);
+  }
+
+  $("#foodMode").addEventListener("click",e=>{
+    const b=e.target.closest("button"); if(!b) return;
+    state.foodMode=b.dataset.m; renderFoods(); saveState(); $("#views").scrollTop=0;
+  });
+
   function openServe(f){
     const m=childMonths(), now=serveFor(f,m), tried=isTried(f.n);
     const box=$("#sheetInner");
@@ -2425,10 +2832,16 @@
             '<span>'+esc(text)+'</span></div>';
         }).join("")+
       '</div></div>'+
+      (!tried && !state.intro[f.n] && f.from<=m
+        ? '<button class="btn btn-outline btn-wide" id="svIntro" type="button">Вводить по дневнику · 3 дня</button>' : '')+
+      (state.intro[f.n] ? '<button class="btn btn-outline btn-wide" id="svIntro" type="button">Открыть дневник продукта</button>' : '')+
       '<div class="sheet-foot"><button class="btn btn-ghost" id="svClose" type="button">Закрыть</button>'+
       '<button class="btn btn-primary" id="svTried" type="button">'+(tried?"Убрать отметку":"Отметить введённым")+'</button></div>';
     $("#sheet").hidden=false;
     $("#svClose").addEventListener("click",closeSheet);
+    if($("#svIntro")) $("#svIntro").addEventListener("click",()=>{
+      if(state.intro[f.n]) openIntro(f.n); else { closeSheet(); startIntro(f.n); }
+    });
     $("#svTried").addEventListener("click",()=>{
       if(tried) delete state.tried[f.n]; else state.tried[f.n]=true;
       closeSheet(); renderFoods(); saveState();
