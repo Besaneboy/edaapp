@@ -1541,7 +1541,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "12.10 · сборка 33";
+  const BUILD = "16.10 · сборка 34";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -1983,6 +1983,9 @@
       state.ff={age:state.ff.age, excl:excl.slice()};
       state.f={...state.f, excl:excl.slice()};
       state.onboarded=true;
+      // опрос идёт только при первом запуске: демо-дни не принадлежат этому ребёнку,
+      // иначе к выбранному горизонту прибавлялись бы чужие приёмы
+      state.days={}; state.notes={}; state.cursor=TODAY_ISO;
       onb.hidden=true;
       renderProfile(); renderFoods(); renderRecGrid();
       if(withPlan) fillPlan(planDays, false); else renderDay();
