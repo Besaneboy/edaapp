@@ -188,6 +188,7 @@
   .meal-edit{appearance:none;background:none;border:0;padding:3px;cursor:pointer;color:var(--ink-3);
     display:grid;place-items:center;flex:none}
   .meal-edit svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  .meal-head .meal-edit + .meal-edit{margin-left:-4px}
   .meal-dish{appearance:none;background:none;border:0;padding:0;cursor:pointer;width:100%;text-align:left;
     font-family:inherit;font-size:14px;line-height:1.45;color:var(--ink-2);
     display:flex;gap:7px;align-items:baseline}
@@ -483,7 +484,12 @@
   .ai-note{font-size:13px;color:var(--ink-2);display:flex;gap:9px;align-items:flex-start;line-height:1.45;margin:0}
 
   .toast{position:absolute;left:16px;right:16px;bottom:100px;background:var(--ink);color:var(--ground);
-    border-radius:14px;padding:13px 15px;font-size:13.5px;z-index:6;box-shadow:0 14px 34px -14px rgba(0,0,0,.5)}
+    border-radius:14px;padding:13px 15px;font-size:13.5px;z-index:6;box-shadow:0 14px 34px -14px rgba(0,0,0,.5);
+    display:flex;align-items:center;gap:12px}
+  .toast[hidden]{display:none}
+  .toast span{flex:1;min-width:0}
+  .toast button{appearance:none;background:none;border:0;padding:2px 0;cursor:pointer;flex:none;
+    font:inherit;font-weight:700;color:inherit;text-decoration:underline;text-underline-offset:3px}
 
   .hint{margin:0;font-size:12.5px;color:var(--ink-3);text-align:center;max-width:390px;line-height:1.5}
 
@@ -1378,9 +1384,30 @@
   const esc = s => String(s).replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
 
   let toastT=null;
-  function toast(msg){
-    const t=$("#toast"); t.textContent=msg; t.hidden=false;
-    clearTimeout(toastT); toastT=setTimeout(()=>{t.hidden=true;},2600);
+  // action — необязательная кнопка в тосте: {label, fn}, например «Отменить»
+  function toast(msg, action){
+    const t=$("#toast"); t.innerHTML="";
+    t.appendChild(el("span",null,msg));
+    if(action){
+      const b=el("button",null,action.label); b.type="button";
+      b.addEventListener("click",()=>{ t.hidden=true; clearTimeout(toastT); action.fn(); });
+      t.appendChild(b);
+    }
+    t.hidden=false;
+    clearTimeout(toastT); toastT=setTimeout(()=>{t.hidden=true;}, action ? 5000 : 2600);
+  }
+
+  // удаление приёма с возможностью вернуть его на прежнее место
+  function deleteMeal(iso, m){
+    const list=mealsOf(iso), at=list.indexOf(m);
+    if(at<0) return;
+    list.splice(at,1);
+    renderDay();
+    toast(m.name+" удалён из планера.", {label:"Отменить", fn:()=>{
+      const cur=mealsOf(iso);
+      cur.splice(Math.min(at,cur.length),0,m);
+      renderDay();
+    }});
   }
 
   /* ───────── экран «День» ───────── */
@@ -1480,6 +1507,11 @@
         ed.innerHTML='<svg viewBox="0 0 24 24"><path d="M4.5 19.5h4l10-10-4-4-10 10z"/><path d="M14.5 5.5l4 4"/></svg>';
         ed.addEventListener("click",()=>openMealEditor(m));
         head.appendChild(ed);
+        const del=el("button","meal-edit"); del.type="button";
+        del.setAttribute("aria-label","Удалить приём: "+slot);
+        del.innerHTML='<svg viewBox="0 0 24 24"><path d="M4.5 7h15"/><path d="M9.5 7V4.5h5V7"/><path d="M6.5 7l1 12.5h9l1-12.5"/><path d="M10.5 11v5M13.5 11v5"/></svg>';
+        del.addEventListener("click",()=>deleteMeal(state.cursor, m));
+        head.appendChild(del);
       }
       body.appendChild(head);
 
@@ -1541,7 +1573,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "16.10 · сборка 34";
+  const BUILD = "16.10 · сборка 35";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -2147,9 +2179,7 @@
       toast(v.name+": "+v.dish+", "+v.time+", "+v.gram+" г.");
     });
     $("#edDel").addEventListener("click",()=>{
-      state.days[state.cursor]=mealsOf(state.cursor).filter(x=>x!==m);
-      closeSheet(); renderDay();
-      toast(m.name+" удалён из планера.");
+      closeSheet(); deleteMeal(state.cursor, m);
     });
   }
 
