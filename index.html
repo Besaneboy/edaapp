@@ -1727,7 +1727,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "16.10 · сборка 45";
+  const BUILD = "16.10 · сборка 46";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -2603,9 +2603,8 @@
   /* ───────── план ввода ─────────
      state.plan = {mode:"who"|"manual", list:[названия], dates:{название: iso «не раньше»}}.
      «who» — порядок считается сам по рекомендациям ВОЗ; любая ручная правка переводит план в «manual». */
-  const PLAN_WHO_MAX = 20;
-  // чередуем группы: железо (мясо, рыба, желток, бобовые, гречка) с первых недель, овощи и фрукты — постоянно
-  const WHO_PATTERN = ["veg","meat","grain","veg","fruit","fish","dairy","nuts"];
+  // порядок групп при равенстве: железо (мясо, рыба, желток, бобовые, гречка) с первых недель, овощи и фрукты — постоянно
+  const WHO_PRIORITY = ["veg","meat","grain","fruit","fish","dairy","nuts","other"];
   // дата, когда ребёнку исполнится m месяцев
   function ageIso(m){
     const b=new Date(state.child.birth+"T00:00:00"); if(isNaN(b)) return TODAY_ISO;
@@ -2621,15 +2620,21 @@
     const r=a[1], left=INTRO_DAYS-okDays(r).length;
     return addDays(TODAY_ISO, r.log[TODAY_ISO] ? left+1 : left);
   }
+  // все продукты каталога: каждый раз берём группу, пройденную меньше остальных, — так группы идут вперемешку
+  // до конца плана; продукт встаёт не раньше своего возраста, а если по возрасту ничего нет — ждём ближайший
   function whoOrder(){
-    const pool=FOODS.filter(f=>f.c!=="other" && planFree(f));
-    // группы продолжают чередоваться с учётом уже начатых продуктов
-    const out=[]; let day=planStartIso(), i=Object.keys(state.intro).length, idle=0;
-    while(out.length<PLAN_WHO_MAX && pool.length && idle<WHO_PATTERN.length){
-      const c=WHO_PATTERN[i++ % WHO_PATTERN.length];
-      const k=pool.findIndex(f=>f.c===c && ageIso(f.from)<=day);
-      if(k<0){ idle++; continue; }
-      idle=0; out.push(pool[k].n); pool.splice(k,1);
+    const pool=FOODS.filter(planFree);
+    const at={}; pool.forEach(f=>{ at[f.n]=ageIso(f.from); });
+    const total={}, done={};
+    FOODS.forEach(f=>{ total[f.c]=(total[f.c]||0)+1; if(!planFree(f)) done[f.c]=(done[f.c]||0)+1; });
+    const out=[]; let day=planStartIso();
+    while(pool.length){
+      const ready=pool.filter(f=>at[f.n]<=day);
+      if(!ready.length){ day=pool.reduce((m,f)=>at[f.n]<m?at[f.n]:m, at[pool[0].n]); continue; }
+      const cats=[...new Set(ready.map(f=>f.c))].sort((a,b)=>
+        ((done[a]||0)/total[a] - (done[b]||0)/total[b]) || WHO_PRIORITY.indexOf(a)-WHO_PRIORITY.indexOf(b));
+      const f=ready.find(x=>x.c===cats[0]);
+      out.push(f.n); pool.splice(pool.indexOf(f),1); done[f.c]=(done[f.c]||0)+1;
       day=addDays(day, INTRO_DAYS);
     }
     return out;
@@ -2721,8 +2726,10 @@
     state.plan={mode:"manual", list:[], dates:{}};
     renderFoods(); renderDay(); saveState();
   }
+  // год пишем, только если он не текущий: план на всё меню уходит на пару лет вперёд
   const rangeLabel = (a,b) => { const da=new Date(a+"T00:00:00"), db=new Date(b+"T00:00:00");
-    return da.getMonth()===db.getMonth() ? da.getDate()+"–"+FMT_DAY.format(db) : shortDate(a)+" – "+shortDate(b); };
+    const y = db.getFullYear()!==TODAY.getFullYear() ? " "+db.getFullYear() : "";
+    return (da.getMonth()===db.getMonth() ? da.getDate()+"–"+FMT_DAY.format(db) : shortDate(a)+" – "+shortDate(b)) + y; };
 
   // карточка продукта в плане: дата, подача, убрать
   function openPlanItem(n){
@@ -3166,7 +3173,7 @@
     }
     box.appendChild(btns);
     box.appendChild(el("p","intronote", state.plan.mode==="who"
-      ? "Порядок по руководству ВОЗ по прикорму (2023): с 6 месяцев — разнообразно, продукты с железом (мясо, рыба, желток, бобовые) с первых недель, овощи и фрукты постоянно. Соль, сахар, мёд и напитки в план не входят. Порядок и даты можно поменять — тогда план станет ручным."
+      ? "Порядок по руководству ВОЗ по прикорму (2023): с 6 месяцев — разнообразно, продукты с железом (мясо, рыба, желток, бобовые) с первых недель, овощи и фрукты постоянно. В плане все продукты каталога, кроме исключённых аллергенов; соль, сахар, мёд и какао встают не раньше своего возраста. Порядок и даты можно поменять — тогда план станет ручным."
       : "Зажмите строку и перетащите, чтобы поменять порядок; нажмите на продукт, чтобы закрепить дату. Каждому продукту — 3 дня, следующий начинается после."));
 
     const done=el("div","track"); into=done;
