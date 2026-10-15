@@ -434,12 +434,23 @@
   .onb .check input{accent-color:var(--sage);width:20px;height:20px;flex:none}
   .onb .check .tail{margin-left:auto;font-size:12.5px;color:var(--ink-3)}
   .onb-list{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--radius);padding:2px 14px}
-  .onb-slot{display:grid;grid-template-columns:20px 1fr 104px;gap:10px;align-items:center;
+  .onb-slot{display:grid;grid-template-columns:20px minmax(0,1fr) 96px;gap:10px;align-items:center;
     padding:10px 0;border-bottom:1px solid var(--line-2)}
   .onb-slot:last-child{border-bottom:0}
   .onb-slot input[type="checkbox"]{accent-color:var(--sage);width:20px;height:20px}
   .onb .onb-slot input[type="text"],.onb .onb-slot input[type="time"]{
-    padding:9px 10px;font-size:14px;border-radius:11px;background:var(--surface-2);border:1px solid transparent}
+    padding:0 10px;font-size:16px;line-height:40px;height:40px;border-radius:11px;background:var(--surface-2);
+    border:1px solid transparent;min-width:0;width:100%;margin:0;display:block}
+  /* iOS рисует время своим контролом: свой размер, отступы и центровку — выравниваем вручную */
+  .onb .onb-slot input[type="time"]{-webkit-appearance:none;appearance:none;text-align:left}
+  .onb .onb-slot input[type="time"]::-webkit-date-and-time-value{text-align:left;margin:0;line-height:40px}
+  .onb .onb-slot input[type="time"]::-webkit-datetime-edit{padding:0}
+  .onb .onb-slot input[type="checkbox"]{margin:0}
+  .birth{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.5fr) minmax(0,1fr);gap:8px}
+  .birth select{-webkit-appearance:none;appearance:none;font-family:inherit;font-size:16px;color:var(--ink);
+    background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239B978C' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M7 10l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 10px center/16px;
+    border:1px solid var(--line);border-radius:14px;padding:0 28px 0 12px;height:52px;width:100%;min-width:0;margin:0}
+  .birth select:invalid,.birth select.empty{color:var(--ink-3)}
   .onb-slot.off input{opacity:.45}
   .onb-scroll{max-height:46vh;overflow-y:auto}
   .onb-mark{width:72px;height:72px;border-radius:24px;background:var(--sage-soft);color:var(--sage-ink);
@@ -454,6 +465,22 @@
     border:1px solid var(--line);border-radius:14px;padding:14px;width:100%;box-sizing:border-box}
   .onb .field-note{font-size:12.5px;color:var(--ink-3);line-height:1.4}
   .onb-foot{margin-top:auto;padding-top:18px;display:flex;flex-direction:column;gap:9px}
+  /* аллергены: сетка плиток с картинками, кнопка всегда под рукой */
+  #onbAllergens{display:flex;flex-direction:column;gap:10px}
+  .al-sec{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin:6px 0 -4px}
+  .al-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+  .al-tile{appearance:none;-webkit-appearance:none;cursor:pointer;font-family:inherit;margin:0;
+    background:var(--surface);border:1.5px solid var(--line-2);border-radius:18px;padding:12px 4px 10px;
+    display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;
+    color:var(--ink);font-size:12.5px;font-weight:600;line-height:1.2;text-align:center;
+    -webkit-tap-highlight-color:transparent;transition:border-color .15s,background .15s}
+  .al-tile .ic{font-size:30px;line-height:1}
+  .al-tile .nm{min-height:2.4em;display:flex;align-items:center}
+  .al-tile[aria-pressed="true"]{background:var(--risk-soft);border-color:var(--risk)}
+  .al-tile[aria-pressed="true"]::after{content:"✓";position:absolute;top:6px;right:7px;width:17px;height:17px;border-radius:50%;
+    background:var(--risk);color:#fff;font-size:10.5px;font-weight:800;display:grid;place-items:center}
+  #onbStep4 .onb-foot{position:sticky;bottom:0;margin:auto -22px -26px;padding:16px 22px 26px;
+    background:linear-gradient(rgba(248,246,242,0),var(--ground) 28%)}
   .onb-note{font-size:12.5px;color:var(--ink-3);text-align:center}
   .sheet{position:absolute;inset:0;background:rgba(22,21,15,.36);display:flex;align-items:flex-end;
     border-radius:38px;z-index:5}
@@ -823,8 +850,13 @@
                 <input id="onbName" placeholder="Например, Мия" autocomplete="off" enterkeyhint="done">
               </div>
               <div class="field">
-                <label for="onbBirth">Дата рождения</label>
-                <input id="onbBirth" type="date">
+                <label for="onbBD">Дата рождения</label>
+                <div class="birth">
+                  <select id="onbBD" aria-label="День рождения"></select>
+                  <select id="onbBM" aria-label="Месяц рождения"></select>
+                  <select id="onbBY" aria-label="Год рождения"></select>
+                </div>
+                <input id="onbBirth" type="hidden">
                 <span class="field-note" id="onbAgeNote">Возраст посчитается сам и будет обновляться каждый месяц.</span>
               </div>
               <div class="onb-foot">
@@ -845,10 +877,10 @@
 
             <div class="onb-step" id="onbStep4" hidden>
               <h2>Есть ли аллергия у ребёнка?</h2>
-              <p>Блюда с отмеченными аллергенами будут скрыты из рецептов, а продукты в каталоге помечены красным знаком. Фильтр снимается в любой момент.</p>
+              <p>Отметьте, если есть: такие блюда скроем из рецептов, а продукты в каталоге пометим красным. Поменять можно в любой момент.</p>
               <div id="onbAllergens"></div>
               <div class="onb-foot">
-                <button class="btn btn-primary btn-wide" id="onbNext4" type="button">Дальше</button>
+                <button class="btn btn-primary btn-wide" id="onbNext4" type="button">Нет аллергии — дальше →</button>
                 <button class="btn btn-ghost btn-wide" id="onbBack4" type="button">Назад</button>
               </div>
             </div>
@@ -1573,7 +1605,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "16.10 · сборка 35";
+  const BUILD = "16.10 · сборка 37";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -1923,9 +1955,31 @@
         ? "Сейчас " + ageLabel(monthsSince(v)) + ". Подбор блюд и подача в каталоге настроятся на этот возраст."
         : "Возраст посчитается сам и будет обновляться каждый месяц.";
     }
-    $("#onbBirth").max = TODAY_ISO;
-    $("#onbBirth").oninput=updateNote;
-    updateNote();
+    // дата из трёх списков: системное поле даты на iPhone само подставляло дату
+    const MONTHS=["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
+    const bD=$("#onbBD"), bM=$("#onbBM"), bY=$("#onbBY");
+    const fillSel=(sel, ph, items, keep)=>{
+      sel.innerHTML="";
+      sel.appendChild(new Option(ph,""));
+      items.forEach(([t,v])=>sel.appendChild(new Option(t,v)));
+      sel.value = items.some(([,v])=>v===keep) ? keep : "";
+      sel.classList.toggle("empty", !sel.value);
+    };
+    const y0=TODAY.getFullYear();
+    fillSel(bY,"Год",[0,1,2,3,4].map(k=>[String(y0-k),String(y0-k)]),"");
+    fillSel(bM,"Месяц",MONTHS.map((m,i)=>[m,String(i+1).padStart(2,"0")]),"");
+    function syncBirth(){
+      // дней в месяце столько, сколько есть в выбранных месяце и году
+      const dim = new Date(+bY.value||2024, +bM.value||1, 0).getDate();
+      fillSel(bD,"День",Array.from({length:dim},(_,i)=>[String(i+1),String(i+1).padStart(2,"0")]),bD.value);
+      [bM,bY].forEach(x=>x.classList.toggle("empty",!x.value));
+      let v = bD.value && bM.value && bY.value ? bY.value+"-"+bM.value+"-"+bD.value : "";
+      if(v && v>TODAY_ISO){ v=""; toast("Дата рождения не может быть в будущем."); }
+      $("#onbBirth").value=v;
+      updateNote();
+    }
+    syncBirth();
+    [bD,bM,bY].forEach(x=>x.onchange=syncBirth);
 
     // шаг 3: приёмы пищи — название и время правятся прямо здесь
     const draftMeals = ALL_SLOTS.map(name=>({
@@ -1960,18 +2014,38 @@
     // шаг 4: аллергены
     const alBox=$("#onbAllergens");
     alBox.innerHTML="";
-    const alList=el("div","onb-list onb-scroll");
-    Object.keys(ALLERGEN_SRC).forEach(a=>{
-      const n=FOODS.filter(f=>f.al.includes(a)).length;
-      const lab=document.createElement("label"); lab.className="check";
-      const cb=document.createElement("input"); cb.type="checkbox"; cb.checked=draftExcl.has(a);
-      cb.addEventListener("change",()=>{ cb.checked ? draftExcl.add(a) : draftExcl.delete(a); });
-      lab.appendChild(cb);
-      lab.appendChild(el("span",null,a));
-      lab.appendChild(el("span","tail", n ? "в "+n+" "+plur(n,"продукте","продуктах","продуктах") : "нет в каталоге"));
-      alList.appendChild(lab);
+    // ключ — название аллергена в фильтрах, на плитке — короткая подпись и картинка
+    const AL_TILES=[
+      ["Частые у детей",[["Молоко","🥛","Молоко"],["Яйца","🥚","Яйца"],["Злаки с глютеном","🌾","Глютен"],["Рыба","🐟","Рыба"],
+                         ["Арахис","🥜","Арахис"],["Орехи","🌰","Орехи"],["Соя","🫘","Соя"],["Ракообразные","🦐","Креветки"]]],
+      ["Реже",[["Моллюски","🦪","Моллюски"],["Кунжут","🥯","Кунжут"],["Сельдерей","🥬","Сельдерей"],["Горчица","🫙","Горчица"],
+               ["Люпин","🪻","Люпин"],["Диоксид серы и сульфиты","🍇","Сульфиты"]]]
+    ];
+    const next4=$("#onbNext4");
+    const paintNext4=()=>{
+      const n=draftExcl.size;
+      next4.textContent = n ? "Дальше · "+n+" "+plur(n,"аллерген","аллергена","аллергенов")+" →" : "Нет аллергии — дальше →";
+    };
+    AL_TILES.forEach(([title,items])=>{
+      alBox.appendChild(el("div","al-sec",title));
+      const grid=el("div","al-grid");
+      items.forEach(([key,ic,short])=>{
+        const n=FOODS.filter(f=>f.al.includes(key)).length;
+        const b=el("button","al-tile"); b.type="button";
+        b.setAttribute("aria-pressed", String(draftExcl.has(key)));
+        b.title = key + (n ? " · в "+n+" "+plur(n,"продукте","продуктах","продуктах") : "");
+        b.appendChild(el("span","ic",ic));
+        b.appendChild(el("span","nm",short));
+        b.addEventListener("click",()=>{
+          draftExcl.has(key) ? draftExcl.delete(key) : draftExcl.add(key);
+          b.setAttribute("aria-pressed", String(draftExcl.has(key)));
+          paintNext4();
+        });
+        grid.appendChild(b);
+      });
+      alBox.appendChild(grid);
     });
-    alBox.appendChild(alList);
+    paintNext4();
 
     // шаг 5: горизонт планирования
     const dayBox=$("#onbDays");
