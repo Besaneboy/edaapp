@@ -552,6 +552,17 @@
   .node .x b{font-size:14px;display:block;line-height:1.25;font-weight:700}
   .node .x span{font-size:12px;color:var(--ink-2)}
   .node .when{font-size:11.5px;color:var(--ink-3);font-weight:600;flex:none}
+  div.node{cursor:default}
+  .node .main{appearance:none;-webkit-appearance:none;border:0;background:none;padding:0;margin:0;font-family:inherit;color:inherit;
+    text-align:left;cursor:pointer;flex:1;min-width:0;display:flex;align-items:center;gap:10px}
+  .node .ctl{display:flex;gap:2px;flex:none}
+  .node .ctl button{appearance:none;-webkit-appearance:none;border:0;background:var(--surface-2);color:var(--ink-2);cursor:pointer;
+    width:28px;height:28px;border-radius:9px;font-size:14px;line-height:1;padding:0;font-family:inherit}
+  .node .ctl button:disabled{opacity:.3;cursor:default}
+  .node .start{appearance:none;-webkit-appearance:none;border:0;cursor:pointer;font-family:inherit;}
+  .plan-head{display:flex;align-items:center;gap:8px;margin:4px 0 -4px}
+  .plan-head .ptitle2{margin:0}
+  .plan-btns{display:flex;flex-wrap:wrap;gap:8px}
   .node .start{flex:none;font-size:12.5px;font-weight:700;color:#fff;background:var(--sage);border-radius:999px;padding:6px 11px}
   .ptitle2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin:4px 0 -4px}
   .al-sec{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin:6px 0 -4px}
@@ -1413,7 +1424,7 @@
     foodFilter:"all",
     rec:0, portions:2, step:0, timeLeft:0, running:false, tick:null,
     recFilter:"all", f:{time:null, age:null, main:null, excl:[], onlyTried:false},
-    tried:{}, intro:{}, foodMode:"path", ff:{age:null, excl:[]}, catClosed:{}, onboarded:false,
+    tried:{}, intro:{}, plan:{mode:"who", list:[], dates:{}}, foodMode:"path", ff:{age:null, excl:[]}, catClosed:{}, onboarded:false,
     slots:DEFAULT_SLOTS.slice(), slotTimes:{}, pantry:["Масло оливковое","Мука","Масло сливочное"],
     paper:false
   };
@@ -1432,7 +1443,7 @@
       });
       localStorage.setItem(STORE_KEY, JSON.stringify({
         v:1, days, pantry:state.pantry, buyHorizon:state.buyHorizon, notes:state.notes, child:state.child,
-        tried:state.tried, intro:state.intro, foodMode:state.foodMode, ff:state.ff, f:state.f, foodFilter:state.foodFilter,
+        tried:state.tried, intro:state.intro, plan:state.plan, foodMode:state.foodMode, ff:state.ff, f:state.f, foodFilter:state.foodFilter,
         onboarded:state.onboarded, slots:state.slots, slotTimes:state.slotTimes
       }));
     }catch(e){ /* приватный режим или переполнение — работаем без сохранения */ }
@@ -1451,6 +1462,8 @@
       if(d.notes && typeof d.notes==="object") state.notes=d.notes;
       if(d.tried && typeof d.tried==="object") state.tried=d.tried;
       if(d.intro && typeof d.intro==="object") state.intro=d.intro;
+      if(d.plan && Array.isArray(d.plan.list))
+        state.plan={mode:d.plan.mode==="manual"?"manual":"who", list:d.plan.list, dates:d.plan.dates||{}};
       if(d.foodMode==="list" || d.foodMode==="path") state.foodMode=d.foodMode;
       // у тех, кто пользовался приложением до появления опроса, он не показывается
       state.onboarded = d.onboarded===undefined ? true : !!d.onboarded;
@@ -1470,7 +1483,7 @@
   function resetDemo(){
     try{ localStorage.removeItem(STORE_KEY); }catch(e){}
     state.days={}; state.notes={}; state.pantry=["Масло оливковое","Мука","Масло сливочное"];
-    state.tried={}; state.intro={}; state.ff={age:null, excl:[]}; state.catClosed={}; state.onboarded=false;
+    state.tried={}; state.intro={}; state.plan={mode:"who", list:[], dates:{}}; state.ff={age:null, excl:[]}; state.catClosed={}; state.onboarded=false;
     state.foodFilter="all";
     state.slots=DEFAULT_SLOTS.slice(); state.slotTimes={};
     state.f={time:null, age:null, main:null, excl:[], onlyTried:false};
@@ -1705,7 +1718,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "16.10 · сборка 42";
+  const BUILD = "16.10 · сборка 43";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -2572,9 +2585,119 @@
     });
     return iso;
   }
+  // следующие продукты: сперва из плана ввода, у которых подошёл возраст
   function introSuggestions(k){
-    const m=childMonths(), excl=new Set(state.ff.excl||[]);
-    return FOODS.filter(f=>!isTried(f.n) && !state.intro[f.n] && f.from<=m && !f.al.some(a=>excl.has(a))).slice(0,k);
+    const m=childMonths();
+    return planSchedule().map(x=>foodByName(x.n)).filter(f=>f.from<=m).slice(0,k);
+  }
+
+  /* ───────── план ввода ─────────
+     state.plan = {mode:"who"|"manual", list:[названия], dates:{название: iso «не раньше»}}.
+     «who» — порядок считается сам по рекомендациям ВОЗ; любая ручная правка переводит план в «manual». */
+  const PLAN_WHO_MAX = 20;
+  // чередуем группы: железо (мясо, рыба, желток, бобовые, гречка) с первых недель, овощи и фрукты — постоянно
+  const WHO_PATTERN = ["veg","meat","grain","veg","fruit","fish","dairy","nuts"];
+  // дата, когда ребёнку исполнится m месяцев
+  function ageIso(m){
+    const b=new Date(state.child.birth+"T00:00:00"); if(isNaN(b)) return TODAY_ISO;
+    b.setMonth(b.getMonth()+m);
+    return isoOf(b);
+  }
+  const maxIso = (a,b) => a>b ? a : b;
+  const planFree = f => !isTried(f.n) && !state.intro[f.n] && !f.al.some(a=>(state.ff.excl||[]).includes(a));
+  // день, с которого можно начинать следующий продукт по плану
+  function planStartIso(){
+    const a=activeIntro();
+    if(!a) return maxIso(nextAllowedIso()||TODAY_ISO, TODAY_ISO);
+    const r=a[1], left=INTRO_DAYS-okDays(r).length;
+    return addDays(TODAY_ISO, r.log[TODAY_ISO] ? left+1 : left);
+  }
+  function whoOrder(){
+    const pool=FOODS.filter(f=>f.c!=="other" && planFree(f));
+    // группы продолжают чередоваться с учётом уже начатых продуктов
+    const out=[]; let day=planStartIso(), i=Object.keys(state.intro).length, idle=0;
+    while(out.length<PLAN_WHO_MAX && pool.length && idle<WHO_PATTERN.length){
+      const c=WHO_PATTERN[i++ % WHO_PATTERN.length];
+      const k=pool.findIndex(f=>f.c===c && ageIso(f.from)<=day);
+      if(k<0){ idle++; continue; }
+      idle=0; out.push(pool[k].n); pool.splice(k,1);
+      day=addDays(day, INTRO_DAYS);
+    }
+    return out;
+  }
+  function planList(){
+    if(state.plan.mode==="who") return whoOrder();
+    return state.plan.list.filter(n=>{ const f=foodByName(n); return f && !isTried(n) && !state.intro[n]; });
+  }
+  // даты по плану: по 3 дня на продукт, не раньше закреплённой даты и нужного возраста
+  function planSchedule(){
+    let day=planStartIso();
+    return planList().map(n=>{
+      const start=maxIso(maxIso(day, state.plan.dates[n]||day), ageIso(foodByName(n).from));
+      const end=addDays(start, INTRO_DAYS-1);
+      day=addDays(end,1);
+      return {n, start, end};
+    });
+  }
+  function planEdit(fn){
+    if(state.plan.mode==="who") state.plan={mode:"manual", list:whoOrder(), dates:state.plan.dates||{}};
+    else state.plan.list=planList();
+    fn(state.plan);
+    renderFoods(); renderDay(); saveState();
+  }
+  function planMove(n, d){ planEdit(p=>{ const i=p.list.indexOf(n), j=i+d; if(i<0||j<0||j>=p.list.length) return;
+    [p.list[i],p.list[j]]=[p.list[j],p.list[i]]; }); }
+  function planRemove(n){ planEdit(p=>{ p.list=p.list.filter(x=>x!==n); delete p.dates[n]; });
+    toast(n+" убран из плана."); }
+  function planAdd(n){ planEdit(p=>{ if(!p.list.includes(n)) p.list.push(n); }); toast(n+" добавлен в план."); }
+  function planWho(){
+    state.plan={mode:"who", list:[], dates:{}};
+    renderFoods(); renderDay(); saveState();
+    toast("План расставлен по рекомендациям ВОЗ.");
+  }
+  function planClear(){
+    state.plan={mode:"manual", list:[], dates:{}};
+    renderFoods(); renderDay(); saveState();
+  }
+  const rangeLabel = (a,b) => { const da=new Date(a+"T00:00:00"), db=new Date(b+"T00:00:00");
+    return da.getMonth()===db.getMonth() ? da.getDate()+"–"+FMT_DAY.format(db) : shortDate(a)+" – "+shortDate(b); };
+
+  // карточка продукта в плане: дата, подача, убрать
+  function openPlanItem(n){
+    const f=foodByName(n), it=planSchedule().find(x=>x.n===n); if(!f||!it) return;
+    const box=$("#sheetInner"); box.innerHTML="";
+    box.appendChild(el("div","sheet-grab"));
+    const head=el("div","ihead");
+    head.appendChild(foodIcon("div","intro-ic",n));
+    const ht=el("div"); ht.appendChild(el("b",null,n));
+    ht.appendChild(el("span","chip","по плану: "+rangeLabel(it.start,it.end)));
+    head.appendChild(ht); box.appendChild(head);
+
+    const sec=el("div","fsec");
+    sec.appendChild(el("h4",null,"Начать не раньше"));
+    const inp=document.createElement("input"); inp.type="date"; inp.min=TODAY_ISO;
+    inp.value=state.plan.dates[n]||it.start; inp.className="ipick-q";
+    sec.appendChild(inp);
+    sec.appendChild(el("p","intronote","Остальные продукты сдвинутся следом. Раньше возраста "+
+      (f.from>=48?Math.round(f.from/12)+" лет":f.from+" мес")+" продукт не встанет."));
+    box.appendChild(sec);
+
+    const save=el("button","btn btn-primary btn-wide","Сохранить дату"); save.type="button";
+    save.addEventListener("click",()=>{ const v=inp.value; closeSheet();
+      planEdit(p=>{ if(v) p.dates[n]=v; else delete p.dates[n]; }); });
+    box.appendChild(save);
+    if(state.plan.dates[n]){
+      const un=el("button","btn btn-ghost btn-wide","Без закреплённой даты"); un.type="button";
+      un.addEventListener("click",()=>{ closeSheet(); planEdit(p=>{ delete p.dates[n]; }); });
+      box.appendChild(un);
+    }
+    const sv=el("button","btn btn-ghost btn-wide","Как подавать"); sv.type="button";
+    sv.addEventListener("click",()=>openServe(f));
+    box.appendChild(sv);
+    const rm=el("button","btn btn-ghost btn-wide","Убрать из плана"); rm.type="button";
+    rm.addEventListener("click",()=>{ closeSheet(); planRemove(n); });
+    box.appendChild(rm);
+    $("#sheet").hidden=false;
   }
 
   // продукт на выбранный день планера: записанный в этот день или ещё вводимый
@@ -2583,10 +2706,13 @@
       const r=state.intro[n];
       if(r.log[iso]) return {n, r, logged:r.log[iso]};
     }
-    const a=activeIntro(); if(!a) return null;
-    const [n,r]=a, o=offsetOf(iso);
-    const left=INTRO_DAYS - okDays(r).filter(d=>d!==TODAY_ISO).length;
-    if(o<=0 || (iso>=r.start && o<left)) return {n, r, logged:null};
+    const a=activeIntro(), o=offsetOf(iso);
+    const left=a ? INTRO_DAYS - okDays(a[1]).filter(d=>d!==TODAY_ISO).length : 0;
+    if(a && (o<=0 || (iso>=a[1].start && o<left))) return {n:a[0], r:a[1], logged:null};
+    if(iso>TODAY_ISO){
+      const p=planSchedule().find(x=>x.start<=iso && iso<=x.end);
+      if(p) return {n:p.n, r:null, logged:null, planned:true};
+    }
     return null;
   }
   // новый продукт ставим в первый приём до 15:00, чтобы реакцию было видно днём
@@ -2644,12 +2770,14 @@
   }
 
   // выбор продукта: начать новый или заменить тот, что вводится (отметки переходят к новому)
-  function openIntroPicker(replace, startIso){
+  // onPick — добавление в план: доступны и продукты «на вырост», кроме уже стоящих в плане
+  function openIntroPicker(replace, startIso, onPick){
     const m=childMonths(), excl=new Set(state.ff.excl||[]);
-    const pool=FOODS.filter(f=>f.n!==replace && !isTried(f.n) && !state.intro[f.n] && f.from<=m);
+    const inPlan=onPick ? new Set(planList()) : new Set();
+    const pool=FOODS.filter(f=>f.n!==replace && !isTried(f.n) && !state.intro[f.n] && !inPlan.has(f.n) && (onPick || f.from<=m));
     const box=$("#sheetInner"); box.innerHTML="";
     box.appendChild(el("div","sheet-grab"));
-    box.appendChild(el("h3",null, replace ? "Какой продукт вводим?" : "Выберите продукт"));
+    box.appendChild(el("h3",null, replace ? "Какой продукт вводим?" : onPick ? "Добавить в план" : "Выберите продукт"));
     if(replace) box.appendChild(el("p","intronote","Сейчас: "+lc(replace)+". Отметки за дни перейдут к выбранному продукту."));
     const q=document.createElement("input"); q.type="search"; q.placeholder="Найти продукт"; q.className="ipick-q";
     box.appendChild(q);
@@ -2666,9 +2794,10 @@
           const b=el("button","ipick-row"); b.type="button";
           b.appendChild(foodIcon("span","e",f.n));
           b.appendChild(el("span","x",f.n));
+          if(f.from>m) b.appendChild(el("span","chip","с "+(f.from>=48?Math.round(f.from/12)+" лет":f.from+" мес")));
           if(f.al.some(a=>excl.has(a))) b.appendChild(el("span","chip risk","аллерген"));
           else if(f.al.length) b.appendChild(el("span","chip warn","аллерген"));
-          b.addEventListener("click",()=>{ closeSheet(); replace ? swapIntro(replace, f.n) : startIntro(f.n, startIso); });
+          b.addEventListener("click",()=>{ closeSheet(); onPick ? onPick(f.n) : replace ? swapIntro(replace, f.n) : startIntro(f.n, startIso); });
           list.appendChild(b);
         });
       });
@@ -2726,9 +2855,9 @@
   }
 
   function introInMeal(body, it){
-    body.appendChild(el("p","meal-new","+ "+lc(it.n)+" · новый"));
+    body.appendChild(el("p","meal-new","+ "+lc(it.n)+" · новый"+(it.planned?" · по плану":"")));
     if(it.logged){ const w=el("div","iask"); w.appendChild(introSummary(it.n, state.cursor, it.logged)); body.appendChild(w); }
-    else if(state.cursor<=TODAY_ISO && it.r.status==="active") body.appendChild(introAsk(it.n, state.cursor));
+    else if(it.r && state.cursor<=TODAY_ISO && it.r.status==="active") body.appendChild(introAsk(it.n, state.cursor));
   }
 
   function renderIntroBanner(){
@@ -2749,12 +2878,26 @@
         b.addEventListener("click",()=>openIntroPicker(null, iso));
         box.appendChild(b); box.hidden=false; return;
       }
+      // будущий день по плану ввода
+      const pl = state.cursor>TODAY_ISO ? introOnDay(state.cursor) : null;
+      if(pl && pl.planned){
+        const it=planSchedule().find(x=>x.n===pl.n), no=offsetOf(state.cursor)-offsetOf(it.start)+1;
+        const b=el("button","intro-banner calm"); b.type="button";
+        const top=el("div","intro-top");
+        top.appendChild(foodIcon("div","intro-ic",pl.n));
+        const t=el("div","intro-txt"); t.appendChild(el("b",null,"По плану: "+lc(pl.n)));
+        t.appendChild(el("span",null,"День "+no+" из "+INTRO_DAYS+" · "+rangeLabel(it.start,it.end)));
+        top.appendChild(t); top.appendChild(el("span","intro-go","→"));
+        b.appendChild(top);
+        b.addEventListener("click",()=>openPlanItem(pl.n));
+        box.appendChild(b); box.hidden=false; return;
+      }
       if(state.cursor!==TODAY_ISO || !sug || from>TODAY_ISO){ box.hidden=true; return; }
       const b=el("div","intro-banner calm"); b.setAttribute("role","button"); b.tabIndex=0;
       const top=el("div","intro-top");
       top.appendChild(foodIcon("div","intro-ic",sug.n));
       const t=el("div","intro-txt"); t.appendChild(el("b",null,"Можно вводить новый продукт"));
-      t.appendChild(el("span",null,"Следующий по возрасту — "+lc(sug.n)));
+      t.appendChild(el("span",null,"Следующий по плану — "+lc(sug.n)));
       top.appendChild(t); top.appendChild(el("span","intro-go","Начать →"));
       b.appendChild(top);
       b.addEventListener("click",()=>startIntro(sug.n));
@@ -2892,27 +3035,80 @@
     box.appendChild(stats);
 
     const track=el("div","track");
+    let into=track;
     const node=(cls,n,sub,right,onClick)=>{
       const b=el("button","node"+(cls?" "+cls:"")); b.type="button";
       b.appendChild(foodIcon("span","e",n));
       const x=el("div","x"); x.appendChild(el("b",null,n)); x.appendChild(el("span",null,sub)); b.appendChild(x);
       if(right) b.appendChild(right);
       b.addEventListener("click",onClick);
-      track.appendChild(b);
+      into.appendChild(b);
     };
 
-    const from=nextAllowedIso();
-    introSuggestions(2).forEach((f,i)=>{
-      const canNow = !a && from<=TODAY_ISO && i===0;
-      const sub = a ? "Следующий · после текущего" : (from>TODAY_ISO ? "Следующий · можно с "+shortDate(from) : i===0 ? "Можно начинать сегодня" : "Потом");
-      const right = canNow ? el("span","start","Начать") : null;
-      node("next", f.n, sub, right, ()=> canNow ? startIntro(f.n) : openServe(f));
-    });
     if(a){
       const [n,r]=a;
       node("now", n, "День "+introDayNo(r)+" из "+INTRO_DAYS+(r.log[TODAY_ISO]?" · сегодня отмечено":" · отметить сегодня"),
            el("span","chip warn","идёт"), ()=>openIntro(n));
     }
+    box.appendChild(track);
+
+    // план ввода
+    const ph=el("div","plan-head");
+    ph.appendChild(el("div","ptitle2","План ввода"));
+    ph.appendChild(el("span","chip"+(state.plan.mode==="who"?" ok":""), state.plan.mode==="who"?"по ВОЗ":"вручную"));
+    box.appendChild(ph);
+    const sched=planSchedule();
+    const ptrack=el("div","track");
+    sched.forEach((it,i)=>{
+      const row=el("div","node next");
+      const main=el("button","main"); main.type="button";
+      main.setAttribute("aria-label","План: "+it.n);
+      main.appendChild(foodIcon("span","e",it.n));
+      const x=el("div","x"); x.appendChild(el("b",null,it.n));
+      const canNow = i===0 && !a && it.start<=TODAY_ISO;
+      x.appendChild(el("span",null, canNow ? "Можно начинать сегодня"
+        : rangeLabel(it.start,it.end)+(state.plan.dates[it.n]?" · дата закреплена":"")));
+      main.appendChild(x);
+      main.addEventListener("click",()=>openPlanItem(it.n));
+      row.appendChild(main);
+      if(canNow){
+        const go=el("button","start","Начать"); go.type="button";
+        go.addEventListener("click",()=>startIntro(it.n));
+        row.appendChild(go);
+      }
+      const ctl=el("div","ctl");
+      [["↑",-1,"выше"],["↓",1,"ниже"]].forEach(([t,d,lab])=>{
+        const b=el("button",null,t); b.type="button"; b.setAttribute("aria-label",it.n+": "+lab);
+        b.disabled = d<0 ? i===0 : i===sched.length-1;
+        b.addEventListener("click",()=>planMove(it.n,d)); ctl.appendChild(b);
+      });
+      const rm=el("button",null,"✕"); rm.type="button"; rm.setAttribute("aria-label","Убрать из плана: "+it.n);
+      rm.addEventListener("click",()=>planRemove(it.n)); ctl.appendChild(rm);
+      row.appendChild(ctl);
+      ptrack.appendChild(row);
+    });
+    if(sched.length) box.appendChild(ptrack);
+    else box.appendChild(el("p","intronote", state.plan.mode==="who"
+      ? "Подходящих продуктов для плана нет: всё по возрасту уже введено или исключено аллергенами."
+      : "План пуст. Добавьте продукты вручную или расставьте их по рекомендациям ВОЗ."));
+    const btns=el("div","plan-btns");
+    const add=el("button","btn btn-sm btn-ghost","+ Добавить продукт"); add.type="button";
+    add.addEventListener("click",()=>openIntroPicker(null, null, planAdd));
+    btns.appendChild(add);
+    if(state.plan.mode!=="who"){
+      const who=el("button","btn btn-sm btn-ghost","Расставить по ВОЗ"); who.type="button";
+      who.addEventListener("click",planWho); btns.appendChild(who);
+    }
+    if(sched.length){
+      const clr=el("button","btn btn-sm btn-ghost","Очистить план"); clr.type="button";
+      clr.addEventListener("click",planClear); btns.appendChild(clr);
+    }
+    box.appendChild(btns);
+    box.appendChild(el("p","intronote", state.plan.mode==="who"
+      ? "Порядок по руководству ВОЗ по прикорму (2023): с 6 месяцев — разнообразно, продукты с железом (мясо, рыба, желток, бобовые) с первых недель, овощи и фрукты постоянно. Соль, сахар, мёд и напитки в план не входят. Порядок и даты можно поменять — тогда план станет ручным."
+      : "Стрелками меняйте порядок, нажмите на продукт, чтобы закрепить дату. Каждому продукту — 3 дня, следующий начинается после."));
+
+    const done=el("div","track"); into=done;
     recs.filter(([,r])=>r.status!=="active").sort((x,y)=>(y[1].end||"").localeCompare(x[1].end||"")).forEach(([n,r])=>{
       if(r.status==="reaction"){
         const l=r.log[r.end];
@@ -2921,7 +3117,7 @@
         node("", n, "Ввели "+shortDate(r.end), el("span","when",okDays(r).length+"/"+INTRO_DAYS), ()=>openIntro(n));
       }
     });
-    box.appendChild(track);
+    if(done.children.length){ box.appendChild(el("div","ptitle2","Введено")); box.appendChild(done); }
 
     // отмеченные введёнными без дневника — одной строкой, чтобы не терялись
     const plain=FOODS.filter(f=>isTried(f.n) && !state.intro[f.n]);
@@ -2929,9 +3125,9 @@
       box.appendChild(el("div","ptitle2","Отмечены введёнными без дневника"));
       box.appendChild(el("p","intronote",plain.map(f=>f.n).join(", ")));
     }
-    if(!track.children.length && !plain.length)
-      box.appendChild(el("p","intronote","Подходящих продуктов по возрасту пока нет."));
+
     const tip=el("p","intronote","По одному новому продукту: 3 дня понемногу, в первой половине дня. Если всё хорошо — следующий. Отмечать удобно прямо в планере.");
+    if(!track.children.length) track.remove();
     box.appendChild(tip);
   }
 
