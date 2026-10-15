@@ -561,6 +561,15 @@
   .node .ctl button:disabled{opacity:.3;cursor:default}
   .node .start{appearance:none;-webkit-appearance:none;border:0;cursor:pointer;font-family:inherit;}
   .plan-head{display:flex;align-items:center;gap:8px;margin:4px 0 -4px}
+  .track .node.next{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  .node .grip{flex:none;width:22px;height:28px;display:grid;place-items:center;color:var(--ink-3);cursor:grab;touch-action:none}
+  .node .grip svg{width:18px;height:18px;fill:currentColor}
+  .node.shift{transition:transform .16s ease}
+  .node.drag{z-index:3;background:var(--surface);border-style:solid;border-color:var(--sage);
+    box-shadow:0 10px 24px rgba(22,21,15,.16);transition:none}
+  .node.drag::before{opacity:0}
+  body.dragging{cursor:grabbing}
+  @media (prefers-reduced-motion:reduce){.node.shift{transition:none}}
   .plan-head .ptitle2{margin:0}
   .plan-btns{display:flex;flex-wrap:wrap;gap:8px}
   .node .start{flex:none;font-size:12.5px;font-weight:700;color:#fff;background:var(--sage);border-radius:999px;padding:6px 11px}
@@ -1718,7 +1727,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "16.10 · сборка 44";
+  const BUILD = "16.10 · сборка 45";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -2645,8 +2654,61 @@
     fn(state.plan);
     renderFoods(); renderDay(); saveState();
   }
-  function planMove(n, d){ planEdit(p=>{ const i=p.list.indexOf(n), j=i+d; if(i<0||j<0||j>=p.list.length) return;
-    [p.list[i],p.list[j]]=[p.list[j],p.list[i]]; }); }
+  function planReorder(names){ planEdit(p=>{ p.list=names; }); }
+
+  // перетаскивание строк плана: долгое нажатие на строку или сразу за ручку справа
+  function planDrag(track){
+    const HOLD=380, SLOP=8;
+    let row=null, timer=null, on=false, y0=0, x0=0, from=0, to=0, slots=[], step=0, pid=null, mute=0;
+    const rows=()=>[...track.children];
+    const reset=()=>{ clearTimeout(timer); timer=null;
+      rows().forEach(r=>{ r.style.transform=""; r.classList.remove("drag","shift"); });
+      document.body.classList.remove("dragging"); row=null; on=false; };
+    function start(){
+      on=true;
+      const list=rows(); from=to=list.indexOf(row);
+      slots=list.map(r=>{ const b=r.getBoundingClientRect(); return b.top+b.height/2; });
+      step=list.length>1 ? slots[1]-slots[0] : row.offsetHeight;
+      row.classList.add("drag"); list.forEach(r=>{ if(r!==row) r.classList.add("shift"); });
+      document.body.classList.add("dragging");
+      // захват — только когда перетаскивание началось, иначе обычное нажатие не дойдёт до кнопки
+      try{ track.setPointerCapture(pid); }catch(_){}
+      if(navigator.vibrate) try{ navigator.vibrate(12); }catch(e){}
+    }
+    track.addEventListener("pointerdown",e=>{
+      const r=e.target.closest(".node"); if(!r || e.target.closest(".ctl,.start")) return;
+      if(e.pointerType==="mouse" && e.button!==0) return;
+      row=r; y0=e.clientY; x0=e.clientX; pid=e.pointerId;
+      if(e.target.closest(".grip")){ e.preventDefault(); start(); }
+      else timer=setTimeout(start, HOLD);
+    });
+    track.addEventListener("pointermove",e=>{
+      if(!row) return;
+      const dy=e.clientY-y0;
+      if(!on){ if(Math.abs(dy)>SLOP || Math.abs(e.clientX-x0)>SLOP) reset(); return; }
+      row.style.transform="translateY("+dy+"px)";
+      const c=slots[from]+dy;
+      to=from; slots.forEach((s,i)=>{ if(i<from && c<s) to=Math.min(to,i); if(i>from && c>s) to=Math.max(to,i); });
+      rows().forEach((r,i)=>{ if(r===row) return;
+        r.style.transform = (from<to && i>from && i<=to) ? "translateY("+(-step)+"px)"
+                          : (to<from && i<from && i>=to) ? "translateY("+step+"px)" : ""; });
+    });
+    const finish=e=>{
+      if(!row) return;
+      const was=on, names=rows().map(r=>r.dataset.n);
+      reset();
+      if(!was) return;
+      mute=Date.now()+400;
+      if(from!==to){ const [m]=names.splice(from,1); names.splice(to,0,m); planReorder(names); }
+    };
+    track.addEventListener("pointerup",finish);
+    track.addEventListener("pointercancel",()=>reset());
+    // клик сразу после перетаскивания не открывает карточку продукта
+    track.addEventListener("click",e=>{ if(Date.now()<mute){ e.stopPropagation(); e.preventDefault(); } },true);
+    // пока тащим, страница не прокручивается
+    track.addEventListener("touchmove",e=>{ if(on) e.preventDefault(); },{passive:false});
+    track.addEventListener("contextmenu",e=>{ if(row) e.preventDefault(); });
+  }
   function planRemove(n){ planEdit(p=>{ p.list=p.list.filter(x=>x!==n); delete p.dates[n]; });
     toast(n+" убран из плана."); }
   function planAdd(n){ planEdit(p=>{ if(!p.list.includes(n)) p.list.push(n); }); toast(n+" добавлен в план."); }
@@ -3076,18 +3138,17 @@
         go.addEventListener("click",()=>startIntro(it.n));
         row.appendChild(go);
       }
+      row.dataset.n=it.n;
       const ctl=el("div","ctl");
-      [["↑",-1,"выше"],["↓",1,"ниже"]].forEach(([t,d,lab])=>{
-        const b=el("button",null,t); b.type="button"; b.setAttribute("aria-label",it.n+": "+lab);
-        b.disabled = d<0 ? i===0 : i===sched.length-1;
-        b.addEventListener("click",()=>planMove(it.n,d)); ctl.appendChild(b);
-      });
       const rm=el("button",null,"✕"); rm.type="button"; rm.setAttribute("aria-label","Убрать из плана: "+it.n);
       rm.addEventListener("click",()=>planRemove(it.n)); ctl.appendChild(rm);
       row.appendChild(ctl);
+      const grip=el("span","grip"); grip.setAttribute("aria-hidden","true");
+      grip.innerHTML='<svg viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>';
+      row.appendChild(grip);
       ptrack.appendChild(row);
     });
-    if(sched.length) box.appendChild(ptrack);
+    if(sched.length){ box.appendChild(ptrack); planDrag(ptrack); }
     else box.appendChild(el("p","intronote", state.plan.mode==="who"
       ? "Подходящих продуктов для плана нет: всё по возрасту уже введено или исключено аллергенами."
       : "План пуст. Добавьте продукты вручную или расставьте их по рекомендациям ВОЗ."));
@@ -3106,7 +3167,7 @@
     box.appendChild(btns);
     box.appendChild(el("p","intronote", state.plan.mode==="who"
       ? "Порядок по руководству ВОЗ по прикорму (2023): с 6 месяцев — разнообразно, продукты с железом (мясо, рыба, желток, бобовые) с первых недель, овощи и фрукты постоянно. Соль, сахар, мёд и напитки в план не входят. Порядок и даты можно поменять — тогда план станет ручным."
-      : "Стрелками меняйте порядок, нажмите на продукт, чтобы закрепить дату. Каждому продукту — 3 дня, следующий начинается после."));
+      : "Зажмите строку и перетащите, чтобы поменять порядок; нажмите на продукт, чтобы закрепить дату. Каждому продукту — 3 дня, следующий начинается после."));
 
     const done=el("div","track"); into=done;
     recs.filter(([,r])=>r.status!=="active").sort((x,y)=>(y[1].end||"").localeCompare(x[1].end||"")).forEach(([n,r])=>{
