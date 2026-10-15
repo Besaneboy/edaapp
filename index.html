@@ -562,8 +562,6 @@
   .node .start{appearance:none;-webkit-appearance:none;border:0;cursor:pointer;font-family:inherit;}
   .plan-head{display:flex;align-items:center;gap:8px;margin:4px 0 -4px}
   .track .node.next{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-  .node .grip{flex:none;width:22px;height:28px;display:grid;place-items:center;color:var(--ink-3);cursor:grab;touch-action:none}
-  .node .grip svg{width:18px;height:18px;fill:currentColor}
   .node.shift{transition:transform .16s ease}
   .node.drag{z-index:3;background:var(--surface);border-style:solid;border-color:var(--sage);
     box-shadow:0 10px 24px rgba(22,21,15,.16);transition:none}
@@ -1727,7 +1725,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "16.10 · сборка 47";
+  const BUILD = "16.10 · сборка 48";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -2663,7 +2661,7 @@
     [p.list[i],p.list[j]]=[p.list[j],p.list[i]]; }); }
   function planReorder(names){ planEdit(p=>{ p.list=names; }); }
 
-  // перетаскивание строк плана: долгое нажатие на строку или сразу за ручку справа
+  // перетаскивание строк плана: долгое нажатие на строку
   function planDrag(track){
     const HOLD=380, SLOP=8;
     let row=null, timer=null, on=false, y0=0, x0=0, from=0, to=0, slots=[], step=0, pid=null, mute=0;
@@ -2686,8 +2684,7 @@
       const r=e.target.closest(".node"); if(!r || e.target.closest(".ctl,.start")) return;
       if(e.pointerType==="mouse" && e.button!==0) return;
       row=r; y0=e.clientY; x0=e.clientX; pid=e.pointerId;
-      if(e.target.closest(".grip")){ e.preventDefault(); start(); }
-      else timer=setTimeout(start, HOLD);
+      timer=setTimeout(start, HOLD);
     });
     track.addEventListener("pointermove",e=>{
       if(!row) return;
@@ -3157,9 +3154,6 @@
       const rm=el("button",null,"✕"); rm.type="button"; rm.setAttribute("aria-label","Убрать из плана: "+it.n);
       rm.addEventListener("click",()=>planRemove(it.n)); ctl.appendChild(rm);
       row.appendChild(ctl);
-      const grip=el("span","grip"); grip.setAttribute("aria-hidden","true");
-      grip.innerHTML='<svg viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>';
-      row.appendChild(grip);
       ptrack.appendChild(row);
     });
     if(sched.length){ box.appendChild(ptrack); planDrag(ptrack); }
