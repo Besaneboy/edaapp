@@ -1718,7 +1718,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "16.10 · сборка 43";
+  const BUILD = "16.10 · сборка 44";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -2550,7 +2550,7 @@
   const foodByName = n => FOODS.find(f=>f.n===n);
   const foodEmoji = n => FOOD_EMOJI[n] || CAT_EMOJI[(foodByName(n)||{}).c] || "🥄";
   // свои рисунки для продуктов, у которых нет эмодзи; рисуются в размер эмодзи
-  const FOOD_IMG = {"Цветная капуста":"img/cauliflower.svg"};
+  const FOOD_IMG = {"Цветная капуста":"img/cauliflower.svg?v=2"};
   function foodIcon(tag, cls, n){
     const box=el(tag, cls);
     if(FOOD_IMG[n]){
