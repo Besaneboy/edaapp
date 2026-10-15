@@ -1749,7 +1749,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "16.10 · сборка 51";
+  const BUILD = "16.10 · сборка 52";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -2759,14 +2759,16 @@
     return addDays(TODAY_ISO, r.log[TODAY_ISO] ? left+1 : left);
   }
   // рекомендованный порядок; продукты, которых нет в списке, — в конец по возрасту
+  // в плане — только продукты, разрешённые по возрасту ребёнка из профиля; остальные появятся, когда он подрастёт
+  const planAllowed = f => f.from <= childMonths();
   function whoOrder(){
     const known=new Set(EVIDENCE_PLAN.map(x=>x[0]));
     const rest=FOODS.filter(f=>!known.has(f.n)).sort((a,b)=>a.from-b.from).map(f=>f.n);
-    return EVIDENCE_PLAN.map(x=>x[0]).concat(rest).filter(n=>{ const f=foodByName(n); return f && planFree(f); });
+    return EVIDENCE_PLAN.map(x=>x[0]).concat(rest).filter(n=>{ const f=foodByName(n); return f && planFree(f) && planAllowed(f); });
   }
   function planList(){
     if(state.plan.mode==="who") return whoOrder();
-    return state.plan.list.filter(n=>{ const f=foodByName(n); return f && !isTried(n) && !state.intro[n]; });
+    return state.plan.list.filter(n=>{ const f=foodByName(n); return f && !isTried(n) && !state.intro[n] && planAllowed(f); });
   }
   // даты по плану: по 3 дня на продукт, не раньше закреплённой даты и нужного возраста
   function planSchedule(){
@@ -2965,11 +2967,11 @@
   }
 
   // выбор продукта: начать новый или заменить тот, что вводится (отметки переходят к новому)
-  // onPick — добавление в план: доступны и продукты «на вырост», кроме уже стоящих в плане
+  // onPick — добавление в план: продукты по возрасту, кроме уже стоящих в плане
   function openIntroPicker(replace, startIso, onPick){
     const m=childMonths(), excl=new Set(state.ff.excl||[]);
     const inPlan=onPick ? new Set(planList()) : new Set();
-    const pool=FOODS.filter(f=>f.n!==replace && !isTried(f.n) && !state.intro[f.n] && !inPlan.has(f.n) && (onPick || f.from<=m));
+    const pool=FOODS.filter(f=>f.n!==replace && !isTried(f.n) && !state.intro[f.n] && !inPlan.has(f.n) && f.from<=m);
     const box=$("#sheetInner"); box.innerHTML="";
     box.appendChild(el("div","sheet-grab"));
     box.appendChild(el("h3",null, replace ? "Какой продукт вводим?" : onPick ? "Добавить в план" : "Выберите продукт"));
@@ -3283,6 +3285,14 @@
       ptrack.appendChild(row);
     });
     if(sched.length){ box.appendChild(ptrack); planDrag(ptrack); }
+    // что пока рано по возрасту — одной строкой, с возрастом, когда появится следующий
+    const later=FOODS.filter(f=>planFree(f) && !planAllowed(f));
+    if(later.length){
+      const next=Math.min(...later.map(f=>f.from)), nextN=later.filter(f=>f.from===next).length;
+      box.appendChild(el("p","intronote","План составлен из продуктов, разрешённых в "+ageLabel(childMonths())+
+        " (возраст из профиля). Ещё "+later.length+" "+plur(later.length,"продукт","продукта","продуктов")+" пока рано: "+
+        (nextN===later.length ? "появятся" : "первые "+nextN+" появятся")+" в плане в "+ageLabel(next)+"."));
+    }
     else box.appendChild(el("p","intronote", state.plan.mode==="who"
       ? "Подходящих продуктов для плана нет: всё по возрасту уже введено или исключено аллергенами."
       : "План пуст. Добавьте продукты вручную или расставьте их по рекомендациям."));
