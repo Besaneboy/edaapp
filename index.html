@@ -507,6 +507,24 @@
   .d3.bad{background:var(--risk-soft);border-color:transparent}
   .d3.bad .v{color:var(--risk)}
   .d3.now{border-color:var(--sage);box-shadow:0 0 0 3px var(--sage-soft)}
+  button.d3{appearance:none;-webkit-appearance:none;font-family:inherit;color:var(--ink);cursor:pointer;margin:0}
+  .d3.skip{background:var(--surface-2);border-color:transparent}
+  .d3.miss{border-style:dashed}
+  .d3.miss .v{color:var(--warn)}
+  .d3.early{border-style:dashed;background:none}
+  .d3.early .v{color:var(--sage-ink)}
+  .d3.sel{border-color:var(--ink);box-shadow:0 0 0 3px var(--line)}
+  .intro-other{appearance:none;-webkit-appearance:none;border:0;background:none;cursor:pointer;margin:0;padding:2px 0;
+    font-family:inherit;font-size:13px;font-weight:700;color:var(--sage-ink);text-align:left;align-self:flex-start}
+  .ihead .intro-other{margin-left:auto;align-self:center}
+  .ipick-q{font-family:inherit;font-size:16px;color:var(--ink);background:var(--surface-2);border:1px solid transparent;
+    border-radius:14px;padding:12px 14px;width:100%;box-sizing:border-box}
+  .ipick{display:flex;flex-direction:column;gap:6px}
+  .ipick .ptitle2{margin:8px 0 0}
+  .ipick-row{appearance:none;-webkit-appearance:none;font-family:inherit;cursor:pointer;margin:0;text-align:left;color:var(--ink);
+    display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line-2);border-radius:14px;padding:10px 12px;font-size:15px}
+  .ipick-row .e{font-size:20px}
+  .ipick-row .x{flex:1;min-width:0}
   .ihead{display:flex;align-items:center;gap:12px}
   .ihead .intro-ic{width:54px;height:54px;border-radius:17px;font-size:30px;background:var(--sage-soft)}
   .ihead b{display:block;font-family:"Onest","Manrope",sans-serif;font-size:20px;letter-spacing:-.02em;line-height:1.2}
@@ -1693,7 +1711,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "16.10 · сборка 38";
+  const BUILD = "16.10 · сборка 39";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -2550,7 +2568,7 @@
     const a=activeIntro(); if(!a) return null;
     const [n,r]=a, o=offsetOf(iso);
     const left=INTRO_DAYS - okDays(r).filter(d=>d!==TODAY_ISO).length;
-    if(iso>=r.start && o>=0 && o<left) return {n, r, logged:null};
+    if(iso>=r.start && (o<0 || o<left)) return {n, r, logged:null};
     return null;
   }
   // новый продукт ставим в первый приём до 15:00, чтобы реакцию было видно днём
@@ -2570,21 +2588,87 @@
     toast("Начали вводить: "+lc(n)+". 3 дня понемногу, в первой половине дня.");
   }
 
+  // статус считается по всем записям по порядку дат: первая реакция останавливает ввод, третий «всё хорошо» завершает
+  function recomputeIntro(n){
+    const r=state.intro[n]; let ok=0;
+    r.status="active"; r.end=null;
+    for(const d of Object.keys(r.log).sort()){
+      const x=r.log[d];
+      if(INTRO_BAD.has(x.react)){ r.status="reaction"; r.end=d; break; }
+      if(x.react==="ok" && ++ok>=INTRO_DAYS){ r.status="done"; r.end=d; break; }
+    }
+    if(r.status==="done") state.tried[n]=true; else delete state.tried[n];
+  }
+
   function logIntro(n, iso, amt, react){
     const r=state.intro[n]; if(!r) return;
     r.log[iso]={amt:amt||null, react};
-    if(INTRO_BAD.has(react)){
-      r.status="reaction"; r.end=iso; delete state.tried[n];
-      toast("Реакция записана, "+lc(n)+" на паузе. Покажите педиатру; следующий продукт — с "+shortDate(addDays(iso,3))+".");
-    } else if(okDays(r).length>=INTRO_DAYS){
-      r.status="done"; r.end=iso; state.tried[n]=true;
-      toast("Ввели без реакций: "+lc(n)+". Следующий продукт можно с "+shortDate(addDays(iso,1))+".");
-    } else {
-      r.status="active"; r.end=null;
-      toast(react==="refuse" ? "Записали отказ — попробуйте ещё раз завтра, день не засчитан."
-                             : "День "+okDays(r).length+" из "+INTRO_DAYS+" записан.");
-    }
+    if(iso<r.start) r.start=iso;
+    recomputeIntro(n);
+    if(r.status==="reaction")
+      toast("Реакция записана, "+lc(n)+" на паузе. Покажите педиатру; следующий продукт — с "+shortDate(addDays(r.end,3))+".");
+    else if(r.status==="done")
+      toast("Ввели без реакций: "+lc(n)+". Следующий продукт можно с "+shortDate(addDays(r.end,1))+".");
+    else
+      toast(react==="refuse" ? "Записали отказ — день не засчитан, попробуйте ещё раз."
+                             : "Отмечено: "+shortDate(iso)+". Засчитано "+okDays(r).length+" из "+INTRO_DAYS+".");
     renderDay(); renderFoods(); saveState();
+  }
+  function unlogIntro(n, iso){
+    const r=state.intro[n]; if(!r || !r.log[iso]) return;
+    delete r.log[iso];
+    const logged=Object.keys(r.log).sort();
+    if(iso===r.start && logged.length) r.start=logged[0];
+    recomputeIntro(n);
+    renderDay(); renderFoods(); saveState();
+    toast("Отметка за "+shortDate(iso)+" снята.");
+  }
+
+  // выбор продукта: начать новый или заменить тот, что вводится (отметки переходят к новому)
+  function openIntroPicker(replace){
+    const m=childMonths(), excl=new Set(state.ff.excl||[]);
+    const pool=FOODS.filter(f=>f.n!==replace && !isTried(f.n) && !state.intro[f.n] && f.from<=m);
+    const box=$("#sheetInner"); box.innerHTML="";
+    box.appendChild(el("div","sheet-grab"));
+    box.appendChild(el("h3",null, replace ? "Какой продукт вводим?" : "Выберите продукт"));
+    if(replace) box.appendChild(el("p","intronote","Сейчас: "+lc(replace)+". Отметки за дни перейдут к выбранному продукту."));
+    const q=document.createElement("input"); q.type="search"; q.placeholder="Найти продукт"; q.className="ipick-q";
+    box.appendChild(q);
+    const list=el("div","ipick");
+    function draw(){
+      list.innerHTML="";
+      const t=q.value.trim().toLowerCase();
+      const shown=pool.filter(f=>!t || f.n.toLowerCase().includes(t));
+      if(!shown.length){ list.appendChild(el("p","intronote","Ничего не нашлось. Введённые продукты и те, что рано по возрасту, в список не входят.")); return; }
+      FOOD_CATS.forEach(c=>{
+        const items=shown.filter(f=>f.c===c.k); if(!items.length) return;
+        list.appendChild(el("div","ptitle2",c.t));
+        items.forEach(f=>{
+          const b=el("button","ipick-row"); b.type="button";
+          b.appendChild(el("span","e",foodEmoji(f.n)));
+          b.appendChild(el("span","x",f.n));
+          if(f.al.some(a=>excl.has(a))) b.appendChild(el("span","chip risk","аллерген"));
+          else if(f.al.length) b.appendChild(el("span","chip warn","аллерген"));
+          b.addEventListener("click",()=>{ closeSheet(); replace ? swapIntro(replace, f.n) : startIntro(f.n); });
+          list.appendChild(b);
+        });
+      });
+    }
+    q.addEventListener("input",draw);
+    draw();
+    box.appendChild(list);
+    const foot=el("div","sheet-foot");
+    const close=el("button","btn btn-ghost","Отмена"); close.type="button";
+    close.addEventListener("click",()=> replace ? openIntro(replace) : closeSheet());
+    foot.appendChild(close); box.appendChild(foot);
+    $("#sheet").hidden=false;
+  }
+  function swapIntro(from, to){
+    const r=state.intro[from]; if(!r) return;
+    delete state.intro[from]; delete state.tried[from];
+    state.intro[to]=r; recomputeIntro(to);
+    renderDay(); renderFoods(); saveState();
+    toast("Теперь вводим: "+lc(to)+". Отметки за дни сохранены.");
   }
 
   // блок «Как прошло?»: количество выбирается, реакция сразу сохраняет день
@@ -2625,7 +2709,7 @@
   function introInMeal(body, it){
     body.appendChild(el("p","meal-new","+ "+lc(it.n)+" · новый"));
     if(it.logged){ const w=el("div","iask"); w.appendChild(introSummary(it.n, state.cursor, it.logged)); body.appendChild(w); }
-    else if(state.cursor===TODAY_ISO && it.r.status==="active") body.appendChild(introAsk(it.n, TODAY_ISO));
+    else if(state.cursor<=TODAY_ISO && it.r.status==="active") body.appendChild(introAsk(it.n, state.cursor));
   }
 
   function renderIntroBanner(){
@@ -2635,7 +2719,7 @@
       // подсказка о следующем продукте — только на сегодня и только когда уже можно
       const sug=introSuggestions(1)[0], from=nextAllowedIso();
       if(state.cursor!==TODAY_ISO || !sug || from>TODAY_ISO){ box.hidden=true; return; }
-      const b=el("button","intro-banner calm"); b.type="button";
+      const b=el("div","intro-banner calm"); b.setAttribute("role","button"); b.tabIndex=0;
       const top=el("div","intro-top");
       top.appendChild(el("div","intro-ic",foodEmoji(sug.n)));
       const t=el("div","intro-txt"); t.appendChild(el("b",null,"Можно вводить новый продукт"));
@@ -2643,6 +2727,9 @@
       top.appendChild(t); top.appendChild(el("span","intro-go","Начать →"));
       b.appendChild(top);
       b.addEventListener("click",()=>startIntro(sug.n));
+      const other=el("button","intro-other","Выбрать другой продукт"); other.type="button";
+      other.addEventListener("click",e=>{ e.stopPropagation(); openIntroPicker(null); });
+      b.appendChild(other);
       box.appendChild(b); box.hidden=false; return;
     }
     const [n,r]=a, no=introDayNo(r), okN=okDays(r).length;
@@ -2660,7 +2747,8 @@
     b.appendChild(pr);
     // приёмов сегодня нет — спрашиваем прямо в плашке
     const meals=mealsOf(state.cursor);
-    if(state.cursor===TODAY_ISO && !td && !meals.length) b.appendChild(introAsk(n, TODAY_ISO));
+    const cur=introOnDay(state.cursor);
+    if(cur && cur.n===n && !cur.logged && state.cursor<=TODAY_ISO && !meals.length) b.appendChild(introAsk(n, state.cursor));
     b.addEventListener("click",()=>openIntro(n));
     box.appendChild(b); box.hidden=false;
   }
@@ -2679,27 +2767,53 @@
     ht.appendChild(el("span","chip "+st[0],st[1]));
     head.appendChild(ht); box.appendChild(head);
 
-    // три плитки: засчитанные дни, текущий, будущие
-    const ok=okDays(r), tiles=el("div","days3");
-    for(let i=0;i<INTRO_DAYS;i++){
-      const iso=ok[i];
-      let cls="d3", k, v, sub;
-      if(iso){ cls+=" done"; k=FMT_WD.format(new Date(iso+"T00:00:00")).replace(".",""); v="✓"; sub=r.log[iso].amt?amtLabel(r.log[iso].amt):"без реакции"; }
-      else if(r.status==="reaction" && i===ok.length){ cls+=" bad"; k=shortDate(r.end); v="!"; sub=REACT_LABEL[r.log[r.end].react].toLowerCase(); }
-      else if(r.status==="active" && i===ok.length){ cls+=" now"; k="Сегодня"; v="?"; sub="отметьте"; }
-      else { k="День "+(i+1); v="—"; sub=i===INTRO_DAYS-1?"до 5 ложек":"понемногу"; }
-      const d=el("div",cls); d.appendChild(el("div","k",k)); d.appendChild(el("div","v",v)); d.appendChild(el("div","s",sub));
+    if(r.status==="active"){
+      const sw=el("button","intro-other","Сменить продукт"); sw.type="button";
+      sw.addEventListener("click",()=>openIntroPicker(n));
+      head.appendChild(sw);
+    }
+
+    // отмечаемый день: выбранная плитка, иначе сегодня, если ещё не отмечено
+    const markIso = editIso || (r.status==="active" && !r.log[TODAY_ISO] && TODAY_ISO>=r.start ? TODAY_ISO : null);
+
+    // плитки — настоящие даты от начала ввода; прошедшие и сегодня можно нажать и отметить
+    const tiles=el("div","days3");
+    const tile=(iso, cls, k, v, sub)=>{
+      const tap = iso && iso<=TODAY_ISO;
+      const d=el(tap?"button":"div", "d3"+(cls?" "+cls:"")+(iso&&iso===markIso?" sel":""));
+      if(tap){ d.type="button"; d.setAttribute("aria-label","Отметить "+shortDate(iso)); d.addEventListener("click",()=>openIntro(n, iso)); }
+      d.appendChild(el("div","k",k)); d.appendChild(el("div","v",v)); d.appendChild(el("div","s",sub));
       tiles.appendChild(d);
+    };
+    const dayKey = iso => { const o=offsetOf(iso);
+      return o===0 ? "Сегодня" : o===-1 ? "Вчера" : o===1 ? "Завтра"
+        : FMT_WD.format(new Date(iso+"T00:00:00")).replace(".","")+" "+new Date(iso+"T00:00:00").getDate(); };
+    // день раньше начала — если ввод начали, а отметить забыли
+    const before=addDays(r.start,-1);
+    if(r.status==="active" && offsetOf(before)>=-14)
+      tile(before, "early", "← Раньше", "+", "начали раньше");
+    let d=r.start, okc=0, guard=0;
+    while(guard++<21){
+      const x=r.log[d];
+      if(x){
+        if(x.react==="ok"){ okc++; tile(d,"done",dayKey(d),"✓",x.amt?amtLabel(x.amt):"всё хорошо"); }
+        else if(INTRO_BAD.has(x.react)){ tile(d,"bad",dayKey(d),"!",REACT_LABEL[x.react].toLowerCase()); break; }
+        else tile(d,"skip",dayKey(d),"×","отказался");
+      } else if(r.status==="active"){
+        if(d<TODAY_ISO) tile(d,"miss",dayKey(d),"?","не отмечено");
+        else { okc++; tile(d, d===TODAY_ISO?"now":"", dayKey(d), d===TODAY_ISO?"?":"—", d===TODAY_ISO?"отметьте":okc===INTRO_DAYS?"до 5 ложек":"понемногу"); }
+      } else if(d>(r.end||d)) break;
+      if(okc>=INTRO_DAYS || (r.status!=="active" && d>=r.end)) break;
+      d=addDays(d,1);
     }
     box.appendChild(tiles);
+    if(r.status==="active") box.appendChild(el("p","intronote","Нажмите на любой день, чтобы отметить его или исправить."));
 
-    // отметка: сегодня для вводимого продукта или правка уже записанного дня
-    const markIso = editIso || (r.status==="active" ? TODAY_ISO : null);
     if(markIso){
       const prev=r.log[markIso]||{};
       let amt=prev.amt||null, react=prev.react||null;
       const sec=el("div","fsec");
-      sec.appendChild(el("h4",null,(markIso===TODAY_ISO?"Сегодня":dayLabel(markIso))+": сколько съел"));
+      sec.appendChild(el("h4",null,dayLabel(markIso)+": сколько съел"));
       const amts=el("div","ipills");
       INTRO_AMT.forEach(a=>{ const b=el("button","ipill",amtLabel(a)); b.type="button"; b.setAttribute("aria-pressed",String(amt===a));
         b.addEventListener("click",()=>{ amt=amt===a?null:a; amts.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===b&&amt===a))); });
@@ -2715,6 +2829,11 @@
       const save=el("button","btn btn-primary btn-wide","Сохранить"); save.type="button";
       save.addEventListener("click",()=>{ if(!react){ toast("Отметьте, как прошло."); return; } closeSheet(); logIntro(n, markIso, amt, react); });
       box.appendChild(save);
+      if(r.log[markIso]){
+        const un=el("button","btn btn-ghost btn-wide","Снять отметку"); un.type="button";
+        un.addEventListener("click",()=>{ closeSheet(); unlogIntro(n, markIso); });
+        box.appendChild(un);
+      }
     }
 
     const days=Object.keys(r.log).sort();
