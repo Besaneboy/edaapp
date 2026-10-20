@@ -1,5 +1,5 @@
 // «Живое фото» на приветствии онбординга: картинка мамы с малышом и карта глубины дают объём —
-// ближние планы (еда, малыш) смещаются сильнее дальних (стена), камера мягко плавает, фото «дышит».
+// ближние планы (еда, малыш) смещаются сильнее дальних (стена), камера мягко плавает. Картинка не обрезается.
 // Чистый WebGL без библиотек. Без WebGL остаётся обычная картинка <img>.
 
 const VERT = `
@@ -12,19 +12,19 @@ precision mediump float;
 varying vec2 uv;
 uniform sampler2D img, depth;
 uniform vec2 shift;      // смещение камеры
-uniform float zoom;      // лёгкое «дыхание»
 uniform float focus;     // плоскость, которая стоит на месте (лица)
 uniform vec2 cover;      // подгонка картинки под рамку, как object-fit: cover
 void main(){
-  // как object-fit: cover + object-position: 50% 0% (лица в кадре), с лёгким приближением
-  vec2 lo = (1.0 - cover) * vec2(0.5, 0.0);
-  vec2 mid = lo + cover * vec2(0.5, 0.12);  // приближаем от верха: голова мамы не обрезается
-  vec2 c = (lo + uv * cover - mid) / zoom + mid;
+  // картинка целиком, без обрезки и приближения
+  vec2 c = (1.0 - cover) * 0.5 + uv * cover;
+  // у краёв сдвиг гаснет: рамка не «съедает» картинку и края не тянутся
+  vec2 e = smoothstep(0.0, 0.08, c) * smoothstep(0.0, 0.08, 1.0 - c);
+  vec2 sh = shift * e.x * e.y;
   // несколько шагов: точнее обходит края предметов, меньше «резины»
   vec2 q = c;
   for (int i = 0; i < 3; i++) {
     float d = texture2D(depth, q).r;
-    q = c + shift * (d - focus);
+    q = c + sh * (d - focus);
   }
   gl_FragColor = texture2D(img, clamp(q, 0.001, 0.999));
 }`;
@@ -61,7 +61,7 @@ export async function mount(canvas, { src, depthSrc, still = false }) {
   const U = n => gl.getUniformLocation(prog, n);
   gl.uniform1i(U("img"), 0); gl.uniform1i(U("depth"), 1);
   gl.uniform1f(U("focus"), 0.62);
-  const uShift = U("shift"), uZoom = U("zoom"), uCover = U("cover");
+  const uShift = U("shift"), uCover = U("cover");
 
   let w = 0, h = 0;
   function resize() {
@@ -89,7 +89,6 @@ export async function mount(canvas, { src, depthSrc, still = false }) {
     const sx = Math.sin(s * 0.55) * 0.022 + px * 0.018;
     const sy = Math.sin(s * 0.9) * 0.010 + py * 0.012;
     gl.uniform2f(uShift, sx, sy);
-    gl.uniform1f(uZoom, 1.035 + Math.sin(s * 0.7) * 0.008);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 
