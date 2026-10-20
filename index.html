@@ -434,6 +434,10 @@
   .onb .check input{accent-color:var(--sage);width:20px;height:20px;flex:none}
   .onb .check .tail{margin-left:auto;font-size:12.5px;color:var(--ink-3)}
   .onb-list{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--radius);padding:2px 14px}
+  .onb-rec{background:var(--sage-soft);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+  .onb-rec b{font-size:14px;color:var(--ink)}
+  .onb .onb-rec p{font-size:13.5px;max-width:none}
+  .onb-rec small{font-size:11.5px;color:var(--ink-3)}
   .onb-slot{display:grid;grid-template-columns:20px minmax(0,1fr) 96px;gap:10px;align-items:center;
     padding:10px 0;border-bottom:1px solid var(--line-2)}
   .onb-slot:last-child{border-bottom:0}
@@ -1017,7 +1021,8 @@
 
             <div class="onb-step" id="onbStep3" hidden>
               <h2>Сколько приёмов пищи?</h2>
-              <p>Отметьте те, что есть у вас в течение дня. Из них будет собираться день в планере — потом можно поменять.</p>
+              <p>Мы отметили приёмы по возрасту малыша. Поправьте под ваш распорядок — потом можно поменять.</p>
+              <div class="onb-rec" id="onbRec"></div>
               <div id="onbSlots"></div>
               <div class="onb-foot">
                 <button class="btn btn-primary btn-wide" id="onbNext3" type="button">Дальше</button>
@@ -1432,6 +1437,15 @@
   const SLOT_PRESETS = ["Завтрак","Перекус 1","Обед","Полдник","Перекус 2","Ужин","Второй завтрак","Ночное кормление"];
   const ALL_SLOTS = ["Завтрак","Перекус 1","Обед","Полдник","Перекус 2","Ужин"];
   const DEFAULT_SLOTS = ["Завтрак","Обед","Полдник","Ужин"];
+  // сколько приёмов прикорма по возрасту: ВОЗ (6–8 мес — 2–3 приёма, 9–23 мес — 3–4 приёма и 1–2 перекуса),
+  // AAP с 2 лет — 3 приёма и 1–2 перекуса. Грудное молоко или смесь — между приёмами, в план не входят.
+  function mealsForAge(m){
+    if(m<7)  return {slots:["Завтрак","Обед"], text:"2 приёма прикорма в день, а грудное молоко или смесь — как раньше. Начинают с малых порций."};
+    if(m<9)  return {slots:["Завтрак","Обед","Ужин"], text:"2–3 приёма прикорма в день, грудное молоко или смесь — между ними."};
+    if(m<12) return {slots:["Завтрак","Обед","Полдник","Ужин"], text:"3–4 приёма пищи в день, один из них можно сделать перекусом."};
+    if(m<24) return {slots:["Завтрак","Перекус 1","Обед","Полдник","Ужин"], text:"3–4 приёма пищи и 1–2 перекуса. Малыш постепенно переходит на общий стол."};
+    return {slots:["Завтрак","Перекус 1","Обед","Полдник","Ужин"], text:"3 основных приёма и 1–2 перекуса, как за общим столом."};
+  }
   const timeOf = name => (state && state.slotTimes && state.slotTimes[name]) || SLOT_TIME[name] || "12:00";
   const gramOf = name => SLOT_GRAM[name] || "120 г";
   const isoOf = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
@@ -1785,7 +1799,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "21.10 · сборка 68";
+  const BUILD = "21.10 · сборка 69";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -2180,35 +2194,57 @@
     syncBirth();
     [bD,bM,bY].forEach(x=>x.onchange=syncBirth);
 
-    // шаг 3: приёмы пищи — название и время правятся прямо здесь
+    // шаг 3: приёмы пищи — название и время правятся прямо здесь; отметки по возрасту из шага 2
     const draftMeals = ALL_SLOTS.map(name=>({
       on: draftSlots.has(name),
       name: name,
       time: timeOf(name)
     }));
+    // повторный опрос (приёмы уже настроены) — возраст не перебивает выбор, пока не попросят
+    let slotsTouched = !!(state.onboarded && state.slots && state.slots.length);
     const slotBox=$("#onbSlots");
-    slotBox.innerHTML="";
-    const slotList=el("div","onb-list");
-    draftMeals.forEach(m=>{
-      const row=el("div","onb-slot");
-      const cb=document.createElement("input"); cb.type="checkbox"; cb.checked=m.on;
-      cb.setAttribute("aria-label","Включить приём: "+m.name);
-      const nm=document.createElement("input"); nm.type="text"; nm.value=m.name; nm.className="onb-slot-name";
-      nm.setAttribute("aria-label","Название приёма");
-      const tm=document.createElement("input"); tm.type="time"; tm.value=m.time; tm.className="onb-slot-time";
-      tm.setAttribute("aria-label","Время приёма");
-      function paint(){
-        row.classList.toggle("off", !m.on);
-        nm.disabled=!m.on; tm.disabled=!m.on;
+    function renderSlots(){
+      slotBox.innerHTML="";
+      const slotList=el("div","onb-list");
+      draftMeals.forEach(m=>{
+        const row=el("div","onb-slot");
+        const cb=document.createElement("input"); cb.type="checkbox"; cb.checked=m.on;
+        cb.setAttribute("aria-label","Включить приём: "+m.name);
+        const nm=document.createElement("input"); nm.type="text"; nm.value=m.name; nm.className="onb-slot-name";
+        nm.setAttribute("aria-label","Название приёма");
+        const tm=document.createElement("input"); tm.type="time"; tm.value=m.time; tm.className="onb-slot-time";
+        tm.setAttribute("aria-label","Время приёма");
+        function paint(){
+          row.classList.toggle("off", !m.on);
+          nm.disabled=!m.on; tm.disabled=!m.on;
+        }
+        cb.onchange=()=>{ m.on=cb.checked; slotsTouched=true; paint(); };
+        nm.oninput=()=>{ m.name=nm.value; };
+        tm.oninput=()=>{ m.time=tm.value || m.time; };
+        paint();
+        row.appendChild(cb); row.appendChild(nm); row.appendChild(tm);
+        slotList.appendChild(row);
+      });
+      slotBox.appendChild(slotList);
+    }
+    function applyAgeMeals(force){
+      const v=$("#onbBirth").value; if(!v) return;
+      const m=monthsSince(v), rec=mealsForAge(m);
+      const box=$("#onbRec"); box.innerHTML="";
+      box.appendChild(el("b",null,"В "+ageLabel(m)+" рекомендуют"));
+      box.appendChild(el("p",null,rec.text));
+      if(slotsTouched && !force){
+        const b=el("button","btn btn-sm btn-ghost","Отметить по возрасту"); b.type="button";
+        b.style.alignSelf="flex-start";
+        b.addEventListener("click",()=>{ slotsTouched=false; applyAgeMeals(true); });
+        box.appendChild(b);
       }
-      cb.onchange=()=>{ m.on=cb.checked; paint(); };
-      nm.oninput=()=>{ m.name=nm.value; };
-      tm.oninput=()=>{ m.time=tm.value || m.time; };
-      paint();
-      row.appendChild(cb); row.appendChild(nm); row.appendChild(tm);
-      slotList.appendChild(row);
-    });
-    slotBox.appendChild(slotList);
+      box.appendChild(el("small",null, m<24 ? "Источник: руководство ВОЗ по прикорму, 2023" : "Источник: Американская академия педиатрии"));
+      if(slotsTouched && !force) return;
+      draftMeals.forEach(x=>{ x.on = rec.slots.includes(x.name); });
+      renderSlots();
+    }
+    renderSlots();
 
     // шаг 4: аллергены
     const alBox=$("#onbAllergens");
@@ -2270,6 +2306,7 @@
     $("#onbNext2").onclick=()=>{
       if(!$("#onbName").value.trim()){ toast("Впишите имя ребёнка."); $("#onbName").focus(); return; }
       if(!$("#onbBirth").value){ toast("Укажите дату рождения ребёнка."); return; }
+      applyAgeMeals(false);
       show(3);
     };
     $("#onbNext3").onclick=()=>{
