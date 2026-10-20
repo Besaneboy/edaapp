@@ -478,10 +478,10 @@
   .onb-heart{position:absolute;width:28px;height:28px;opacity:0;pointer-events:none;
     background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 21s-8-5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 6-8 11-8 11z' fill='%23F28F96' stroke='%23fff' stroke-width='1.5'/%3E%3C/svg%3E") center/contain no-repeat;
     animation:onbHeart 4.8s ease-in infinite}
-  .onb-heart.h1{left:62%;top:24%}
-  .onb-heart.h2{left:71%;top:30%;width:19px;height:19px;animation-delay:1.6s}
-  .onb-heart.h3{left:55%;top:29%;width:22px;height:22px;animation-delay:3.2s}
-  @keyframes onbHeart{0%{opacity:0;transform:translate(0,0) scale(.6)}15%{opacity:1}100%{opacity:0;transform:translate(10px,-70px) scale(1.1)}}
+  .onb-heart.h1{left:72%;top:16%}
+  .onb-heart.h2{left:82%;top:22%;width:19px;height:19px;animation-delay:1.6s}
+  .onb-heart.h3{left:63%;top:12%;width:22px;height:22px;animation-delay:3.2s}
+  @keyframes onbHeart{0%{opacity:0;transform:translate(0,0) scale(.6)}15%{opacity:1}100%{opacity:0;transform:translate(10px,-55px) scale(1.1)}}
   @media (prefers-reduced-motion:reduce){.onb-heart{display:none}}
   .onb-mark{width:72px;height:72px;border-radius:24px;background:var(--sage-soft);color:var(--sage-ink);
     display:grid;place-items:center;margin-bottom:4px;flex:none}
@@ -1785,7 +1785,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "21.10 · сборка 67";
+  const BUILD = "21.10 · сборка 68";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
