@@ -22,8 +22,8 @@
 
   :root{
     color-scheme:light;
-    --cream:#F2EEE7;
-    --ground:#F8F6F2;
+    --cream:#F7F4EF;
+    --ground:#FCFBF8;
     --surface:#FFFFFF;
     --surface-2:#F4F1EA;
     --ink:#16150F;
@@ -623,7 +623,7 @@
   .al-tile[aria-pressed="true"]::after{content:"✓";position:absolute;top:6px;right:7px;width:17px;height:17px;border-radius:50%;
     background:var(--risk);color:#fff;font-size:10.5px;font-weight:800;display:grid;place-items:center}
   #onbStep4 .onb-foot{position:sticky;bottom:0;margin:auto -22px -26px;padding:16px 22px 26px;
-    background:linear-gradient(rgba(248,246,242,0),var(--ground) 28%)}
+    background:linear-gradient(rgba(252,251,248,0),var(--ground) 28%)}
   .onb-note{font-size:12.5px;color:var(--ink-3);text-align:center}
   .sheet{position:absolute;inset:0;background:rgba(22,21,15,.36);display:flex;align-items:flex-end;
     border-radius:38px;z-index:5}
@@ -1803,7 +1803,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "21.10 · сборка 76";
+  const BUILD = "21.10 · сборка 77";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -3949,8 +3949,8 @@
   function applyTgTheme(){
     // приложение всегда светлое, тему клиента не наследуем
     document.documentElement.setAttribute("data-theme","light");
-    try{ TG.setHeaderColor("#F2EEE7"); }catch(e){}
-    try{ TG.setBackgroundColor("#F8F6F2"); }catch(e){}
+    try{ TG.setHeaderColor("#F7F4EF"); }catch(e){}
+    try{ TG.setBackgroundColor("#FCFBF8"); }catch(e){}
   }
 
   function initTelegram(){
