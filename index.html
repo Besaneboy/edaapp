@@ -936,60 +936,99 @@
           <div class="onb" id="onb" hidden>
             <div class="onb-progress" id="onbProgress" hidden><i></i><i></i><i></i><i></i><i></i></div>
             <div class="onb-step onb-hello" id="onbStep0">
-              <svg class="onb-hero" viewBox="0 0 320 250" role="img" aria-label="Детская тарелка с пюре и ложкой в окружении овощей и фруктов">
+              <svg class="onb-hero" id="onbHero" viewBox="0 0 320 250" role="img" aria-label="Мама кормит малыша в детском стульчике с ложечки">
+                <defs>
+                  <clipPath id="mfClip"><rect x="0" y="0" width="320" height="236"/></clipPath>
+                </defs>
                 <!-- фон -->
-                <ellipse cx="160" cy="128" rx="138" ry="108" fill="#EAEEE3"/>
-                <circle cx="262" cy="46" r="20" fill="#F6E3B4"/>
-                <g stroke="#F2D58E" stroke-width="3" stroke-linecap="round"><path d="M262 14v-6M262 84v6M230 46h-6M300 46h6M239 23l-4-4M285 69l4 4M285 23l4-4M239 69l-4 4"/></g>
-                <!-- листья на фоне -->
-                <path d="M38 150c-6-26 10-48 34-50-2 24-14 44-34 50z" fill="#C9D8BB"/>
-                <path d="M38 150c8-16 18-30 32-46" stroke="#A9BF97" stroke-width="2" fill="none" stroke-linecap="round"/>
-                <path d="M286 168c8-22-2-44-24-52-2 22 6 42 24 52z" fill="#C9D8BB"/>
-                <!-- брокколи -->
+                <ellipse cx="160" cy="132" rx="146" ry="104" fill="#EAEEE3"/>
+                <path d="M30 168c-6-26 10-48 34-50-2 24-14 44-34 50z" fill="#C9D8BB"/>
+                <path d="M30 168c8-16 18-30 32-46" stroke="#A9BF97" stroke-width="2" fill="none" stroke-linecap="round"/>
+                <path d="M296 176c8-22-2-44-24-52-2 22 6 42 24 52z" fill="#C9D8BB"/>
+                <circle cx="276" cy="40" r="15" fill="#F6E3B4"/>
+                <g clip-path="url(#mfClip)">
+                <!-- ── стульчик ── -->
+                <path d="M222 156l-12 80M276 156l10 80" stroke="#C9A77C" stroke-width="6" stroke-linecap="round"/>
+                <rect x="228" y="80" width="56" height="94" rx="18" fill="#E6C89E"/>
+                <!-- ── малыш ── -->
                 <g>
-                  <path d="M70 196l6-26h10l4 26z" fill="#9BBF7A"/>
-                  <circle cx="70" cy="164" r="14" fill="#6E9A55"/><circle cx="88" cy="158" r="15" fill="#7FAA62"/>
-                  <circle cx="80" cy="148" r="13" fill="#8DB86E"/><circle cx="96" cy="170" r="11" fill="#6E9A55"/>
-                  <circle cx="76" cy="146" r="4" fill="#A6CB88"/><circle cx="90" cy="152" r="3.5" fill="#A6CB88"/>
+                  <!-- ножки -->
+                  <g>
+                    <animateTransform attributeName="transform" type="rotate" values="0 240 176;14 240 176;0 240 176" dur="1.6s" repeatCount="indefinite"/>
+                    <path d="M232 170q-6 26 -14 40" stroke="#F5C9A8" stroke-width="10" fill="none" stroke-linecap="round"/>
+                    <ellipse cx="216" cy="212" rx="8" ry="5" fill="#F5C9A8"/>
+                  </g>
+                  <!-- тело и слюнявчик -->
+                  <path d="M222 130c0-12 10-18 22-18s22 6 22 18v34c0 8-6 12-22 12s-22-4-22-12z" fill="#A9C4DE"/>
+                  <path d="M226 124c6 14 30 14 36 0v18c-6 12-30 12-36 0z" fill="#FFFFFF"/>
+                  <circle cx="244" cy="140" r="4" fill="#F3C877"/>
+                  <!-- ручка с поднятой ладошкой -->
+                  <g>
+                    <animateTransform attributeName="transform" type="rotate" values="0 230 136;-18 230 136;0 230 136" dur="3.2s" keyTimes="0;0.55;1" repeatCount="indefinite"/>
+                    <path d="M230 136q-14 -4 -18 -18" stroke="#F5C9A8" stroke-width="9" fill="none" stroke-linecap="round"/>
+                    <circle cx="211" cy="116" r="6" fill="#F5C9A8"/>
+                  </g>
+                  <!-- голова -->
+                  <circle cx="240" cy="98" r="22" fill="#F8D4B6"/>
+                  <circle cx="258" cy="100" r="6" fill="#F5C9A8"/>
+                  <path d="M226 80c4-10 18-14 28-8-6 0-10 2-12 6 4-4 10-4 14 0-10-2-20 0-30 2z" fill="#B07A52"/>
+                  <path d="M238 76c-2-6 2-10 6-10" stroke="#B07A52" stroke-width="3" fill="none" stroke-linecap="round"/>
+                  <circle cx="236" cy="104" r="4" fill="#F4AE9F" opacity="0.8"/>
+                  <!-- глазки: радостные дуги -->
+                  <path d="M226 95q4 -4 8 0" stroke="#3B2A2E" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+                  <!-- ротик: открывается, когда ложка рядом -->
+                  <ellipse cx="222" cy="108" rx="4.5" ry="4" fill="#9A4E5C">
+                    <animate attributeName="ry" values="1.2;1.2;4.2;4.2;1.2;2.2;1.2;2.2;1.2" keyTimes="0;0.32;0.42;0.55;0.62;0.7;0.78;0.86;1" dur="3.2s" repeatCount="indefinite"/>
+                  </ellipse>
                 </g>
-                <!-- морковь -->
-                <g transform="translate(16 6) rotate(28 250 178)">
-                  <path d="M238 150c8-4 18-4 24 0l-10 62c-1 4-5 4-6 0z" fill="#EE9A4D"/>
-                  <path d="M242 166h10M244 182h8M246 196h5" stroke="#D97F33" stroke-width="2.4" stroke-linecap="round"/>
-                  <path d="M250 150c-4-12-12-16-18-16 2 8 8 14 18 16zM250 150c2-14 8-20 16-20-1 10-6 16-16 20zM250 150c0-12 0-18 0-24" fill="#7FAA62" stroke="#6E9A55" stroke-width="2" stroke-linecap="round"/>
-                </g>
-                <!-- яблоко -->
+                <!-- столик стульчика с тарелочкой -->
+                <rect x="196" y="150" width="84" height="10" rx="5" fill="#D9B98C"/>
+                <path d="M250 144h22c0 6-4 8-11 8s-11-2-11-8z" fill="#FFFFFF"/>
+                <ellipse cx="261" cy="144" rx="11" ry="3" fill="#F3C877"/>
+                <!-- ── мама ── -->
                 <g>
-                  <path d="M226 96c-12-8-30-2-30 18 0 18 14 32 24 30 4-1 6-2 8-2s4 1 8 2c10 2 24-12 24-30 0-20-18-26-30-18z" fill="#E9806E"/>
-                  <path d="M226 96c0-8 2-14 6-18" stroke="#8A6A3E" stroke-width="3" fill="none" stroke-linecap="round"/>
-                  <path d="M230 86c6-8 16-8 20-4-6 6-14 8-20 4z" fill="#7FAA62"/>
-                  <ellipse cx="210" cy="108" rx="5" ry="8" fill="#F4AE9F" transform="rotate(-20 210 108)"/>
+                  <!-- тело -->
+                  <path d="M70 128c4-10 16-14 30-14s26 4 30 14l12 108H58z" fill="#E9A9A0"/>
+                  <path d="M86 116c4 8 24 8 28 0" stroke="#D88E84" stroke-width="3" fill="none" stroke-linecap="round"/>
+                  <!-- шея и голова -->
+                  <rect x="94" y="100" width="12" height="16" rx="6" fill="#F2C3A2"/>
+                  <circle cx="102" cy="84" r="23" fill="#F6CFAF"/>
+                  <!-- волосы с пучком -->
+                  <path d="M80 86c-4-20 10-32 26-30 12 2 20 10 20 20-10-6-22-6-30 2-4 4-8 6-16 8z" fill="#6B4632"/>
+                  <circle cx="82" cy="58" r="11" fill="#6B4632"/>
+                  <path d="M80 86c-2 10 0 22 6 28-8-2-12-14-10-24z" fill="#6B4632"/>
+                  <!-- лицо -->
+                  <ellipse cx="112" cy="84" rx="2.4" ry="2.6" fill="#3B2A2E">
+                    <animate attributeName="ry" values="2.6;2.6;0.3;2.6;2.6" keyTimes="0;0.9;0.93;0.96;1" dur="4.5s" repeatCount="indefinite"/>
+                  </ellipse>
+                  <path d="M110 96q6 4 11 -1" stroke="#9A4E5C" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+                  <circle cx="106" cy="92" r="5" fill="#F4AE9F" opacity="0.7"/>
+                  <!-- рука с ложкой: тянется к малышу и обратно -->
+                  <g>
+                    <animateTransform attributeName="transform" type="rotate" values="12 112 130;12 112 130;-7 112 130;-7 112 130;12 112 130;12 112 130" keyTimes="0;0.12;0.42;0.56;0.9;1" dur="3.2s" calcMode="spline" keySplines="0 0 1 1;0.4 0 0.2 1;0 0 1 1;0.4 0 0.2 1;0 0 1 1" repeatCount="indefinite"/>
+                    <path d="M112 130c20 6 44 8 66 2" stroke="#E9A9A0" stroke-width="15" fill="none" stroke-linecap="round"/>
+                    <circle cx="182" cy="131" r="7" fill="#F6CFAF"/>
+                    <path d="M184 129l29 -7" stroke="#77896A" stroke-width="4" stroke-linecap="round"/>
+                    <ellipse cx="219" cy="120" rx="7" ry="4.5" fill="#77896A" transform="rotate(-14 219 120)"/>
+                    <ellipse cx="219" cy="118.5" rx="5" ry="2.6" fill="#F3C877" transform="rotate(-14 219 118.5)">
+                      <animate attributeName="opacity" values="1;1;0;0;1" keyTimes="0;0.5;0.53;0.85;0.9" dur="3.2s" repeatCount="indefinite"/>
+                    </ellipse>
+                  </g>
                 </g>
-                <!-- стручок горошка -->
-                <g transform="rotate(-18 92 98)">
-                  <path d="M58 98c10-12 58-12 68 0-10 12-58 12-68 0z" fill="#8DB86E"/>
-                  <circle cx="74" cy="98" r="6" fill="#B5D69A"/><circle cx="91" cy="98" r="6.5" fill="#B5D69A"/><circle cx="108" cy="98" r="6" fill="#B5D69A"/>
                 </g>
-                <!-- тарелка -->
-                <ellipse cx="160" cy="214" rx="78" ry="12" fill="#DCE3D2"/>
-                <path d="M86 168h148c0 30-30 46-74 46s-74-16-74-46z" fill="#FFFFFF"/>
-                <ellipse cx="160" cy="168" rx="74" ry="18" fill="#FFFFFF" stroke="#E2E0D6" stroke-width="2"/>
-                <ellipse cx="160" cy="168" rx="58" ry="12" fill="#F3C877"/>
-                <path d="M128 166c8-5 18-5 26 0M162 170c8-4 16-4 24 0" stroke="#E9B45A" stroke-width="2.4" fill="none" stroke-linecap="round"/>
-                <circle cx="176" cy="164" r="4" fill="#9BBF7A"/><circle cx="142" cy="171" r="3" fill="#9BBF7A"/>
-                <path d="M96 186c18 18 110 18 128 0" stroke="#EAEEE3" stroke-width="5" fill="none" stroke-linecap="round"/>
-                <!-- пар -->
-                <g stroke="#B9C6AC" stroke-width="3" fill="none" stroke-linecap="round">
-                  <path d="M146 140c-6-8 6-12 0-20"/><path d="M162 136c-6-8 6-12 0-20"/><path d="M178 140c-6-8 6-12 0-20"/>
+                <!-- сердечки от малыша -->
+                <g fill="#F0A8A0">
+                  <path d="M250 64c-3-4-10-3-10 3 0 6 10 11 10 11s10-5 10-11c0-6-7-7-10-3z" opacity="0">
+                    <animateTransform attributeName="transform" type="translate" values="0 0;0 0;6 -26" keyTimes="0;0.6;1" dur="3.2s" repeatCount="indefinite"/>
+                    <animate attributeName="opacity" values="0;0;1;0" keyTimes="0;0.6;0.75;1" dur="3.2s" repeatCount="indefinite"/>
+                  </path>
+                  <path d="M268 74c-2-3-7-2-7 2 0 4 7 8 7 8s7-4 7-8c0-4-5-5-7-2z" opacity="0">
+                    <animateTransform attributeName="transform" type="translate" values="0 0;0 0;8 -22" keyTimes="0;0.68;1" dur="3.2s" repeatCount="indefinite"/>
+                    <animate attributeName="opacity" values="0;0;1;0" keyTimes="0;0.68;0.8;1" dur="3.2s" repeatCount="indefinite"/>
+                  </path>
                 </g>
-                <!-- ложка -->
-                <g transform="rotate(-32 214 150)">
-                  <rect x="208" y="96" width="9" height="70" rx="4.5" fill="#77896A"/>
-                  <ellipse cx="212.5" cy="168" rx="13" ry="17" fill="#77896A"/>
-                  <ellipse cx="212.5" cy="166" rx="8" ry="11" fill="#93A486"/>
-                </g>
-                <!-- сердечко -->
-                <path d="M60 58c-4-6-14-4-14 4 0 8 14 16 14 16s14-8 14-16c0-8-10-10-14-4z" fill="#F0A8A0"/>
+                <!-- пол -->
+                <path d="M40 236h240" stroke="#DCE3D2" stroke-width="4" stroke-linecap="round"/>
               </svg>
               <h2>Привет! Давайте кормить малыша вкусно и спокойно</h2>
               <p>EdaApp подскажет, что и когда предложить ребёнку, запомнит, как он поел, и соберёт список покупок. Без таблиц и лишних забот — у вас их и так хватает.</p>
@@ -1804,7 +1843,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "20.10 · сборка 54";
+  const BUILD = "20.10 · сборка 55";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -2262,6 +2301,9 @@
     // переходы
     // присваиваем, а не навешиваем: опрос можно запустить повторно без дублей
     $("#onbHello").onclick=()=>show(1);
+    // анимация на приветствии: стоит, если пользователь просил меньше движения
+    const hero=$("#onbHero");
+    if(hero && hero.pauseAnimations && window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) hero.pauseAnimations();
     $("#onbGo").onclick=()=>{ show(2); setTimeout(()=>$("#onbName").focus(),80); };
     $("#onbBack2").onclick=()=>show(1);
     $("#onbBack3").onclick=()=>show(2);
