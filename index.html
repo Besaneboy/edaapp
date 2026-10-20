@@ -454,16 +454,28 @@
   .onb-slot.off input{opacity:.45}
   .onb-scroll{max-height:46vh;overflow-y:auto}
   .onb-hello{justify-content:flex-start}
-  .onb-pains{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
-  .onb-pains li{position:relative;padding-left:28px;font-size:14px;line-height:1.4;color:var(--ink-2)}
-  .onb-pains li b{color:var(--ink);font-weight:700}
-  .onb-pains li::before{content:"";position:absolute;left:0;top:1px;width:19px;height:19px;border-radius:50%;
-    background:var(--sage-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5.5 10.5l3 3 6-7' fill='none' stroke='%235C6E50' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/15px no-repeat}
+  .onb-title{display:flex;flex-direction:column;gap:6px}
+  .onb-accent{color:var(--sage-ink);background:linear-gradient(transparent 62%,#F6DCC9 62%,#F6DCC9 92%,transparent 92%);padding:0 2px;margin:0 -2px}
+  .onb .onb-lead{font-size:15px;color:var(--ink-2);max-width:none}
+  .onb-feats{list-style:none;margin:2px 0 0;padding:0;display:flex;flex-direction:column;gap:12px}
+  .onb-feats li{display:flex;gap:12px;align-items:flex-start}
+  .onb-feats .ic{width:40px;height:40px;flex:none;border-radius:13px;background:var(--sage-soft);display:grid;place-items:center}
+  .onb-feats .ic svg{width:22px;height:22px;fill:none;stroke:var(--sage-ink);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .onb-feats b{display:block;font-size:15px;font-weight:700;color:var(--ink);line-height:1.3}
+  .onb-feats li span:not(.ic){display:block;font-size:13.5px;color:var(--ink-2);line-height:1.4;margin-top:1px}
+  .onb-badge{position:absolute;left:12px;bottom:12px;z-index:2;display:flex;align-items:center;gap:6px;
+    padding:7px 12px 7px 9px;border-radius:999px;background:rgba(255,255,255,.88);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+    font-size:12.5px;font-weight:700;color:var(--sage-ink);white-space:nowrap;box-shadow:0 4px 14px -6px rgba(60,40,20,.35)}
+  .onb-badge svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
   @media (max-height:720px){
     .onb-hello{gap:11px;padding-top:18px}
     .onb-hello .onb-hero-wrap{width:min(100%,30vh);border-radius:22px}
-    .onb-hello h2{font-size:25px}
-    .onb-pains{gap:6px}
+    .onb-hello h2{font-size:26px}
+    .onb-feats{gap:8px}
+    .onb-badge{left:8px;bottom:8px;padding:5px 9px 5px 7px;font-size:11px;gap:4px}
+    .onb-badge svg{width:13px;height:13px}
+    .onb-feats .ic{width:34px;height:34px;border-radius:11px}
+    .onb-feats li span:not(.ic){font-size:13px}
   }
   .onb-hero-wrap{position:relative;width:min(100%,42vh);aspect-ratio:1;align-self:center;margin:0 0 4px;flex:none;
     border-radius:28px;overflow:hidden;background:#F3E6DA;box-shadow:0 18px 40px -22px rgba(120,70,50,.45);isolation:isolate}
@@ -962,15 +974,28 @@
                 <img class="onb-hero" id="onbHero" src="img/hello-hug.jpg?v=3" alt="Мама обнимает смеющегося малыша, на столе детская тарелка с брокколи, морковью и макаронами" decoding="async">
                 <canvas class="onb-hero3d" id="onbHero3d" aria-hidden="true" hidden></canvas>
                 <span class="onb-heart h1" aria-hidden="true"></span><span class="onb-heart h2" aria-hidden="true"></span><span class="onb-heart h3" aria-hidden="true"></span>
+                <span class="onb-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/><path d="M8.5 12l2.4 2.4 4.6-4.8"/></svg>По рекомендациям ВОЗ</span>
               </div>
-              <h2>Прикорм без тревоги и путаницы</h2>
-              <ul class="onb-pains">
-                <li><b>Что и когда давать</b> — план по возрасту малыша, по рекомендациям ВОЗ</li>
-                <li><b>Без страха аллергии</b> — новое по одному, дневник реакций всегда под рукой</li>
-                <li><b>Не готовить отдельно</b> — блюда с общего стола и список покупок</li>
+              <div class="onb-title">
+                <h2>Прикорм <span class="onb-accent">без тревог</span></h2>
+                <p class="onb-lead">Спокойно и по шагам — от первой ложки до общего стола</p>
+              </div>
+              <ul class="onb-feats">
+                <li>
+                  <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8.5 14.5l2 2 4-4"/></svg></span>
+                  <div><b>Что и когда давать</b><span>План по возрасту малыша — каждый день понятно, что предложить</span></div>
+                </li>
+                <li>
+                  <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21c-5-2.6-8-6-8-10V6l8-3 8 3v5c0 4-3 7.4-8 10z"/><path d="M12 9v6M9 12h6"/></svg></span>
+                  <div><b>Новое — без страха</b><span>Вводим по одному и отмечаем реакцию, всё сохранится для педиатра</span></div>
+                </li>
+                <li>
+                  <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11h16v2a7 7 0 0 1-7 7h-2a7 7 0 0 1-7-7z"/><path d="M2.5 11h19"/><path d="M9 7.5c0-1.3 1.2-1.3 1.2-2.6M14 7.5c0-1.3 1.2-1.3 1.2-2.6"/></svg></span>
+                  <div><b>Не готовить отдельно</b><span>Блюда с общего стола для всей семьи и список покупок в одно касание</span></div>
+                </li>
               </ul>
               <div class="onb-foot">
-                <button class="btn btn-primary btn-wide" id="onbHello" type="button">Начать</button>
+                <button class="btn btn-primary btn-wide" id="onbHello" type="button">Составить план малыша</button>
               </div>
             </div>
 
@@ -1779,7 +1804,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "20.10 · сборка 63";
+  const BUILD = "20.10 · сборка 64";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
