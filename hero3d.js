@@ -16,8 +16,8 @@ uniform float zoom;      // лёгкое «дыхание»
 uniform float focus;     // плоскость, которая стоит на месте (лица)
 uniform vec2 cover;      // подгонка картинки под рамку, как object-fit: cover
 void main(){
-  // как object-fit: cover + object-position: 50% 30% (лица в кадре), с лёгким приближением
-  vec2 lo = (1.0 - cover) * vec2(0.5, 0.3);
+  // как object-fit: cover + object-position: 50% 40% (лица в кадре), с лёгким приближением
+  vec2 lo = (1.0 - cover) * vec2(0.5, 0.4);
   vec2 mid = lo + cover * 0.5;
   vec2 c = (lo + uv * cover - mid) / zoom + mid;
   // несколько шагов: точнее обходит края предметов, меньше «резины»
