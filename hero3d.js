@@ -8,7 +8,11 @@ varying vec2 uv;
 void main(){ uv = p * 0.5 + 0.5; uv.y = 1.0 - uv.y; gl_Position = vec4(p, 0.0, 1.0); }`;
 
 const FRAG = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;   // на iPhone mediump даёт «дрожание» пикселей при сдвиге
+#else
 precision mediump float;
+#endif
 varying vec2 uv;
 uniform sampler2D img, depth;
 uniform vec2 shift;      // смещение камеры
@@ -22,7 +26,7 @@ void main(){
   vec2 sh = shift * e.x * e.y;
   // несколько шагов: точнее обходит края предметов, меньше «резины»
   vec2 q = c;
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < 5; i++) {
     float d = texture2D(depth, q).r;
     q = c + sh * (d - focus);
   }
@@ -51,7 +55,9 @@ export async function mount(canvas, { src, depthSrc, still = false }) {
   const tex = (unit, image) => {
     const t = gl.createTexture(); gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, t);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    // картинки квадратные 2^n: мип-уровни убирают мерцание, когда фото меньше своего размера
+    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
@@ -65,7 +71,7 @@ export async function mount(canvas, { src, depthSrc, still = false }) {
 
   let w = 0, h = 0;
   function resize() {
-    const r = canvas.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const r = canvas.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 3);
     const W = Math.round(r.width * dpr), H = Math.round(r.height * dpr);
     if (!W || (W === w && H === h)) return;
     w = W; h = H; canvas.width = W; canvas.height = H; gl.viewport(0, 0, W, H);
@@ -81,13 +87,16 @@ export async function mount(canvas, { src, depthSrc, still = false }) {
   canvas.addEventListener("pointermove", onMove);
   canvas.addEventListener("pointerleave", onLeave);
 
+  let last = 0;
   function frame(ms) {
     resize();
-    const s = ms / 1000;
-    px += (tx - px) * 0.06; py += (ty - py) * 0.06;
-    // плавная «восьмёрка» камеры + параллакс от пальца
-    const sx = Math.sin(s * 0.55) * 0.022 + px * 0.018;
-    const sy = Math.sin(s * 0.9) * 0.010 + py * 0.012;
+    const s = ms / 1000, dt = last ? Math.min((ms - last) / 1000, 0.1) : 0.016; last = ms;
+    // сглаживание по времени, а не по кадрам: одинаково на 60 и 120 Гц
+    const k = 1 - Math.exp(-dt * 3.5);
+    px += (tx - px) * k; py += (ty - py) * k;
+    // камера плывёт по неповторяющейся мягкой кривой + параллакс от пальца
+    const sx = (Math.sin(s * 0.5) * 0.8 + Math.sin(s * 0.21 + 1.3) * 0.2) * 0.02 + px * 0.016;
+    const sy = (Math.sin(s * 0.37 + 0.7) * 0.7 + Math.sin(s * 0.83) * 0.3) * 0.009 + py * 0.011;
     gl.uniform2f(uShift, sx, sy);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }

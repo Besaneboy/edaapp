@@ -969,7 +969,7 @@
             <div class="onb-progress" id="onbProgress" hidden><i></i><i></i><i></i><i></i></div>
             <div class="onb-step onb-hello" id="onbStep0">
               <div class="onb-hero-wrap">
-                <img class="onb-hero" id="onbHero" src="img/hello-hug.jpg?v=4" alt="Мама обнимает смеющегося малыша, на столе детская тарелка с брокколи, морковью и макаронами" decoding="async">
+                <img class="onb-hero" id="onbHero" src="img/hello-hug.jpg?v=5" alt="Мама обнимает смеющегося малыша, на столе детская тарелка с брокколи, морковью и макаронами" decoding="async">
                 <canvas class="onb-hero3d" id="onbHero3d" aria-hidden="true" hidden></canvas>
                 <span class="onb-heart h1" aria-hidden="true"></span><span class="onb-heart h2" aria-hidden="true"></span><span class="onb-heart h3" aria-hidden="true"></span>
               </div>
@@ -1799,7 +1799,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "21.10 · сборка 69";
+  const BUILD = "21.10 · сборка 70";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -2133,10 +2133,10 @@
     if(!on || hero3dLoading || !window.WebGLRenderingContext) return;
     hero3dLoading=true;
     const still = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
-    import("./hero3d.js?v=62").then(m=>{
+    import("./hero3d.js?v=63").then(m=>{
       const cv=$("#onbHero3d");
       cv.hidden=false;
-      return m.mount(cv,{src:"img/hello-hug.jpg?v=4", depthSrc:"img/hello-hug-depth.png?v=3", still}).then(api=>{
+      return m.mount(cv,{src:"img/hello-hug.jpg?v=5", depthSrc:"img/hello-hug-depth.png?v=4", still}).then(api=>{
         hero3d=api; $("#onbHero").style.visibility="hidden";
         if(!hero3dWanted) hero3d.stop();
       });
