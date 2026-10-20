@@ -456,7 +456,10 @@
   .birth select:invalid,.birth select.empty{color:var(--ink-3)}
   .onb-slot.off input{opacity:.45}
   .onb-scroll{max-height:46vh;overflow-y:auto}
-  .onb-hello{justify-content:flex-start}
+  /* приветствие по центру: от верха до картинки столько же, сколько от кнопки до низа */
+  .onb-hello{justify-content:flex-start;padding-top:24px;padding-bottom:24px;box-sizing:border-box}
+  .onb-hello > :first-child{margin-top:auto !important}
+  .onb-hello > :last-child{margin-bottom:auto}
   .onb-title{display:flex;flex-direction:column;gap:6px}
   .onb-accent{color:var(--sage-ink);background:linear-gradient(transparent 62%,#F6DCC9 62%,#F6DCC9 92%,transparent 92%);padding:0 2px;margin:0 -2px}
   .onb .onb-lead{font-size:15px;color:var(--ink-2);max-width:none}
@@ -467,7 +470,7 @@
   .onb-feats b{display:block;font-size:15px;font-weight:700;color:var(--ink);line-height:1.3}
   .onb-feats li span:not(.ic){display:block;font-size:13.5px;color:var(--ink-2);line-height:1.4;margin-top:1px}
   @media (max-height:720px){
-    .onb-hello{gap:11px;padding-top:18px}
+    .onb-hello{gap:11px;padding-top:16px;padding-bottom:16px}
     .onb-hello .onb-hero-wrap{width:min(100%,30vh);border-radius:22px}
     .onb-hello h2{font-size:26px}
     .onb-feats{gap:8px}
@@ -1800,7 +1803,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "21.10 · сборка 73";
+  const BUILD = "21.10 · сборка 74";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
