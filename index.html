@@ -437,7 +437,6 @@
   .onb-rec{background:var(--sage-soft);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:4px}
   .onb-rec b{font-size:14px;color:var(--ink)}
   .onb .onb-rec p{font-size:13.5px;max-width:none}
-  .onb-rec small{font-size:11.5px;color:var(--ink-3)}
   .onb-slot{display:grid;grid-template-columns:20px minmax(0,1fr) 96px;gap:10px;align-items:center;
     padding:10px 0;border-bottom:1px solid var(--line-2)}
   .onb-slot:last-child{border-bottom:0}
@@ -499,6 +498,7 @@
     border:1px solid var(--line);border-radius:14px;padding:14px;width:100%;box-sizing:border-box}
   .onb .field-note{font-size:12.5px;color:var(--ink-3);line-height:1.4}
   .onb-foot{margin-top:auto;padding-top:18px;display:flex;flex-direction:column;gap:9px}
+  .onb-hello .onb-foot{margin-top:0;padding-top:10px}   /* кнопка сразу под пунктами, а не у самого низа экрана */
   /* аллергены: сетка плиток с картинками, кнопка всегда под рукой */
   #onbAllergens{display:flex;flex-direction:column;gap:10px}
 
@@ -1799,7 +1799,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "21.10 · сборка 70";
+  const BUILD = "21.10 · сборка 71";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -2239,7 +2239,6 @@
         b.addEventListener("click",()=>{ slotsTouched=false; applyAgeMeals(true); });
         box.appendChild(b);
       }
-      box.appendChild(el("small",null, m<24 ? "Источник: руководство ВОЗ по прикорму, 2023" : "Источник: Американская академия педиатрии"));
       if(slotsTouched && !force) return;
       draftMeals.forEach(x=>{ x.on = rec.slots.includes(x.name); });
       renderSlots();
