@@ -459,16 +459,24 @@
   .onb-pains li b{color:var(--ink);font-weight:700}
   .onb-pains li::before{content:"";position:absolute;left:0;top:1px;width:19px;height:19px;border-radius:50%;
     background:var(--sage-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5.5 10.5l3 3 6-7' fill='none' stroke='%235C6E50' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/15px no-repeat}
-  .onb-hello .onb-hero-wrap{max-width:270px;margin:0 0 2px}
   @media (max-height:720px){
     .onb-hello{gap:11px;padding-top:18px}
-    .onb-hello .onb-hero-wrap{max-width:190px}
+    .onb-hello .onb-hero-wrap{height:30vh;border-radius:22px}
     .onb-hello h2{font-size:25px}
     .onb-pains{gap:6px}
   }
-  .onb-hero-wrap{position:relative;width:100%;max-width:300px;aspect-ratio:320/250;align-self:center;margin:6px 0 4px;flex:none}
-  .onb-hero{position:absolute;inset:0;width:100%;height:100%}
+  .onb-hero-wrap{position:relative;width:100%;height:clamp(200px,40vh,380px);margin:0 0 4px;flex:none;
+    border-radius:28px;overflow:hidden;background:#F3E6DA;box-shadow:0 18px 40px -22px rgba(120,70,50,.45);isolation:isolate}
+  .onb-hero{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 30%;transform:scale(1.06)}
   .onb-hero3d{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:pan-y}
+  .onb-heart{position:absolute;width:22px;height:22px;opacity:0;pointer-events:none;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 21s-8-5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 6-8 11-8 11z' fill='%23F28F96' stroke='%23fff' stroke-width='1.5'/%3E%3C/svg%3E") center/contain no-repeat;
+    animation:onbHeart 4.8s ease-in infinite}
+  .onb-heart.h1{left:80%;top:30%}
+  .onb-heart.h2{left:88%;top:44%;width:15px;height:15px;animation-delay:1.6s}
+  .onb-heart.h3{left:72%;top:22%;width:17px;height:17px;animation-delay:3.2s}
+  @keyframes onbHeart{0%{opacity:0;transform:translate(0,0) scale(.6)}15%{opacity:1}100%{opacity:0;transform:translate(10px,-70px) scale(1.1)}}
+  @media (prefers-reduced-motion:reduce){.onb-heart{display:none}}
   .onb-mark{width:72px;height:72px;border-radius:24px;background:var(--sage-soft);color:var(--sage-ink);
     display:grid;place-items:center;margin-bottom:4px;flex:none}
   .onb-mark svg{width:36px;height:36px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
@@ -951,107 +959,9 @@
             <div class="onb-progress" id="onbProgress" hidden><i></i><i></i><i></i><i></i><i></i></div>
             <div class="onb-step onb-hello" id="onbStep0">
               <div class="onb-hero-wrap">
-              <svg class="onb-hero" id="onbHero" viewBox="0 0 320 250" role="img" aria-label="Мама обнимает малыша, малыш грызёт брокколи, вокруг летают овощи и фрукты">
-                <defs><clipPath id="hgClip"><rect x="0" y="0" width="320" height="238"/></clipPath></defs>
-                <!-- фон -->
-                <ellipse cx="160" cy="134" rx="146" ry="104" fill="#EAEEE3"/>
-                <path d="M296 182c8-22-2-44-24-52-2 22 6 42 24 52z" fill="#C9D8BB"/>
-                <path d="M26 176c-6-26 10-48 34-50-2 24-14 44-34 50z" fill="#C9D8BB"/>
-                <!-- летающая еда -->
-                <g>
-                  <animateTransform attributeName="transform" type="translate" values="0 0;0 -7;0 0" dur="3.4s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
-                  <g transform="rotate(-30 66 64)">
-                    <path d="M56 50c6-3 14-3 20 0l-8 46c-1 3-3 3-4 0z" fill="#EE9A4D"/>
-                    <path d="M60 62h8M62 74h6M63 85h4" stroke="#D97F33" stroke-width="2" stroke-linecap="round"/>
-                    <path d="M66 50c-3-9-9-12-14-12 2 6 6 10 14 12zM66 50c1-10 6-15 12-15-1 8-5 12-12 15z" fill="#7FAA62"/>
-                  </g>
-                </g>
-                <g>
-                  <animateTransform attributeName="transform" type="translate" values="0 0;0 -8;0 0" dur="3s" begin="-1s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
-                  <path d="M262 52c-9-6-23-2-23 14 0 14 11 25 19 23 3-1 4-1 6-1s3 0 6 1c8 2 19-9 19-23 0-16-14-20-23-14z" fill="#E9806E"/>
-                  <path d="M262 52c0-6 2-11 5-14" stroke="#8A6A3E" stroke-width="2.6" fill="none" stroke-linecap="round"/>
-                  <path d="M265 44c5-6 12-6 15-3-5 5-11 6-15 3z" fill="#7FAA62"/>
-                  <ellipse cx="250" cy="62" rx="4" ry="6" fill="#F4AE9F" transform="rotate(-20 250 62)"/>
-                </g>
-                <g>
-                  <animateTransform attributeName="transform" type="translate" values="0 0;0 -6;0 0" dur="3.8s" begin="-2s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
-                  <g transform="rotate(20 54 142)">
-                    <path d="M26 142c9-11 47-11 56 0-9 11-47 11-56 0z" fill="#8DB86E"/>
-                    <circle cx="41" cy="142" r="5" fill="#B5D69A"/><circle cx="54" cy="142" r="5.5" fill="#B5D69A"/><circle cx="67" cy="142" r="5" fill="#B5D69A"/>
-                  </g>
-                </g>
-                <g>
-                  <animateTransform attributeName="transform" type="translate" values="0 0;0 -7;0 0" dur="3.2s" begin="-0.6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
-                  <path d="M272 128c-8-6-20 0-18 10 2 12 14 22 18 24 4-2 16-12 18-24 2-10-10-16-18-10z" fill="#E86A6A"/>
-                  <path d="M264 124c4 2 12 2 16 0-2-4-6-6-8-4-2-2-6 0-8 4z" fill="#7FAA62"/>
-                  <g fill="#F7D57A"><circle cx="266" cy="136" r="1.2"/><circle cx="276" cy="134" r="1.2"/><circle cx="271" cy="144" r="1.2"/><circle cx="279" cy="146" r="1.2"/></g>
-                </g>
-                <!-- мама с малышом: лёгкое покачивание -->
-                <g clip-path="url(#hgClip)">
-                <g>
-                  <animateTransform attributeName="transform" type="rotate" values="-2 158 238;2 158 238;-2 158 238" dur="4s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
-                  <!-- мама: тело -->
-                  <path d="M106 132c6-14 24-20 46-20s38 6 44 20l18 108H90z" fill="#E9A9A0"/>
-                  <!-- голова мамы, наклонена к малышу -->
-                  <g transform="rotate(12 146 82)">
-                    <rect x="140" y="98" width="13" height="18" rx="6.5" fill="#F2C3A2"/>
-                    <circle cx="146" cy="80" r="24" fill="#F6CFAF"/>
-                    <path d="M122 82c-4-22 12-34 28-32 14 2 22 12 21 24-10-8-24-8-33 0-4 4-8 6-16 8z" fill="#6B4632"/>
-                    <circle cx="128" cy="54" r="11" fill="#6B4632"/>
-                    <path d="M122 82c-2 10 0 22 6 28-8-2-12-14-10-24z" fill="#6B4632"/>
-                    <path d="M146 84q4 3 8 0M160 84q4 3 8 0" stroke="#3B2A2E" stroke-width="2.2" fill="none" stroke-linecap="round"/>
-                    <path d="M152 94q5 4 10 0" stroke="#9A4E5C" stroke-width="2.2" fill="none" stroke-linecap="round"/>
-                    <circle cx="146" cy="92" r="4.5" fill="#F4AE9F" opacity="0.7"/>
-                  </g>
-                  <!-- малыш -->
-                  <g>
-                    <!-- ножки -->
-                    <g>
-                      <animateTransform attributeName="transform" type="rotate" values="0 196 186;16 196 186;0 196 186" dur="1.4s" repeatCount="indefinite"/>
-                      <path d="M196 186q8 16 4 30" stroke="#F5C9A8" stroke-width="10" fill="none" stroke-linecap="round"/>
-                      <ellipse cx="202" cy="218" rx="8" ry="5" fill="#F5C9A8"/>
-                    </g>
-                    <path d="M170 146c0-10 10-16 22-16s22 6 22 16v34c0 8-8 12-22 12s-22-4-22-12z" fill="#A9C4DE"/>
-                    <circle cx="192" cy="160" r="3" fill="#FFFFFF" opacity="0.8"/><circle cx="192" cy="171" r="3" fill="#FFFFFF" opacity="0.8"/>
-                    <!-- голова малыша -->
-                    <circle cx="190" cy="112" r="20" fill="#F8D4B6"/>
-                    <circle cx="208" cy="114" r="5.5" fill="#F5C9A8"/>
-                    <path d="M176 96c4-9 16-12 26-7-5 0-9 2-11 5 4-3 9-3 13 0-9-2-18 0-28 2z" fill="#B07A52"/>
-                    <path d="M188 92c-2-6 2-10 6-10" stroke="#B07A52" stroke-width="3" fill="none" stroke-linecap="round"/>
-                    <ellipse cx="184" cy="108" rx="2.2" ry="2.4" fill="#3B2A2E"/><ellipse cx="197" cy="108" rx="2.2" ry="2.4" fill="#3B2A2E"/>
-                    <circle cx="180" cy="118" r="4" fill="#F4AE9F" opacity="0.8"/><circle cx="202" cy="118" r="4" fill="#F4AE9F" opacity="0.8"/>
-                    <!-- ротик жуёт -->
-                    <ellipse cx="190" cy="121" rx="3.6" ry="2" fill="#9A4E5C">
-                      <animate attributeName="ry" values="1.2;3.4;1.2;2.4;1.2" keyTimes="0;0.3;0.55;0.75;1" dur="1.8s" repeatCount="indefinite"/>
-                    </ellipse>
-                    <!-- ручка с брокколи: подносит ко рту -->
-                    <g>
-                      <animateTransform attributeName="transform" type="rotate" values="24 210 152;2 210 152;24 210 152" keyTimes="0;0.3;1" dur="1.8s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 0.2 1"/>
-                      <path d="M210 152q-2 -12 -6 -16" stroke="#F5C9A8" stroke-width="8" fill="none" stroke-linecap="round"/>
-                      <path d="M203 136l-4 -8 5 -2 4 8z" fill="#9BBF7A"/>
-                      <circle cx="199" cy="125" r="6" fill="#6E9A55"/><circle cx="206" cy="124" r="5.5" fill="#7FAA62"/><circle cx="202" cy="119" r="5" fill="#8DB86E"/>
-                      <circle cx="205" cy="134" r="5" fill="#F5C9A8"/>
-                    </g>
-                  </g>
-                  <!-- руки мамы обнимают малыша -->
-                  <path d="M118 142c-6 30 20 50 56 50 14 0 30-4 40-10" stroke="#E29B91" stroke-width="15" fill="none" stroke-linecap="round"/>
-                  <circle cx="216" cy="180" r="8" fill="#F6CFAF"/>
-                </g>
-                </g>
-                <!-- сердечки -->
-                <g fill="#F0A8A0">
-                  <path d="M210 82c-3-4-10-3-10 3 0 6 10 11 10 11s10-5 10-11c0-6-7-7-10-3z" opacity="0">
-                    <animateTransform attributeName="transform" type="translate" values="0 0;8 -30" dur="3s" repeatCount="indefinite"/>
-                    <animate attributeName="opacity" values="0;1;0" keyTimes="0;0.3;1" dur="3s" repeatCount="indefinite"/>
-                  </path>
-                  <path d="M226 96c-2-3-7-2-7 2 0 4 7 8 7 8s7-4 7-8c0-4-5-5-7-2z" opacity="0">
-                    <animateTransform attributeName="transform" type="translate" values="0 0;10 -26" dur="3s" begin="1.5s" repeatCount="indefinite"/>
-                    <animate attributeName="opacity" values="0;1;0" keyTimes="0;0.3;1" dur="3s" begin="1.5s" repeatCount="indefinite"/>
-                  </path>
-                </g>
-                <path d="M60 238h200" stroke="#DCE3D2" stroke-width="4" stroke-linecap="round"/>
-              </svg>
-              <canvas class="onb-hero3d" id="onbHero3d" aria-hidden="true" hidden></canvas>
+                <img class="onb-hero" id="onbHero" src="img/hello-hug.jpg?v=2" alt="Мама обнимает смеющуюся дочку с брокколи в руке, на столе тарелка с овощами" decoding="async">
+                <canvas class="onb-hero3d" id="onbHero3d" aria-hidden="true" hidden></canvas>
+                <span class="onb-heart h1" aria-hidden="true"></span><span class="onb-heart h2" aria-hidden="true"></span><span class="onb-heart h3" aria-hidden="true"></span>
               </div>
               <h2>Прикорм без тревоги и путаницы</h2>
               <p>Советы противоречат друг другу, страшно дать новое, а малыш выплёвывает ложку? Мы возьмём это на себя.</p>
@@ -1872,7 +1782,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "20.10 · сборка 57";
+  const BUILD = "20.10 · сборка 58";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -2198,7 +2108,7 @@
     if(head) head.textContent="Пищевой дневник: "+name;
   }
 
-  // 3D-приветствие: three.js грузится только здесь; без WebGL или при ошибке остаётся SVG
+  // «живое фото» на приветствии: WebGL-параллакс по карте глубины; без WebGL или при ошибке остаётся обычная картинка
   let hero3d=null, hero3dLoading=false, hero3dWanted=false;
   function heroAnim(on){
     hero3dWanted=on;
@@ -2206,12 +2116,14 @@
     if(!on || hero3dLoading || !window.WebGLRenderingContext) return;
     hero3dLoading=true;
     const still = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
-    import("./hero3d.js?v=57").then(m=>{
+    import("./hero3d.js?v=59").then(m=>{
       const cv=$("#onbHero3d");
-      hero3d=m.mount(cv,{still});
-      cv.hidden=false; $("#onbHero").style.visibility="hidden";
-      if(!hero3dWanted) hero3d.stop();
-    }).catch(()=>{ /* остаётся SVG-анимация */ });
+      cv.hidden=false;
+      return m.mount(cv,{src:"img/hello-hug.jpg?v=2", depthSrc:"img/hello-hug-depth.png?v=2", still}).then(api=>{
+        hero3d=api; $("#onbHero").style.visibility="hidden";
+        if(!hero3dWanted) hero3d.stop();
+      });
+    }).catch(()=>{ $("#onbHero3d").hidden=true; /* остаётся обычная картинка */ });
   }
 
   function startOnboarding(){
@@ -2347,9 +2259,6 @@
     // переходы
     // присваиваем, а не навешиваем: опрос можно запустить повторно без дублей
     $("#onbHello").onclick=()=>show(1);
-    // анимация на приветствии: стоит, если пользователь просил меньше движения
-    const hero=$("#onbHero");
-    if(hero && hero.pauseAnimations && window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) hero.pauseAnimations();
     $("#onbGo").onclick=()=>{ show(2); setTimeout(()=>$("#onbName").focus(),80); };
     $("#onbBack2").onclick=()=>show(1);
     $("#onbBack3").onclick=()=>show(2);
