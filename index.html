@@ -962,7 +962,7 @@
           </nav>
 
           <div class="onb" id="onb" hidden>
-            <div class="onb-progress" id="onbProgress" hidden><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="onb-progress" id="onbProgress" hidden><i></i><i></i><i></i><i></i></div>
             <div class="onb-step onb-hello" id="onbStep0">
               <div class="onb-hero-wrap">
                 <img class="onb-hero" id="onbHero" src="img/hello-hug.jpg?v=4" alt="Мама обнимает смеющегося малыша, на столе детская тарелка с брокколи, морковью и макаронами" decoding="async">
@@ -992,24 +992,12 @@
               </div>
             </div>
 
-            <div class="onb-step" id="onbStep1" hidden>
-              <div class="onb-mark">
-                <svg viewBox="0 0 24 24"><path d="M3.5 11h17a8.5 8.5 0 0 1-17 0z"/><path d="M8 7c0-1.4 1.3-1.4 1.3-2.8M13 7c0-1.4 1.3-1.4 1.3-2.8"/><path d="M4 20h16"/></svg>
-              </div>
-              <h2>Рацион ребёнка на неделю вперёд</h2>
-              <p>Планер питания по дням, каталог прикорма с подачей по возрасту и список покупок, который собирается сам из запланированных блюд.</p>
-              <div class="onb-foot">
-                <button class="btn btn-primary btn-wide" id="onbGo" type="button">Собрать рацион</button>
-                <p class="onb-note">Два вопроса, меньше минуты</p>
-              </div>
-            </div>
-
             <div class="onb-step" id="onbStep2" hidden>
               <h2>Укажите имя и возраст ребёнка</h2>
               <p>Имя и возраст нужны, чтобы подбирать блюда и показывать подачу по возрасту. Их всегда можно поменять в профиле.</p>
               <div class="field">
                 <label for="onbName">Имя ребёнка</label>
-                <input id="onbName" placeholder="Например, Мия" autocomplete="off" enterkeyhint="done">
+                <input id="onbName" autocomplete="off" enterkeyhint="done">
               </div>
               <div class="field">
                 <label for="onbBD">Дата рождения</label>
@@ -1797,7 +1785,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "20.10 · сборка 66";
+  const BUILD = "21.10 · сборка 67";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -2150,11 +2138,11 @@
     const draftExcl=new Set(state.ff.excl || []);
 
     function show(n){
-      steps.forEach((el,i)=>{ el.hidden = i!==n; });
+      steps.forEach((el,i)=>{ if(el) el.hidden = i!==n; });   // шага 1 больше нет: после приветствия сразу имя
       heroAnim(n===0);
       const pr=$("#onbProgress");
       pr.hidden = n<=1;
-      [...pr.children].forEach((i,k)=>i.classList.toggle("on", k<n));
+      [...pr.children].forEach((i,k)=>i.classList.toggle("on", k<n-1));
       $("#views").scrollTop=0;
       onb.scrollTop=0;
     }
@@ -2273,9 +2261,8 @@
 
     // переходы
     // присваиваем, а не навешиваем: опрос можно запустить повторно без дублей
-    $("#onbHello").onclick=()=>show(1);
-    $("#onbGo").onclick=()=>{ show(2); setTimeout(()=>$("#onbName").focus(),80); };
-    $("#onbBack2").onclick=()=>show(1);
+    $("#onbHello").onclick=()=>{ show(2); setTimeout(()=>$("#onbName").focus(),80); };
+    $("#onbBack2").onclick=()=>show(0);
     $("#onbBack3").onclick=()=>show(2);
     $("#onbBack4").onclick=()=>show(3);
     $("#onbBack5").onclick=()=>show(4);
