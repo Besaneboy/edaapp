@@ -453,6 +453,8 @@
   .birth select:invalid,.birth select.empty{color:var(--ink-3)}
   .onb-slot.off input{opacity:.45}
   .onb-scroll{max-height:46vh;overflow-y:auto}
+  .onb-hello{justify-content:flex-start}
+  .onb-hero{width:100%;max-width:300px;height:auto;align-self:center;margin:6px 0 4px;flex:none}
   .onb-mark{width:72px;height:72px;border-radius:24px;background:var(--sage-soft);color:var(--sage-ink);
     display:grid;place-items:center;margin-bottom:4px;flex:none}
   .onb-mark svg{width:36px;height:36px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
@@ -933,13 +935,67 @@
 
           <div class="onb" id="onb" hidden>
             <div class="onb-progress" id="onbProgress" hidden><i></i><i></i><i></i><i></i><i></i></div>
-            <div class="onb-step" id="onbStep0">
-              <div class="onb-mark">
-                <svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>
-              </div>
-              <h2>Привет, Тея</h2>
+            <div class="onb-step onb-hello" id="onbStep0">
+              <svg class="onb-hero" viewBox="0 0 320 250" role="img" aria-label="Детская тарелка с пюре и ложкой в окружении овощей и фруктов">
+                <!-- фон -->
+                <ellipse cx="160" cy="128" rx="138" ry="108" fill="#EAEEE3"/>
+                <circle cx="262" cy="46" r="20" fill="#F6E3B4"/>
+                <g stroke="#F2D58E" stroke-width="3" stroke-linecap="round"><path d="M262 14v-6M262 84v6M230 46h-6M300 46h6M239 23l-4-4M285 69l4 4M285 23l4-4M239 69l-4 4"/></g>
+                <!-- листья на фоне -->
+                <path d="M38 150c-6-26 10-48 34-50-2 24-14 44-34 50z" fill="#C9D8BB"/>
+                <path d="M38 150c8-16 18-30 32-46" stroke="#A9BF97" stroke-width="2" fill="none" stroke-linecap="round"/>
+                <path d="M286 168c8-22-2-44-24-52-2 22 6 42 24 52z" fill="#C9D8BB"/>
+                <!-- брокколи -->
+                <g>
+                  <path d="M70 196l6-26h10l4 26z" fill="#9BBF7A"/>
+                  <circle cx="70" cy="164" r="14" fill="#6E9A55"/><circle cx="88" cy="158" r="15" fill="#7FAA62"/>
+                  <circle cx="80" cy="148" r="13" fill="#8DB86E"/><circle cx="96" cy="170" r="11" fill="#6E9A55"/>
+                  <circle cx="76" cy="146" r="4" fill="#A6CB88"/><circle cx="90" cy="152" r="3.5" fill="#A6CB88"/>
+                </g>
+                <!-- морковь -->
+                <g transform="translate(16 6) rotate(28 250 178)">
+                  <path d="M238 150c8-4 18-4 24 0l-10 62c-1 4-5 4-6 0z" fill="#EE9A4D"/>
+                  <path d="M242 166h10M244 182h8M246 196h5" stroke="#D97F33" stroke-width="2.4" stroke-linecap="round"/>
+                  <path d="M250 150c-4-12-12-16-18-16 2 8 8 14 18 16zM250 150c2-14 8-20 16-20-1 10-6 16-16 20zM250 150c0-12 0-18 0-24" fill="#7FAA62" stroke="#6E9A55" stroke-width="2" stroke-linecap="round"/>
+                </g>
+                <!-- яблоко -->
+                <g>
+                  <path d="M226 96c-12-8-30-2-30 18 0 18 14 32 24 30 4-1 6-2 8-2s4 1 8 2c10 2 24-12 24-30 0-20-18-26-30-18z" fill="#E9806E"/>
+                  <path d="M226 96c0-8 2-14 6-18" stroke="#8A6A3E" stroke-width="3" fill="none" stroke-linecap="round"/>
+                  <path d="M230 86c6-8 16-8 20-4-6 6-14 8-20 4z" fill="#7FAA62"/>
+                  <ellipse cx="210" cy="108" rx="5" ry="8" fill="#F4AE9F" transform="rotate(-20 210 108)"/>
+                </g>
+                <!-- стручок горошка -->
+                <g transform="rotate(-18 92 98)">
+                  <path d="M58 98c10-12 58-12 68 0-10 12-58 12-68 0z" fill="#8DB86E"/>
+                  <circle cx="74" cy="98" r="6" fill="#B5D69A"/><circle cx="91" cy="98" r="6.5" fill="#B5D69A"/><circle cx="108" cy="98" r="6" fill="#B5D69A"/>
+                </g>
+                <!-- тарелка -->
+                <ellipse cx="160" cy="214" rx="78" ry="12" fill="#DCE3D2"/>
+                <path d="M86 168h148c0 30-30 46-74 46s-74-16-74-46z" fill="#FFFFFF"/>
+                <ellipse cx="160" cy="168" rx="74" ry="18" fill="#FFFFFF" stroke="#E2E0D6" stroke-width="2"/>
+                <ellipse cx="160" cy="168" rx="58" ry="12" fill="#F3C877"/>
+                <path d="M128 166c8-5 18-5 26 0M162 170c8-4 16-4 24 0" stroke="#E9B45A" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+                <circle cx="176" cy="164" r="4" fill="#9BBF7A"/><circle cx="142" cy="171" r="3" fill="#9BBF7A"/>
+                <path d="M96 186c18 18 110 18 128 0" stroke="#EAEEE3" stroke-width="5" fill="none" stroke-linecap="round"/>
+                <!-- пар -->
+                <g stroke="#B9C6AC" stroke-width="3" fill="none" stroke-linecap="round">
+                  <path d="M146 140c-6-8 6-12 0-20"/><path d="M162 136c-6-8 6-12 0-20"/><path d="M178 140c-6-8 6-12 0-20"/>
+                </g>
+                <!-- ложка -->
+                <g transform="rotate(-32 214 150)">
+                  <rect x="208" y="96" width="9" height="70" rx="4.5" fill="#77896A"/>
+                  <ellipse cx="212.5" cy="168" rx="13" ry="17" fill="#77896A"/>
+                  <ellipse cx="212.5" cy="166" rx="8" ry="11" fill="#93A486"/>
+                </g>
+                <!-- сердечко -->
+                <path d="M60 58c-4-6-14-4-14 4 0 8 14 16 14 16s14-8 14-16c0-8-10-10-14-4z" fill="#F0A8A0"/>
+              </svg>
+              <h2>Привет! Давайте кормить малыша вкусно и спокойно</h2>
+              <p>EdaApp подскажет, что и когда предложить ребёнку, запомнит, как он поел, и соберёт список покупок. Без таблиц и лишних забот — у вас их и так хватает.</p>
               <div class="onb-foot">
                 <button class="btn btn-primary btn-wide" id="onbHello" type="button">Начать</button>
+                <p class="onb-note">Для малышей от 6 месяцев до 3 лет</p>
               </div>
             </div>
 
@@ -1748,7 +1804,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "16.10 · сборка 53";
+  const BUILD = "20.10 · сборка 54";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
