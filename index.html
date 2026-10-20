@@ -107,8 +107,8 @@
     font-family:"Onest",sans-serif;font-weight:700;font-size:17px}
   .kid-name{font-family:"Onest","Manrope",sans-serif;font-weight:700;font-size:19px;letter-spacing:-.02em;line-height:1.15}
   .kid-age{font-size:12.5px;color:var(--ink-2)}
-  .who{display:flex;align-items:center;gap:8px}
-  .who-chip{font-size:12px;font-weight:500;padding:6px 11px;border-radius:999px;
+  .family{display:flex;align-items:center;gap:8px}
+  .family-chip{font-size:12px;font-weight:500;padding:6px 11px;border-radius:999px;
     border:1px solid var(--line);color:var(--ink-2);background:var(--surface);white-space:nowrap}
 
   .views{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:18px 16px 22px;display:block}
@@ -321,7 +321,7 @@
 
   .fsec{display:flex;flex-direction:column;gap:9px}
   .fsec h4{margin:0;font-family:"Onest","Manrope",sans-serif;font-size:16px;font-weight:600;letter-spacing:-.01em}
-  .fsec .who{margin:0;font-size:12.5px;color:var(--ink-3);line-height:1.45}
+  .fsec .fnote{margin:0;font-size:12.5px;color:var(--ink-3);line-height:1.45}
   .opts{display:flex;flex-direction:column;gap:8px}
   .opt{appearance:none;cursor:pointer;font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);
     background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;text-align:center}
@@ -719,8 +719,8 @@
                 <span class="kid-age" id="kidAge">1 год 1 мес</span>
               </span>
             </button>
-            <div class="who">
-              <span class="who-chip">вы + папа</span>
+            <div class="family">
+              <span class="family-chip">вы + папа</span>
             </div>
           </header>
 
@@ -1098,7 +1098,7 @@
 
   // Продукт: n — название, c — категория, from — возраст в месяцах, al — аллергены из перечня 14,
   // choke — риск удушья, s — подача по возрасту [[с какого месяца, как подавать], …].
-  // Данные учебные: ВОЗ даёт рекомендации по группам продуктов, а не по отдельным позициям.
+  // Данные учебные: рекомендации даются по группам продуктов, а не по отдельным позициям.
   const FOODS = [
     {n:"Кабачок", c:"veg", from:6, al:[], s:[[6,"Пюре гладкое, без комочков"],[9,"Мягкие кусочки 1 см"],[12,"Палочки, запечённые до мягкости"]]},
     {n:"Цветная капуста", c:"veg", from:6, al:[], s:[[6,"Пюре, отварить на пару"],[9,"Соцветия размером с большой палец"],[12,"Соцветия целиком, мягкие"]]},
@@ -1357,7 +1357,7 @@
     "Люпин":[],
     "Диоксид серы и сульфиты":[]
   };
-  // возрастные группы по руководству ВОЗ по прикорму детей 6–23 месяцев, 2023
+  // возрастные группы прикорма
   const AGE_BANDS = [
     {k:"6",  label:"С 6 месяцев", start:6,  note:"Прикорм начинают около 6 месяцев, 2–3 приёма пищи в день, с малых порций"},
     {k:"9",  label:"С 9 месяцев", start:9,  note:"3–4 приёма пищи и 1–2 перекуса, консистенцию уплотняют постепенно"},
@@ -1441,8 +1441,8 @@
   const SLOT_PRESETS = ["Завтрак","Перекус 1","Обед","Полдник","Перекус 2","Ужин","Второй завтрак","Ночное кормление"];
   const ALL_SLOTS = ["Завтрак","Перекус 1","Обед","Полдник","Перекус 2","Ужин"];
   const DEFAULT_SLOTS = ["Завтрак","Обед","Полдник","Ужин"];
-  // сколько приёмов прикорма по возрасту: ВОЗ (6–8 мес — 2–3 приёма, 9–23 мес — 3–4 приёма и 1–2 перекуса),
-  // AAP с 2 лет — 3 приёма и 1–2 перекуса. Грудное молоко или смесь — между приёмами, в план не входят.
+  // сколько приёмов прикорма по возрасту: 6–8 мес — 2–3 приёма, 9–23 мес — 3–4 приёма и 1–2 перекуса,
+  // с 2 лет — 3 приёма и 1–2 перекуса. Грудное молоко или смесь — между приёмами, в план не входят.
   function mealsForAge(m){
     if(m<7)  return {slots:["Завтрак","Обед"], text:"2 приёма прикорма в день, а грудное молоко или смесь — как раньше. Начинают с малых порций."};
     if(m<9)  return {slots:["Завтрак","Обед","Ужин"], text:"2–3 приёма прикорма в день, грудное молоко или смесь — между ними."};
@@ -1483,7 +1483,7 @@
     foodFilter:"all",
     rec:0, portions:2, step:0, timeLeft:0, running:false, tick:null,
     recFilter:"all", f:{time:null, age:null, main:null, excl:[], onlyTried:false},
-    tried:{}, intro:{}, plan:{mode:"who", list:[], dates:{}}, foodMode:"path", ff:{age:null, excl:[]}, catClosed:{}, onboarded:false,
+    tried:{}, intro:{}, plan:{mode:"rec", list:[], dates:{}}, foodMode:"path", ff:{age:null, excl:[]}, catClosed:{}, onboarded:false,
     slots:DEFAULT_SLOTS.slice(), slotTimes:{}, pantry:["Масло оливковое","Мука","Масло сливочное"],
     paper:false
   };
@@ -1547,7 +1547,7 @@
       if(d.tried && typeof d.tried==="object") state.tried=d.tried;
       if(d.intro && typeof d.intro==="object") state.intro=d.intro;
       if(d.plan && Array.isArray(d.plan.list))
-        state.plan={mode:d.plan.mode==="manual"?"manual":"who", list:d.plan.list, dates:d.plan.dates||{}};
+        state.plan={mode:d.plan.mode==="manual"?"manual":"rec", list:d.plan.list, dates:d.plan.dates||{}};   // старое значение режима тоже становится "rec"
       migrateFoods();
       if(d.foodMode==="list" || d.foodMode==="path") state.foodMode=d.foodMode;
       // у тех, кто пользовался приложением до появления опроса, он не показывается
@@ -1568,7 +1568,7 @@
   function resetDemo(){
     try{ localStorage.removeItem(STORE_KEY); }catch(e){}
     state.days={}; state.notes={}; state.pantry=["Масло оливковое","Мука","Масло сливочное"];
-    state.tried={}; state.intro={}; state.plan={mode:"who", list:[], dates:{}}; state.ff={age:null, excl:[]}; state.catClosed={}; state.onboarded=false;
+    state.tried={}; state.intro={}; state.plan={mode:"rec", list:[], dates:{}}; state.ff={age:null, excl:[]}; state.catClosed={}; state.onboarded=false;
     state.foodFilter="all";
     state.slots=DEFAULT_SLOTS.slice(); state.slotTimes={};
     state.f={time:null, age:null, main:null, excl:[], onlyTried:false};
@@ -1803,7 +1803,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "21.10 · сборка 74";
+  const BUILD = "21.10 · сборка 75";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -2510,7 +2510,7 @@
   /* ───────── экран «Продукты» ───────── */
   const AGE = () => childMonths();
 
-  const WHO_FREQ = [
+  const AGE_FREQ = [
     {max:8,  text:"Прикорм начинают в 6 месяцев, 2–3 приёма пищи в день, с малых порций. Отмечайте, что уже ввели."},
     {max:11, text:"3–4 приёма пищи в день и 1–2 перекуса, консистенцию постепенно уплотняют."},
     {max:23, text:"3–4 приёма пищи и 1–2 перекуса, ребёнок ест с общего стола семьи."},
@@ -2568,7 +2568,7 @@
     renderPath();
     const box=$("#foodList"); box.innerHTML="";
     const m=childMonths();
-    $("#introFreq").textContent=(WHO_FREQ.find(x=>m<=x.max)||WHO_FREQ[3]).text;
+    $("#introFreq").textContent=(AGE_FREQ.find(x=>m<=x.max)||AGE_FREQ[3]).text;
 
     renderDocBars();
     const triedAll=FOODS.filter(f=>isTried(f.n)).length;
@@ -2717,13 +2717,12 @@
   }
 
   /* ───────── план ввода ─────────
-     state.plan = {mode:"who"|"manual", list:[названия], dates:{название: iso «не раньше»}}.
-     «who» — порядок считается сам по рекомендациям ВОЗ; любая ручная правка переводит план в «manual». */
-  // рекомендованный порядок ввода: [продукт, почему здесь]. Опирается на:
-  // ВОЗ 2023 (прикорм с 6 мес, ежедневно мясо/рыба/яйца, овощи и фрукты), ESPGHAN 2017 (аллергены не откладывать,
-  // глютен с 4–12 мес понемногу, коровье молоко как напиток с 12 мес), EAACI 2020 (хорошо сваренное яйцо и арахис
-  // в первые месяцы прикорма), исследования вкуса (овощи до фруктов, горьковатые — с первых недель),
-  // ESPGHAN 2015 по мышьяку в рисе, CDC/AAP (мёд с 12 мес, сок не раньше 12 мес, добавленный сахар — после 2 лет).
+     state.plan = {mode:"rec"|"manual", list:[названия], dates:{название: iso «не раньше»}}.
+     «rec» — порядок считается сам по рекомендациям; любая ручная правка переводит план в «manual». */
+  // рекомендованный порядок ввода: [продукт, почему здесь] — по современным клиническим рекомендациям:
+  // прикорм с 6 мес, овощи до фруктов, горьковатые — с первых недель, мясо, рыба и яйцо ежедневно,
+  // аллергены рано и по одному, глютен понемногу, рис не основной крупой; мёд, сок и коровье молоко
+  // как напиток — с 12 мес, добавленный сахар — после 2 лет.
   const EVIDENCE_PLAN = [
     // около 6 мес: овощи и железо
     ["Брокколи","Зелёный овощ первым: к горьковатому вкусу привыкают с первых ложек"],
@@ -2854,13 +2853,13 @@
   // рекомендованный порядок; продукты, которых нет в списке, — в конец по возрасту
   // в плане — только продукты, разрешённые по возрасту ребёнка из профиля; остальные появятся, когда он подрастёт
   const planAllowed = f => f.from <= childMonths();
-  function whoOrder(){
+  function recOrder(){
     const known=new Set(EVIDENCE_PLAN.map(x=>x[0]));
     const rest=FOODS.filter(f=>!known.has(f.n)).sort((a,b)=>a.from-b.from).map(f=>f.n);
     return EVIDENCE_PLAN.map(x=>x[0]).concat(rest).filter(n=>{ const f=foodByName(n); return f && planFree(f) && planAllowed(f); });
   }
   function planList(){
-    if(state.plan.mode==="who") return whoOrder();
+    if(state.plan.mode==="rec") return recOrder();
     return state.plan.list.filter(n=>{ const f=foodByName(n); return f && !isTried(n) && !state.intro[n] && planAllowed(f); });
   }
   // даты по плану: по 3 дня на продукт, не раньше закреплённой даты и нужного возраста
@@ -2874,7 +2873,7 @@
     });
   }
   function planEdit(fn){
-    if(state.plan.mode==="who") state.plan={mode:"manual", list:whoOrder(), dates:state.plan.dates||{}};
+    if(state.plan.mode==="rec") state.plan={mode:"manual", list:recOrder(), dates:state.plan.dates||{}};
     else state.plan.list=planList();
     fn(state.plan);
     renderFoods(); renderDay(); saveState();
@@ -2938,8 +2937,8 @@
   function planRemove(n){ planEdit(p=>{ p.list=p.list.filter(x=>x!==n); delete p.dates[n]; });
     toast(n+" убран из плана."); }
   function planAdd(n){ planEdit(p=>{ if(!p.list.includes(n)) p.list.push(n); }); toast(n+" добавлен в план."); }
-  function planWho(){
-    state.plan={mode:"who", list:[], dates:{}};
+  function planRecommended(){
+    state.plan={mode:"rec", list:[], dates:{}};
     renderFoods(); renderDay(); saveState();
     toast("План расставлен по рекомендациям.");
   }
@@ -3345,7 +3344,7 @@
     // план ввода
     const ph=el("div","plan-head");
     ph.appendChild(el("div","ptitle2","План ввода"));
-    ph.appendChild(el("span","chip"+(state.plan.mode==="who"?" ok":""), state.plan.mode==="who"?"рекомендованный":"вручную"));
+    ph.appendChild(el("span","chip"+(state.plan.mode==="rec"?" ok":""), state.plan.mode==="rec"?"рекомендованный":"вручную"));
     box.appendChild(ph);
     const sched=planSchedule();
     const ptrack=el("div","track");
@@ -3386,23 +3385,23 @@
         " (возраст из профиля). Ещё "+later.length+" "+plur(later.length,"продукт","продукта","продуктов")+" пока рано: "+
         (nextN===later.length ? "появятся" : "первые "+nextN+" появятся")+" в плане в "+ageLabel(next)+"."));
     }
-    else box.appendChild(el("p","intronote", state.plan.mode==="who"
+    else box.appendChild(el("p","intronote", state.plan.mode==="rec"
       ? "Подходящих продуктов для плана нет: всё по возрасту уже введено или исключено аллергенами."
       : "План пуст. Добавьте продукты вручную или расставьте их по рекомендациям."));
     const btns=el("div","plan-btns");
     const add=el("button","btn btn-sm btn-ghost","+ Добавить продукт"); add.type="button";
     add.addEventListener("click",()=>openIntroPicker(null, null, planAdd));
     btns.appendChild(add);
-    if(state.plan.mode!=="who"){
-      const who=el("button","btn btn-sm btn-ghost","Расставить по рекомендациям"); who.type="button";
-      who.addEventListener("click",planWho); btns.appendChild(who);
+    if(state.plan.mode!=="rec"){
+      const rb=el("button","btn btn-sm btn-ghost","Расставить по рекомендациям"); rb.type="button";
+      rb.addEventListener("click",planRecommended); btns.appendChild(rb);
     }
     if(sched.length){
       const clr=el("button","btn btn-sm btn-ghost","Очистить план"); clr.type="button";
       clr.addEventListener("click",planClear); btns.appendChild(clr);
     }
     box.appendChild(btns);
-    if(state.plan.mode==="who" || sched.length) box.appendChild(el("p","intronote", state.plan.mode==="who"
+    if(state.plan.mode==="rec" || sched.length) box.appendChild(el("p","intronote", state.plan.mode==="rec"
       ? "Порядок — по современным рекомендациям педиатров: начинаем около 6 месяцев с овощей и мяса, аллергены — яйцо, арахис, молоко, глютен, рыбу, кунжут — вводим рано, по одному, а не откладываем. Фрукты — после овощей, мёд, соль, сок и коровье молоко как напиток — с года, сахар — после 2 лет. Каждый продукт встаёт не раньше своего возраста. Перед стартом обсудите план с педиатром."
       : "Порядок меняйте стрелками или перетаскиванием (зажмите строку); нажмите на продукт, чтобы закрепить дату."));
 
@@ -3499,7 +3498,7 @@
         '</div></div>'+
         '<div class="fsec"><h4>Возраст ребёнка</h4><div class="chips">'+
           AGES.map(([lab,v])=>'<button class="chipbtn" type="button" data-a="'+v+'" aria-pressed="'+(d.age===v)+'">'+lab+'</button>').join("")+
-        '</div><p class="who">Показываем то, что уже можно вводить к выбранному возрасту.</p></div>'+
+        '</div><p class="fnote">Показываем то, что уже можно вводить к выбранному возрасту.</p></div>'+
         '<div class="sheet-foot"><button class="btn btn-ghost" id="ffReset" type="button">Сбросить</button>'+
         '<button class="btn btn-primary" id="ffApply" type="button">Показать '+count()+'</button></div>';
 
@@ -3570,13 +3569,13 @@
           '<label class="check"><input type="checkbox" id="fTried"'+(d.onlyTried?' checked':'')+'>'+
           '<span>Только из введённых продуктов</span>'+
           '<span class="tail">'+RECIPES.filter(recipeReady).length+' из '+RECIPES.length+'</span></label>'+
-          '<p class="who">Блюдо показывается, если каждый его продукт уже отмечен введённым во вкладке «Продукты».</p></div>'+
+          '<p class="fnote">Блюдо показывается, если каждый его продукт уже отмечен введённым во вкладке «Продукты».</p></div>'+
         '<div class="fsec"><h4>Время приготовления</h4><div class="opts">'+
           TIMES.map(([lab,v])=>'<button class="opt" type="button" data-time="'+v+'" aria-pressed="'+(d.time===v)+'">'+lab+'</button>').join("")+
         '</div></div>'+
         '<div class="fsec"><h4>Возраст ребёнка</h4><div class="chips">'+
           AGE_BANDS.map(b=>'<button class="chipbtn" type="button" data-age="'+b.k+'" aria-pressed="'+(d.age===b.k)+'">'+b.label+'</button>').join("")+
-        '</div><p class="who">'+(band ? band.note : 'Показываем блюда, которые подходят с выбранного возраста.')+'</p></div>'+
+        '</div><p class="fnote">'+(band ? band.note : 'Показываем блюда, которые подходят с выбранного возраста.')+'</p></div>'+
         '<div class="fsec"><h4>Основной ингредиент</h4><div class="chips">'+
           MAINS.map(m=>'<button class="chipbtn" type="button" data-main="'+esc(m)+'" aria-pressed="'+(d.main===m)+'">'+esc(m)+'</button>').join("")+
         '</div></div>'+
