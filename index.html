@@ -461,13 +461,13 @@
     background:var(--sage-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5.5 10.5l3 3 6-7' fill='none' stroke='%235C6E50' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/15px no-repeat}
   @media (max-height:720px){
     .onb-hello{gap:11px;padding-top:18px}
-    .onb-hello .onb-hero-wrap{height:30vh;border-radius:22px}
+    .onb-hello .onb-hero-wrap{width:min(100%,30vh);border-radius:22px}
     .onb-hello h2{font-size:25px}
     .onb-pains{gap:6px}
   }
-  .onb-hero-wrap{position:relative;width:100%;height:clamp(200px,40vh,380px);margin:0 0 4px;flex:none;
+  .onb-hero-wrap{position:relative;width:min(100%,42vh);aspect-ratio:1;align-self:center;margin:0 0 4px;flex:none;
     border-radius:28px;overflow:hidden;background:#F3E6DA;box-shadow:0 18px 40px -22px rgba(120,70,50,.45);isolation:isolate}
-  .onb-hero{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 40%;transform:scale(1.06)}
+  .onb-hero{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 0%;transform:scale(1.035);transform-origin:50% 12%}
   .onb-hero3d{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:pan-y}
   .onb-heart{position:absolute;width:22px;height:22px;opacity:0;pointer-events:none;
     background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 21s-8-5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 6-8 11-8 11z' fill='%23F28F96' stroke='%23fff' stroke-width='1.5'/%3E%3C/svg%3E") center/contain no-repeat;
@@ -968,7 +968,6 @@
               <ul class="onb-pains">
                 <li><b>Что и когда давать</b> — план по возрасту малыша, по рекомендациям ВОЗ</li>
                 <li><b>Без страха аллергии</b> — новое по одному, дневник реакций всегда под рукой</li>
-                <li><b>Отказался — не беда</b> — отметим и подскажем, когда предложить снова</li>
                 <li><b>Не готовить отдельно</b> — блюда с общего стола и список покупок</li>
               </ul>
               <div class="onb-foot">
@@ -1782,7 +1781,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "20.10 · сборка 59";
+  const BUILD = "20.10 · сборка 60";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -2116,7 +2115,7 @@
     if(!on || hero3dLoading || !window.WebGLRenderingContext) return;
     hero3dLoading=true;
     const still = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
-    import("./hero3d.js?v=60").then(m=>{
+    import("./hero3d.js?v=61").then(m=>{
       const cv=$("#onbHero3d");
       cv.hidden=false;
       return m.mount(cv,{src:"img/hello-hug.jpg?v=3", depthSrc:"img/hello-hug-depth.png?v=3", still}).then(api=>{

@@ -16,9 +16,9 @@ uniform float zoom;      // лёгкое «дыхание»
 uniform float focus;     // плоскость, которая стоит на месте (лица)
 uniform vec2 cover;      // подгонка картинки под рамку, как object-fit: cover
 void main(){
-  // как object-fit: cover + object-position: 50% 40% (лица в кадре), с лёгким приближением
-  vec2 lo = (1.0 - cover) * vec2(0.5, 0.4);
-  vec2 mid = lo + cover * 0.5;
+  // как object-fit: cover + object-position: 50% 0% (лица в кадре), с лёгким приближением
+  vec2 lo = (1.0 - cover) * vec2(0.5, 0.0);
+  vec2 mid = lo + cover * vec2(0.5, 0.12);  // приближаем от верха: голова мамы не обрезается
   vec2 c = (lo + uv * cover - mid) / zoom + mid;
   // несколько шагов: точнее обходит края предметов, меньше «резины»
   vec2 q = c;
@@ -89,7 +89,7 @@ export async function mount(canvas, { src, depthSrc, still = false }) {
     const sx = Math.sin(s * 0.55) * 0.022 + px * 0.018;
     const sy = Math.sin(s * 0.9) * 0.010 + py * 0.012;
     gl.uniform2f(uShift, sx, sy);
-    gl.uniform1f(uZoom, 1.06 + Math.sin(s * 0.7) * 0.012);
+    gl.uniform1f(uZoom, 1.035 + Math.sin(s * 0.7) * 0.008);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 
