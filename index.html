@@ -502,7 +502,7 @@
   .onb .field-note{font-size:12.5px;color:var(--ink-3);line-height:1.4}
   .onb-foot{margin-top:auto;padding-top:18px;display:flex;flex-direction:column;gap:9px}
   /* кнопки идут сразу за содержимым шага, а не прижимаются к самому низу экрана (в Telegram там полоска «домой») */
-  .onb-step:not(#onbStep4) .onb-foot{margin-top:0;padding-top:10px}
+  .onb-step:not(#onbStep4):not(#onbStep5) .onb-foot{margin-top:0;padding-top:10px}   /* на последнем шаге кнопки внизу */
   /* аллергены: сетка плиток с картинками, кнопка всегда под рукой */
   #onbAllergens{display:flex;flex-direction:column;gap:10px}
 
@@ -1803,7 +1803,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "21.10 · сборка 75";
+  const BUILD = "21.10 · сборка 76";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
