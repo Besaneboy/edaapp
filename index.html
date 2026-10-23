@@ -508,14 +508,18 @@
 
   /* ── дневник введения продукта ── */
   .intro-banner{appearance:none;-webkit-appearance:none;border:0;font-family:inherit;text-align:left;cursor:pointer;width:100%;
-    background:var(--gold-soft);border-radius:20px;padding:13px 14px;display:flex;flex-direction:column;gap:10px;color:var(--ink)}
-  .intro-banner.calm{background:var(--sage-soft)}
+    background:var(--surface);border:1.5px solid var(--gold);border-radius:20px;padding:13px 14px;display:flex;flex-direction:column;gap:10px;color:var(--ink);
+    box-shadow:0 10px 24px -16px rgba(120,90,20,.55)}
+  /* белая карточка с цветной рамкой — не путается с цветными плитками приёмов */
+  .intro-banner.calm{border-color:var(--sage);box-shadow:0 10px 24px -16px rgba(60,80,50,.55)}
+  .intro-banner .intro-ic{background:var(--gold-soft)}
+  .intro-banner.calm .intro-ic{background:var(--sage-soft)}
   .intro-top{display:flex;align-items:center;gap:11px}
   .intro-ic{width:40px;height:40px;border-radius:13px;background:var(--surface);display:grid;place-items:center;font-size:22px;flex:none}
   .intro-txt{flex:1;min-width:0}
   .intro-txt b{display:block;font-family:"Onest","Manrope",sans-serif;font-size:15px;font-weight:600;line-height:1.25}
   .intro-txt span{font-size:12.5px;color:var(--ink-2)}
-  .intro-go{font-size:13px;font-weight:700;color:var(--sage-ink);flex:none}
+  .intro-go{font-size:13px;font-weight:700;color:#fff;background:var(--sage-ink);border-radius:999px;padding:7px 12px;flex:none}
   .iprog{display:flex;gap:4px}
   .iprog i{flex:1;height:5px;border-radius:3px;background:rgba(148,114,26,.2)}
   .iprog i.on{background:var(--gold)}
@@ -728,9 +732,9 @@
             <!-- ЭКРАН: ДЕНЬ -->
             <section class="view" data-view="day">
               <div class="datestrip" id="dateStrip"></div>
-              <div class="sec-label"><span id="dayTitle">Сегодня</span><span class="num" id="dayCount">0 из 4</span></div>
-
               <div id="introBanner" hidden></div>
+
+              <div class="sec-label"><span id="dayTitle">Сегодня</span><span class="num" id="dayCount">0 из 4</span></div>
 
               <div class="repeat-card" id="repeatCard">
                 <p id="repeatText"></p>
@@ -1803,7 +1807,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "21.10 · сборка 80";
+  const BUILD = "23.10 · сборка 81";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
