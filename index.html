@@ -520,6 +520,10 @@
   .intro-txt b{display:block;font-family:"Onest","Manrope",sans-serif;font-size:15px;font-weight:600;line-height:1.25}
   .intro-txt span{font-size:12.5px;color:var(--ink-2)}
   .intro-go{font-size:13px;font-weight:700;color:#fff;background:var(--sage-ink);border-radius:999px;padding:7px 12px;flex:none}
+  .iserve{display:flex;gap:8px;align-items:flex-start;background:var(--surface-2);border-radius:12px;padding:8px 10px;
+    font-size:13px;line-height:1.4;color:var(--ink-2)}
+  .iserve b{color:var(--ink);font-weight:700}
+  .iserve svg{width:16px;height:16px;flex:none;margin-top:1px;fill:none;stroke:var(--sage-ink);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
   .iprog{display:flex;gap:4px}
   .iprog i{flex:1;height:5px;border-radius:3px;background:rgba(148,114,26,.2)}
   .iprog i.on{background:var(--gold)}
@@ -1807,7 +1811,7 @@
     note:"Добавьте любой приём: второй завтрак, перекус на прогулке, ночное кормление.",
     dish:"", gram:"100", slot:"Перекус"
   }));
-  const BUILD = "23.10 · сборка 81";
+  const BUILD = "23.10 · сборка 82";
   $("#storeNote").textContent = (STORE_OK
     ? "План и история сохраняются на этом устройстве"
     : "Браузер запретил сохранение — данные живут до перезагрузки") + " · " + BUILD;
@@ -3153,6 +3157,17 @@
     else if(it.r && state.cursor<=TODAY_ISO && it.r.status==="active") body.appendChild(introAsk(it.n, state.cursor));
   }
 
+  // подача продукта по текущему возрасту — подсказка прямо в плашке нового продукта
+  function serveNote(n){
+    const f=foodByName(n); if(!f) return null;
+    const sv=serveFor(f, childMonths()) || f.s[0]; if(!sv) return null;
+    const d=el("div","iserve");
+    d.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v8a3 3 0 0 0 3 3v7M7 3c-2 0-3 2-3 4.5S5 11 7 11M14 21v-9c-2 0-3-2-3-5s1.5-4 3-4 3 1 3 4-1 5-3 5"/></svg>';
+    const t=el("span"); t.appendChild(el("b",null,"Подача: ")); t.appendChild(document.createTextNode(sv[1]));
+    d.appendChild(t);
+    return d;
+  }
+
   function renderIntroBanner(){
     const box=$("#introBanner"); box.innerHTML="";
     const a=activeIntro();
@@ -3182,6 +3197,7 @@
         t.appendChild(el("span",null,"День "+no+" из "+INTRO_DAYS+" · "+rangeLabel(it.start,it.end)));
         top.appendChild(t); top.appendChild(el("span","intro-go","→"));
         b.appendChild(top);
+        const svp=serveNote(pl.n); if(svp) b.appendChild(svp);
         b.addEventListener("click",()=>openPlanItem(pl.n));
         box.appendChild(b); box.hidden=false; return;
       }
@@ -3193,6 +3209,7 @@
       t.appendChild(el("span",null,"Следующий по плану — "+lc(sug.n)));
       top.appendChild(t); top.appendChild(el("span","intro-go","Начать →"));
       b.appendChild(top);
+      const svs=serveNote(sug.n); if(svs) b.appendChild(svs);
       b.addEventListener("click",()=>startIntro(sug.n));
       const other=el("button","intro-other","Выбрать другой продукт"); other.type="button";
       other.addEventListener("click",e=>{ e.stopPropagation(); openIntroPicker(null); });
@@ -3209,6 +3226,7 @@
       (td ? "сегодня отмечено" : y ? "вчера: "+REACT_LABEL[y.react].toLowerCase() : "отметьте после еды")));
     top.appendChild(t); top.appendChild(el("span","intro-go","→"));
     b.appendChild(top);
+    const sva=serveNote(n); if(sva) b.appendChild(sva);
     const pr=el("div","iprog");
     for(let i=0;i<INTRO_DAYS;i++) pr.appendChild(el("i",i<okN?"on":null));
     b.appendChild(pr);
